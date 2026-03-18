@@ -33,7 +33,7 @@ jobs:
     # ✅ Zip ONLY dist folder
     - name: Create Artifact from dist
       run: |
-        cd dist
+        cd dist/oblo/browser
         zip -r ../build.zip .
 
     # ✅ Upload artifact
