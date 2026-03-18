@@ -1,0 +1,875 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="main-content-inner">
+    <div class="bg-white rounded-md shadow-sm mb-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+        <div class="mb-3 sm:mb-0">
+          <div class="flex items-center gap-3">
+            <p-button icon="pi pi-arrow-left" [text]="true" [rounded]="true" (click)="goBack()"
+              styleClass="p-button-secondary" [title]="'Go Back'">
+            </p-button>
+            <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Table Section -->
+    <div *ngIf="isView" class="bg-white rounded-lg border border-gray-200 p-0">
+      <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+        (refreshData)="getViewData(true)" [actionTemplate]="actionTemplateRef">
+        <ng-template #actionTemplateRef let-item let-i="rowIndex">
+          <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+            (click)="op.toggle($event)">
+            <i class="pi pi-ellipsis-v text-xl"></i>
+          </button>
+
+          <p-popover #op>
+            <div class="flex flex-col">
+              <button (click)="openViewDetailsModal(item); op.hide()" title="View"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-eye"></i> View
+              </button>
+              <button (click)="openViewModal(item); op.hide()" title="Approve Imprest" [class]="item.approvedStatus === 'Pending' 
+                  ? 'px-4 py-2 hover:bg-gray-100 text-left' 
+                  : 'px-4 py-2 text-left text-red-500 opacity-50 cursor-not-allowed'"
+                [disabled]="item.approvedStatus !== 'Pending'">
+                <i class="pi pi-check-circle"></i> Approve
+              </button>
+              <button *ngIf="hasReimbDetails(item)" (click)="openApprovalModal(item); op.hide()" type="button"
+                title="Reimbursement Data" class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-wallet"></i> Reimbursement
+              </button>
+              <button (click)="openImprestModal(item); op.hide()" type="button" title="View Imprest History"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-history"></i> Imprest History
+              </button>
+            </div>
+          </p-popover>
+        </ng-template>
+      </app-table-template>
+    </div>
+    <p-dialog [(visible)]="visibleDataDialog" [modal]="true" [draggable]="false" [resizable]="false"
+      [breakpoints]="{ '960px': '90vw', '640px': '100vw' }" [style]="{ width: '70vw', 'max-width': '1000px' }"
+      (onHide)="closeDataDialog()">
+      <ng-template pTemplate="header">
+        <div class="flex items-center justify-between w-full">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800">
+              Expense Request Approval
+            </h2>
+            <p *ngIf="selectedItem" class="mt-1 text-xs text-gray-500 space-x-2">
+              <span *ngIf="selectedItem?.reqNo">Req No: {{ selectedItem.reqNo }}</span>
+              <span *ngIf="selectedItem?.employeeName">• {{ selectedItem.employeeName }}</span>
+              <span *ngIf="selectedItem?.imprest">
+                • Requested Imprest: ₹{{ selectedItem.imprest }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Content -->
+        <div class="px-6 py-5 space-y-5">
+          <!-- Basic Info Row -->
+          <div *ngIf="selectedItem" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div *ngIf="selectedItem?.requestTypeId === 10001">
+              <div class="text-gray-500 text-xs mb-1">Source</div>
+              <div class="font-medium text-gray-800 break-all">
+                {{ selectedItem?.travelSource || '-' }}
+              </div>
+            </div>
+
+            <div *ngIf="selectedItem?.requestTypeId === 10001">
+              <div class="text-gray-500 text-xs mb-1">Destination</div>
+              <div class="font-medium text-gray-800 break-all">
+                {{ selectedItem?.travelDestination || '-' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <div *ngIf="selectedItem" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">
+                Approved Imprest <span class="text-red-500">*</span>
+                <span *ngIf="selectedItem?.imprest" class="text-xs text-gray-500 font-normal ml-2">
+                  (Max: ₹{{ selectedItem.imprest }})
+                </span>
+              </label>
+              <textarea id="Imperest" rows="1" maxlength="18"
+                class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                (keypress)="onApprovedImprestKeyPress($event)" (input)="onApprovedImprestChange($event)"
+                [(ngModel)]="selectedItem.approvedImprest"
+                [placeholder]="'Enter amount (Max: ₹' + (selectedItem?.imprest || 0) + ')'"></textarea>
+              <div
+                *ngIf="selectedItem?.approvedImprest && selectedItem?.imprest && (+selectedItem.approvedImprest > +selectedItem.imprest)"
+                class="text-xs text-red-500 mt-1">
+                Approved Imprest cannot exceed Requested Imprest (₹{{ selectedItem?.imprest }})
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium text-gray-700">
+                Status <span class="text-red-500">*</span>
+              </label>
+              <select [(ngModel)]="status"
+                class="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option selected value="0">Select Status</option>
+                <option value="10000">Approve</option>
+                <option value="10003">Reject</option>
+              </select>
+            </div>
+          </div>
+
+          <div *ngIf="selectedItem" class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700">
+              Remarks  
+            </label>
+            <textarea id="remarks" rows="2" maxlength="500"
+              class="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              [(ngModel)]="remarks"></textarea>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+          <button type="button"
+            class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-100"
+            (click)="closeDataDialog()">
+            Cancel
+          </button>
+
+          <button type="button"
+            class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-100"
+            (click)="resetForm()">
+            Reset
+          </button>
+          <button type="button"
+            class="px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm"
+            (click)="onSubmit()">
+            Submit
+          </button>
+        </div>
+      </div>
+    </p-dialog>
+
+    <!-- View Details Drawer (Read-Only) -->
+    <p-drawer [(visible)]="visibleViewDialog" position="right" [modal]="true"
+      [style]="{ width: '50%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeViewDialog()">
+      <ng-template pTemplate="header">
+        <div class="flex items-center justify-between w-full gap-3 min-w-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="font-bold text-xl text-gray-800 truncate">
+              View Expense Request Details
+            </span>
+            <div class="bg-blue-50 p-2 rounded-full shrink-0">
+              <i class="pi pi-eye text-blue-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="h-full flex flex-col bg-gray-50/50">
+        <div class="flex-grow overflow-y-auto p-4 space-y-4">
+          <!-- Basic Information Section -->
+          <div class="bg-white rounded-lg shadow-sm mb-4">
+            <div class="flex items-center justify-between p-4 border-b">
+              <h3 class="text-sm font-semibold text-gray-700">Basic Information</h3>
+            </div>
+            <div class="p-5">
+              <div *ngIf="selectedItem" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Request Number</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.reqNo || '-' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Request Type</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.text || '-' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Employee Name</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.employeeName || '-' }}
+                  </div>
+                </div>
+                <div *ngIf="selectedItem?.requestTypeId === 10001">
+                  <div class="text-gray-500 text-xs mb-1">Source</div>
+                  <div class="font-medium text-gray-800 break-all">
+                    {{ selectedItem?.travelSource || '-' }}
+                  </div>
+                </div>
+                <div *ngIf="selectedItem?.requestTypeId === 10001">
+                  <div class="text-gray-500 text-xs mb-1">Destination</div>
+                  <div class="font-medium text-gray-800 break-all">
+                    {{ selectedItem?.travelDestination || '-' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">From Date</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.fromDate || '-' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">To Date</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.toDate || '-' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Purpose</div>
+                  <div class="font-medium text-gray-800 break-all">
+                    {{ selectedItem?.purpose || '-' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Imprest Information Section -->
+          <div class="bg-white rounded-lg shadow-sm mb-4">
+            <div class="flex items-center justify-between p-4 border-b">
+              <h3 class="text-sm font-semibold text-gray-700">Imprest Information</h3>
+            </div>
+            <div class="p-5">
+              <div *ngIf="selectedItem" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Requested Imprest</div>
+                  <div class="font-medium text-gray-800">
+                    ₹{{ selectedItem?.imprest || '0' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Approved Imprest</div>
+                  <div class="font-medium text-gray-800">
+                    ₹{{ selectedItem?.approvedImprest || '0' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-gray-500 text-xs mb-1">Approval Status</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.approvedStatus || '-' }}
+                  </div>
+                </div>
+                <div *ngIf="selectedItem?.approvedBy">
+                  <div class="text-gray-500 text-xs mb-1">Approved By</div>
+                  <div class="font-medium text-gray-800">
+                    {{ selectedItem?.approvedByText || selectedItem?.approvedBy || '-' }}
+                  </div>
+                </div>
+                <div *ngIf="selectedItem?.approvalRemarks" class="md:col-span-2">
+                  <div class="text-gray-500 text-xs mb-1">Approval Remarks</div>
+                  <div class="font-medium text-gray-800 break-all">
+                    {{ selectedItem?.approvalRemarks || '-' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-drawer>
+
+    <!-- Imprest History Drawer -->
+    <p-drawer [(visible)]="visibleImprestHistoryDrawer" position="right" [modal]="true"
+      [style]="{ width: '50%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeImprestHistoryDrawer()">
+      <ng-template pTemplate="header">
+        <div class="flex items-center justify-between w-full gap-3 min-w-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="font-bold text-xl text-gray-800 truncate">
+              Imprest History
+            </span>
+            <div class="bg-blue-50 p-2 rounded-full shrink-0">
+              <i class="pi pi-history text-blue-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="h-full flex flex-col bg-gray-50/50">
+        <div class="flex-grow overflow-y-auto p-4 space-y-4">
+          <!-- Request Info -->
+          <div *ngIf="selectedItem" class="bg-white rounded-lg shadow-sm mb-4 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div class="text-gray-500 text-xs mb-1">Request Number</div>
+                <div class="font-medium text-gray-800">
+                  {{ selectedItem?.reqNo || '-' }}
+                </div>
+              </div>
+              <div>
+                <div class="text-gray-500 text-xs mb-1">Employee Name</div>
+                <div class="font-medium text-gray-800">
+                  {{ selectedItem?.employeeName || '-' }}
+                </div>
+              </div>
+              <div>
+                <div class="text-gray-500 text-xs mb-1">Requested Imprest</div>
+                <div class="font-medium text-gray-800">
+                  ₹{{ selectedItem?.imprest || '0' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Table -->
+          <div class="bg-white rounded-lg shadow-sm">
+            <div class="p-4 border-b">
+              <h3 class="text-sm font-semibold text-gray-700">Imprest History Details</h3>
+            </div>
+            <div class="p-4">
+              <div *ngIf="historyList.length === 0" class="text-center py-8 text-gray-500">
+                No imprest history available
+              </div>
+              <div *ngIf="historyList.length > 0" class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                  <thead>
+                    <tr class="bg-gray-50 border-b">
+                      <th class="text-left p-3 text-xs font-semibold text-gray-700">ID</th>
+                      <th class="text-left p-3 text-xs font-semibold text-gray-700">To Date</th>
+                      <th class="text-left p-3 text-xs font-semibold text-gray-700">Imprest Amount</th>
+                      <th class="text-left p-3 text-xs font-semibold text-gray-700">Imprest For</th>
+                      <th class="text-left p-3 text-xs font-semibold text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of historyList; let i = index" class="border-b hover:bg-gray-50">
+                      <td class="p-3 text-sm text-gray-800">{{ item.id || '-' }}</td>
+                      <td class="p-3 text-sm text-gray-800">{{ item.todate || '-' }}</td>
+                      <td class="p-3 text-sm text-gray-800">₹{{ item.imprest || '0' }}</td>
+                      <td class="p-3 text-sm text-gray-800">{{ item.imprestFor || '-' }}</td>
+                      <td class="p-3 text-sm">
+                        <span *ngIf="item.Status"
+                          [class]="item.Status === 'Approved' ? 'text-green-600 font-medium' : item.Status === 'Reject' ? 'text-red-600 font-medium' : 'text-gray-600'">
+                          {{ item.Status }}
+                        </span>
+                        <span *ngIf="!item.Status" class="text-gray-400">Pending</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-drawer>
+
+    <div *ngIf="showAdminHistoryModal" style="
+      margin-bottom: 10px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    ">
+      <div style="
+        background: #f4f7fb;
+        padding: 3rem;
+        border-radius: 20px;
+        width: 80vw;
+        max-width: 1400px;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        overflow-x: auto;
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-weight: 700; font-size: 1.8rem; color: #0f6cbd">
+            Details
+          </h2>
+          <button (click)="closeAccessoryModal()" style="
+            background: transparent;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+          ">
+            &times;
+          </button>
+        </div>
+        <table style="width: 100%; overflow: auto" class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th style="text-align: center">S.no</th>
+              <th style="text-align: center">Ticket</th>
+              <th style="text-align: center">Source</th>
+              <th style="text-align: center">Destination</th>
+              <th style="text-align: center">Travel Mode</th>
+              <th style="text-align: center">Accomodation</th>
+              <th style="text-align: center">Accomodation Details</th>
+              <th style="text-align: center">Car Number</th>
+              <th style="text-align: center">Driver Number</th>
+              <th style="text-align: center">Driver Name</th>
+              <th style="text-align: center">Remarks</th>
+              <th style="text-align: center">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let data of selectedItem.ticketDetails; let i = index">
+              <td style="text-align: center">{{ i + 1 }}</td>
+              <td style="text-align: center">
+                <ng-container *ngIf="data.ticketImage; else noTicket">
+                  <i class="fa fa-image" style="cursor: pointer" (click)="viewAttachment(data.ticketImage)"></i>
+                </ng-container>
+                <ng-template #noTicket></ng-template>
+              </td>
+              <td style="text-align: center">{{ data.source }}</td>
+              <td style="text-align: center">{{ data.destination }}</td>
+              <td style="text-align: center">{{ data.travelBy }}</td>
+              <td style="text-align: center">
+                <ng-container *ngIf="data.accomodationImage; else noAccom">
+                  <i class="fa fa-image" style="cursor: pointer" (click)="viewAttachment(data.accomodationImage)"></i>
+                </ng-container>
+                <ng-template #noAccom></ng-template>
+              </td>
+              <td style="text-align: center">{{ data.accomodationDetails }}</td>
+              <td style="text-align: center">{{ data.carNumber }}</td>
+              <td style="text-align: center">{{ data.driverNumber }}</td>
+              <td style="text-align: center">{{ data.driverName }}</td>
+              <td style="
+                white-space: normal;
+                word-break: break-word;
+                max-width: 300px;
+              ">
+                {{ data.remarks }}
+              </td>
+              <td style="text-align: center">{{ data.date | date : 'dd-MMM-yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="showFinanceHistoryModal" style="
+      margin-bottom: 10px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    ">
+      <div style="
+          background: #f4f7fb;
+          padding: 3rem;
+          border-radius: 20px;
+          width: 80vw;
+          max-width: 1200px;
+          box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        ">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-weight: 700; font-size: 1.8rem; color: #0f6cbd">
+            Details
+          </h2>
+          <button (click)="closeAccessoryModal()" style="
+              background: transparent;
+              border: none;
+              font-size: 2rem;
+              cursor: pointer;
+              color: #666;
+            ">
+            &times;
+          </button>
+        </div>
+        <table style="width: 100%; overflow: auto" class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th style="text-align: center">S.no</th>
+              <th style="text-align: center">Amount</th>
+              <th style="text-align: center">Remarks</th>
+              <th style="text-align: center">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let data of selectedItem.disbursedDetails; let i = index">
+              <td style="text-align: center">{{ i + 1 }}</td>
+              <td style="text-align: center">{{ data.amount }}</td>
+              <td style="
+                  white-space: normal;
+                  word-break: break-word;
+                  max-width: 300px;
+                ">
+                {{ data.remarks }}
+              </td>
+              <td style="text-align: center">{{ data.date | date : 'dd-MMM-yyyy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <ng-template #dataDialogTemplate1>
+      <form>
+        <div mat-dialog-content class="mat-typography mat-content approval-content">
+          <div class="mat-title">
+            <h2 mat-dialog-title> Reimbursement Data ({{ selectedItem?.SerialNo || 'N/A' }})</h2>
+            <button class="close" (click)="closeDataDialog()"><span class="white">×</span> </button>
+          </div>
+
+          <div class="dialog-content">
+            <table class="table table-bordered approval-table" style="margin-top: 15px;">
+              <tbody>
+                <tr>
+                  <th>Serial No</th>
+                  <td>{{ selectedItem?.SerialNo || 'N/A' }}</td>
+                  <th>Employee Name</th>
+                  <td>{{ selectedItem?.empName }}</td>
+                </tr>
+                <tr>
+                  <th>Employee ID</th>
+                  <td>{{ selectedItem?.EmpId }}</td>
+                  <th>Department</th>
+                  <td>{{ selectedItem?.department }}</td>
+                </tr>
+                <tr>
+                  <th>Designation</th>
+                  <td>{{ selectedItem?.designation }}</td>
+                  <th>Organization</th>
+                  <td>{{ selectedItem?.Organization }}</td>
+                </tr>
+                <tr>
+                  <th>Expense Type</th>
+                  <td>{{ selectedItem?.expanseType }}</td>
+                  <th>Travel From</th>
+                  <td>{{ selectedItem?.travelFrom }}</td>
+                </tr>
+                <tr>
+                  <th>Travel To</th>
+                  <td>{{ selectedItem?.travelTo }}</td>
+                  <th>From Date</th>
+                  <td>{{ selectedItem?.fromDate | date: 'yyyy-MM-dd' }}</td>
+                </tr>
+                <tr>
+                  <th>To Date</th>
+                  <td>{{ selectedItem?.toDate | date: 'yyyy-MM-dd' }}</td>
+                  <th>Imprest</th>
+                  <td>{{ selectedItem?.Imprest }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="row" *ngIf="conveyanceChildData.length">
+              <div class="col-md-12">
+                <h3>Conveyance</h3>
+                <div class="table-responsive">
+                  <table class="table table-bordered approval-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Fare/ Conveyance</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Travel By</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Prev Approved Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Approved Amount</th>
+                        <th style="width: 150px; min-width: 150px; max-width: 150px;">Remark</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Details</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Travel From</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Travel To</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">From Date</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">To Date</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Start Meter Reading</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">End Meter Reading</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Total Km</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Attachment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of conveyanceChildData; let i = index">
+                        <td>{{ item.expanseType }}</td>
+                        <td>{{ item.travelBy }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.savedAmount }}</td>
+                        <td>
+                          <input type="text" class="form-control" [value]="item?.approvedAmount" appOnlyNumber
+                            disabled />
+                        </td>
+                        <td>
+                          <input type="text" class="form-control"
+                            [value]="item?.approvalRemarks ? item.approvalRemarks : ''" disabled />
+                        </td>
+                        <td>{{ item.text }}</td>
+                        <td>{{ item.travelFrom }}</td>
+                        <td>{{ item.travelTo }}</td>
+                        <td>{{ item.fromDate }}</td>
+                        <td>{{ item.toDate }}</td>
+                        <td>{{ item.startMeterRead }}</td>
+                        <td>{{ item.endMeterRead }}</td>
+                        <td>{{ item.totalKm }}</td>
+                        <td>
+                          <button [disabled]="!item.attachment" type="button" class="btn-link"
+                            (click)="viewAttachment(item.attachment)">
+                            <i class="fa fa-eye" style="font-size: 24px;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" *ngIf="lodgingChildData.length">
+              <div class="col-md-12">
+                <h3>Lodging</h3>
+                <div class="table-responsive">
+                  <table class="table table-bordered approval-table">
+                    <thead>
+                      <tr>
+                        <th>Hotel Name</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Prev Approved Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Approved Amount</th>
+                        <th style="width: 150px; min-width: 150px; max-width: 150px;">Remark</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">From Date</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">To Date</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Attachment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of lodgingChildData; let i = index">
+                        <td>{{ item.text }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.savedAmount }}</td>
+                        <td>
+                          <input type="text" class="form-control" [value]="item?.approvedAmount" appOnlyNumber
+                            disabled />
+                        </td>
+                        <td>
+                          <input type="text" class="form-control"
+                            [value]="item?.approvalRemarks ? item.approvalRemarks : ''" disabled />
+                        </td>
+                        <td>{{ item.fromDate }}</td>
+                        <td>{{ item.toDate }}</td>
+                        <td>
+                          <button [disabled]="!item.attachment" type="button" class="btn-link"
+                            (click)="viewAttachment(item.attachment)">
+                            <i class="fa fa-eye" style="font-size: 24px;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" *ngIf="foodExpChildData.length">
+              <div class="col-md-12">
+                <h3>Food</h3>
+                <div class="table-responsive">
+                  <table class="table table-bordered approval-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Food Type</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Prev Approved Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Approved Amount</th>
+                        <th style="width: 150px; min-width: 150px; max-width: 150px;">Remark</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Date</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Attachment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of foodExpChildData; let i = index">
+                        <td>{{ item.text }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.savedAmount }}</td>
+                        <td>
+                          <input type="text" class="form-control" [value]="item?.approvedAmount" appOnlyNumber
+                            disabled />
+                        </td>
+                        <td>
+                          <input type="text" class="form-control"
+                            [value]="item?.approvalRemarks ? item.approvalRemarks : ''" disabled />
+                        </td>
+                        <td>{{ item.expenseDate | date: 'dd-MM-yyyy' }}</td>
+                        <td>
+                          <button [disabled]="!item.attachment" type="button" class="btn-link"
+                            (click)="viewAttachment(item.attachment)">
+                            <i class="fa fa-eye" style="font-size: 24px;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" *ngIf="laundryChildData.length">
+              <div class="col-md-12">
+                <h3>Laundry</h3>
+                <div class="table-responsive">
+                  <table class="table table-bordered approval-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">No of cloths</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Prev Approved Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Approved Amount</th>
+                        <th style="width: 150px; min-width: 150px; max-width: 150px;">Remark</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Date</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Attachment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of laundryChildData; let i = index">
+                        <td>{{ item.text }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.savedAmount }}</td>
+                        <td>
+                          <input type="text" class="form-control" [value]="item?.approvedAmount" appOnlyNumber
+                            disabled />
+                        </td>
+                        <td>
+                          <input type="text" class="form-control"
+                            [value]="item?.approvalRemarks ? item.approvalRemarks : ''" disabled />
+                        </td>
+                        <td>{{ item.expenseDate | date: 'dd-MM-yyyy' }}</td>
+                        <td>
+                          <button [disabled]="!item.attachment" type="button" class="btn-link"
+                            (click)="viewAttachment(item.attachment)">
+                            <i class="fa fa-eye" style="font-size: 24px;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" *ngIf="otherExpenseChildData.length">
+              <div class="col-md-12">
+                <h3>Other</h3>
+                <div class="table-responsive">
+                  <table class="table table-bordered approval-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Expense Name</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Prev Approved Amount</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Approved Amount</th>
+                        <th style="width: 150px; min-width: 150px; max-width: 150px;">Remark</th>
+                        <th style="width: 90px; min-width: 90px; max-width: 90px;">Date</th>
+                        <th style="width: 100px; min-width: 100px; max-width: 100px;">Attachment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of otherExpenseChildData; let i = index">
+                        <td>{{ item.text }}</td>
+                        <td>{{ item.amount }}</td>
+                        <td>{{ item.savedAmount }}</td>
+                        <td>
+                          <input type="text" class="form-control" [value]="item?.approvedAmount" appOnlyNumber
+                            disabled />
+                        </td>
+                        <td>
+                          <input type="text" class="form-control"
+                            [value]="item?.approvalRemarks ? item.approvalRemarks : ''" disabled />
+                        </td>
+                        <td>{{ item.expenseDate | date: 'dd-MM-yyyy' }}</td>
+                        <td>
+                          <button [disabled]="!item.attachment" type="button" class="btn-link"
+                            (click)="viewAttachment(item.attachment)">
+                            <i class="fa fa-eye" style="font-size: 24px;"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </ng-template>
+
+    <ng-template #dataDialogTemplate3 let-dialogData>
+      <div class="dialog-container">
+        <div class="mat-title">
+          <h2 mat-dialog-title>Imprest History ({{ dialogData.selectedItem?.reqNo || 'N/A' }})</h2>
+          <button class="close" (click)="closeDataDialog()">
+            <span class="white">×</span>
+          </button>
+        </div>
+
+        <div class="dialog-content">
+          <div *ngIf="dialogData.history && dialogData.history.length > 0; else noHistory">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>S.no</th>
+                  <th>To Date</th>
+                  <th>Imprest</th>
+                  <th>Approved Imprest</th>
+                  <th>Imprest For</th>
+                  <th>Status</th>
+                  <th>Remarks</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of dialogData.history; let i = index"
+                  [class.disabled-row]="item.originalStatus === 'Approved' || item.originalStatus === 'Reject'">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ item.todate | date: 'yyyy-MM-dd' }}</td>
+                  <td>{{ item.imprest }}</td>
+                  <td>
+                    <input type="text" [(ngModel)]="item.approvedImprest" maxlength="18" style="width: 100%;"
+                      [disabled]="item.imprestFor === 'Initial' || item.originalStatus === 'Approved' || item.originalStatus === 'Reject'"
+                      (keypress)="allowOnlyNumbers($event)" />
+                  </td>
+                  <td>{{ item.imprestFor }}</td>
+                  <td>
+                    <select [(ngModel)]="item.Status" style="width: 100%;"
+                      [disabled]="item.imprestFor === 'Initial' || item.originalStatus === 'Approved' || item.originalStatus === 'Reject'">
+                      <option value="">Select Status</option> <!-- Changed to value="" for better empty binding -->
+                      <option value="Approved">Approved</option>
+                      <option value="Reject">Reject</option>
+                    </select>
+                  </td>
+                  <td>
+                    <textarea [(ngModel)]="item.approvalRemarks" rows="1" maxlength="500" style="width: 100%;"
+                      [disabled]="item.originalStatus === 'Approved' || item.originalStatus === 'Reject'">
+                  </textarea>
+                  </td>
+                  <td>
+                    <button mat-raised-button color="primary" (click)="extendedimprestSubmit(item)"
+                      [disabled]="item.imprestFor === 'Initial' || item.originalStatus === 'Approved' || item.originalStatus === 'Reject'">
+                      Submit
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #noHistory>
+            <p>No history available.</p>
+          </ng-template>
+        </div>
+      </div>
+    </ng-template>

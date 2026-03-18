@@ -1,0 +1,1336 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border-b border-gray-200">
+        <div class="mb-3 sm:mb-0">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+        </div>
+        <div class="flex items-center space-x-2">
+            <p-button (click)="showDialog('add')" label="Add Quotation" icon="pi pi-plus"
+                styleClass="orange-button p-button-warning" [raised]="true"></p-button>
+        </div>
+    </div>
+
+    <!-- Templates for Table -->
+    <ng-template #actionTemplateRef let-item>
+        <div class="flex items-center justify-center">
+            <button type="button" class="p-button-text p-button-rounded p-button-sm cursor-pointer"
+                (click)="act.toggle($event)">
+                <i class="pi pi-ellipsis-v text-lg"></i>
+            </button>
+            <p-popover #act [style]="{width:'130px'}">
+                <div class="flex flex-col">
+                    <button class="p-2 text-left hover:bg-gray-100 flex items-center"
+                        (click)="showDialog('view', item); act.hide()">
+                        <i class="pi pi-eye mr-2 text-blue-500"></i> View
+                    </button>
+                    <button class="p-2 text-left hover:bg-gray-100 flex items-center"
+                        (click)="showDialog('update', item); act.hide()" [disabled]="item.canUpdate == '0'">
+                        <i class="pi pi-pencil mr-2 text-green-500"></i> Edit
+                    </button>
+                </div>
+            </p-popover>
+        </div>
+    </ng-template>
+
+    <ng-template #itemDetailsTemplateRef let-item>
+        <button type="button" pButton icon="pi pi-folder-open" (click)="openDetail(item.itemDetails, 'Item Details')"
+            class="p-button-rounded p-button-text p-button-info" pTooltip="View Item Details" tooltipPosition="top">
+        </button>
+    </ng-template>
+    
+    <ng-template #discountDetailsTemplateRef let-item>
+        <button type="button" pButton icon="pi pi-percentage" (click)="openDetail(item.discountDetails, 'Discount Details')"
+            class="p-button-rounded p-button-text p-button-warning" pTooltip="View Discount Details" tooltipPosition="top">
+        </button>
+    </ng-template>
+
+    <ng-template #taxDetailsTemplateRef let-item>
+        <button type="button" pButton icon="pi pi-dollar" (click)="openDetail(item.taxDetails, 'Tax Details')"
+            class="p-button-rounded p-button-text p-button-danger" pTooltip="View Tax Details" tooltipPosition="top">
+        </button>
+    </ng-template>
+
+    <ng-template #otherChargesTemplateRef let-item>
+        <button type="button" pButton icon="pi pi-money-bill" (click)="openDetail(item.otherChargeDetails, 'Other Charges Details')"
+            class="p-button-rounded p-button-text p-button-help" pTooltip="View Other Charges" tooltipPosition="top">
+        </button>
+    </ng-template>
+
+    <ng-template #printTemplateRef let-item>
+        <button type="button" pButton icon="pi pi-print" (click)="printOpportunity(item)" 
+            [disabled]="printingId === item.id"
+            class="p-button-rounded p-button-text p-button-secondary" pTooltip="Print" tooltipPosition="top">
+        </button>
+    </ng-template>
+
+    <!-- Table -->
+    <app-table-template [columns]="columns" [data]="allViewTableData" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)" (searchChange)="onSearchChange($event)"
+        [actionTemplate]="actionTemplateRef"
+        [jsonTemplate]="itemDetailsTemplateRef"
+        [jsonTemplate1]="discountDetailsTemplateRef"
+        [jsonTemplate2]="taxDetailsTemplateRef"
+        [jsonTemplate3]="otherChargesTemplateRef"
+        [jsonTemplate4]="printTemplateRef">
+        <ng-template pTemplate="prepend" let-row let-ri="rowIndex">
+            <td class="text-center text-sm text-gray-700">{{ (pageNo - 1) * pageSize + ri + 1 }}</td>
+        </ng-template>
+    </app-table-template>
+
+    <!-- Main Drawer for Add/Update/View -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [dismissible]="false" [style]="{width:'75vw'}"
+        (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-xl">{{ header }}</span>
+                <i [ngClass]="headerIcon" class="text-blue-500"></i>
+            </div>
+        </ng-template>
+
+        <div class="h-full flex flex-col justify-between">
+            <div class="flex-grow overflow-y-auto p-4" [formGroup]="crmQuotationForm">
+                <!-- Quotation Details -->
+                <div class="bg-white shadow-sm rounded-md overflow-hidden mb-4">
+                    <div class="flex justify-between items-center bg-indigo-50 px-4 py-3 cursor-pointer"
+                        (click)="toggle('showOpportunity')">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i> Quotation Details
+                        </h4>
+                        <i [class]="showOpportunity ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                            class="text-indigo-600"></i>
+                    </div>
+                    <div *ngIf="showOpportunity">
+                        <div class="grid md:grid-cols-2 gap-4 p-4">
+                            <!-- Subject -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Subject <em
+                                        class="text-red-500">*</em></label>
+                                <input pInputText formControlName="subject" class="w-full" maxlength="200"
+                                    placeholder="Enter subject"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('subject', crmQuotationForm)}"
+                                    [readonly]="postType === 'view' || postType === 'update'">
+                                <small class="text-red-500 text-xs mt-1 block" 
+                                       *ngIf="isInvalid('subject', crmQuotationForm) && !crmQuotationForm.get('subject')?.errors?.['required'] && crmQuotationForm.get('subject')?.errors?.['whitespace']">
+                                    Subject cannot be just whitespace
+                                </small>
+                            </div>
+                            
+                            <!-- Opportunity Type -->
+                            
+                            
+                            <!-- Customer Type -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Customer Type <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="customerType" 
+                                    [options]="customerTypeDrop" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    appendTo="body" 
+                                    (onChange)="onCustomerTypeChange()"
+                                    placeholder="Select customer type" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('customerType', crmQuotationForm)}"
+                                    [disabled]="postType === 'view' || postType === 'update'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('customerType', crmQuotationForm)">Please select a customer type</small>
+                            </div>
+                            
+                            <!-- Customer -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Customer <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="customer" 
+                                    [options]="customerTableData"
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    [virtualScroll]="true" 
+                                    [virtualScrollItemSize]="38" 
+                                    appendTo="body"
+                                    (onChange)="onCustomerChange($event)"
+                                    placeholder="Select customer" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('customer', crmQuotationForm)}"
+                                    [disabled]="postType === 'view' || postType === 'update'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('customer', crmQuotationForm)">Please select a customer</small>
+                            </div>
+                            
+                            <!-- Customer Address -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Customer Address <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="customerAddress" 
+                                    [options]="customerAddressDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    appendTo="body" 
+                                    (onChange)="onCustomerAddressChange()"
+                                    placeholder="Select customer address" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('customerAddress', crmQuotationForm)}"
+                                    [disabled]="postType === 'view'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('customerAddress', crmQuotationForm)">Please select a customer address</small>
+                            </div>
+
+                            <!-- Contact -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Contact Details <em class="text-red-500">*</em></label>
+                                <div class="flex items-center gap-2">
+                                    <p-progressSpinner *ngIf="loadingContact" styleClass="w-4 h-4"></p-progressSpinner>
+                                    <p-select 
+                                        formControlName="contact" 
+                                        [options]="contactDrp" 
+                                        optionLabel="drpOption"
+                                        optionValue="drpValue" 
+                                        [filter]="true" 
+                                        [showClear]="true" 
+                                        appendTo="body"
+                                        placeholder="Select contact" 
+                                        class="w-full flex-grow"
+                                        [ngClass]="{'ng-invalid ng-dirty': isInvalid('contact', crmQuotationForm)}"
+                                        [disabled]="postType === 'view'">
+                                    </p-select>
+                                </div>
+                                <small class="text-red-500" *ngIf="isInvalid('contact', crmQuotationForm)">Please select a contact</small>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Source <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="source"
+                                    [options]="sourceTableData" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    appendTo="body" 
+                                    placeholder="Select source" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('source', crmQuotationForm)}"
+                                    [disabled]="postType === 'view'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('source', crmQuotationForm)">Please select source</small>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Opportunity Type <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="opportunityType" 
+                                    [options]="opportunityTypeDrop" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    appendTo="body" 
+                                    (onChange)="onOpportunityTypeChange($event)"
+                                    placeholder="Select opportunity type" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('opportunityType', crmQuotationForm)}"
+                                    [disabled]="postType === 'view' || postType === 'update'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('opportunityType', crmQuotationForm)">Please select an opportunity type</small>
+                            </div>
+
+                            <div *ngIf="(crmQuotationForm.get('opportunityType')?.value) && +crmQuotationForm.get('opportunityType')?.value !== 10000">
+                                <label class="text-xs font-medium mb-1 block">Opportunity Details <em class="text-red-500">*</em></label>
+                                <div class="flex items-center gap-2">
+                                    <p-progressSpinner *ngIf="loadingOpportunity" styleClass="w-4 h-4"></p-progressSpinner>
+                                    <p-select 
+                                        formControlName="opportunityId" 
+                                        [options]="opportunityDrp"
+                                        optionLabel="drpOption" 
+                                        optionValue="drpValue" 
+                                        [filter]="true" 
+                                        [showClear]="true"
+                                        appendTo="body" 
+                                        (onChange)="getContactAddData()" 
+                                        placeholder="Select opportunity"
+                                        class="w-full flex-grow"
+                                        [ngClass]="{'ng-invalid ng-dirty': isInvalid('opportunityId', crmQuotationForm)}">
+                                    </p-select>
+                                </div>
+                                <small class="text-red-500" *ngIf="isInvalid('opportunityId', crmQuotationForm)">Please select an opportunity</small>
+                            </div>
+
+                            <!-- Source -->
+                            
+                            
+                            <!-- Assigned To -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Assigned To <em class="text-red-500">*</em></label>
+                                <p-select 
+                                    formControlName="assignedTo"
+                                    [options]="AssignedTo" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true" 
+                                    [showClear]="true"
+                                    appendTo="body" 
+                                    placeholder="Select assigned to" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('assignedTo', crmQuotationForm)}"
+                                    [disabled]="postType === 'view'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('assignedTo', crmQuotationForm)">Please select assigned to</small>
+                            </div>
+                                                        
+                            <!-- Opportunity Details (for non-direct) -->
+
+                                                        
+                            <!-- Valid Till -->
+                            <div>
+                                <label class="text-xs font-medium mb-1 block">Valid Till <em class="text-red-500">*</em></label>
+                                <p-datepicker 
+                                    formControlName="date" 
+                                    [iconDisplay]="'input'"  
+                                    inputStyleClass="w-full" 
+                                    [showIcon]="true"
+                                    appendTo="body" 
+                                    dateFormat="yy-mm-dd" 
+                                    placeholder="Select date" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('date', crmQuotationForm)}"
+                                    [minDate]="currentDate" 
+                                    [disabled]="postType === 'view'">
+                                </p-datepicker>
+                                <small class="text-red-500" *ngIf="isInvalid('date', crmQuotationForm)">Please select a valid date</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+  
+                <div *ngIf="(priceListTableData && priceListTableData.length) || (itemsDetailsChildData && itemsDetailsChildData.length)" class="bg-white shadow-sm rounded-md overflow-hidden mb-4">
+                    <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                        (click)="toggle('showAddress')">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i class="pi pi-map-marker text-purple-600"></i> Address Details
+                        </h4>
+                        <i [class]="showAddress ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                    </div>
+                    <div *ngIf="showAddress" class="p-4 grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium mb-1 block">Billing Address</label>
+                            <input pInputText formControlName="billingAddress" class="w-full" [readonly]="true">
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium mb-1 block">Shipping Address</label>
+                            <input pInputText formControlName="shippingAdd" class="w-full" [readonly]="true">
+                        </div>
+                    </div>
+                </div>
+
+
+
+                  <div *ngIf="crmQuotationForm.get('opportunityType')?.value == 10000 && showItemDetailsForm">
+                      <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                          (click)="toggle('showItems')">
+                          <h4 class="text-sm font-semibold flex items-center gap-2">
+                              <i class="pi pi-shopping-bag text-purple-600"></i> Item Details
+                          </h4>
+                          <i [class]="showItems ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                      </div>
+                  
+                      <div *ngIf="showItems" class="p-4">
+       
+                          <div *ngIf="postType !== 'view'" class="flex justify-between items-center mb-4">
+                              <div><label class="text-sm font-medium">Price List</label></div>
+                              <div>
+                                  <p-button type="button" icon="pi pi-toggle-off"
+                                      [label]="showChargesSection ? 'Hide Charges' : 'Show Charges'"
+                                      severity="info" (click)="toggleChargesSection()"
+                                      styleClass="p-button-sm ml-2"></p-button>
+                              </div>
+                          </div>
+                  
+                          <form *ngIf="postType !== 'view'"
+                                [formGroup]="itemsDetails"
+                                class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 border-b pb-4">
+                  
+                              <div>
+                                  <label class="block text-sm font-medium mb-1">Price List *</label>
+                                  <p-select
+                                      [options]="priceListTableData"
+                                      optionLabel="drpOption"
+                                      optionValue="drpValue"
+                                      [filter]="true"
+                                      [showClear]="true"
+                                      appendTo="body"
+                                      (onChange)="onPriceListChange($event)"
+                                      formControlName="priceList"
+                                      class="w-full">
+                                  </p-select>
+                                  
+                              </div>
+                  
+                              <div>
+                                  <label class="block text-sm font-medium mb-1">Item *</label>
+                                  <p-select
+                                      [options]="itemListTableDataArray"
+                                      optionLabel="drpOption"
+                                      optionValue="drpValue"
+                                      [filter]="true"
+                                      [showClear]="true"
+                                      appendTo="body"
+                                      formControlName="item"
+                                      class="w-full"
+                                      (onChange)="getUnitPrice($event)">
+                                  </p-select>
+                                  
+                              </div>
+                  
+                              <div>
+                                  <label class="block text-sm font-medium mb-1">Quantity *</label>
+                                  <input pInputText type="number" formControlName="quantity"
+                                      (change)="totalPriceVal($event)" class="w-full"
+                                      (input)="calculateTotal()" min="1">
+                                  <small class="text-red-500" *ngIf="isInvalid('quantity', itemsDetails)">
+                                      Quantity is required
+                                  </small>
+                              </div>
+                  
+                              <div>
+                                  <label class="block text-sm font-medium mb-1">Unit Price</label>
+                                  <input pInputText formControlName="unitPrice" class="w-full bg-gray-100" type="number" readonly>
+                              </div>
+                  
+                              <div *ngIf="isTaxItemWise">
+                                  <label class="block text-sm font-medium mb-1">Tax</label>
+                                  <p-multiSelect
+                                      [options]="itemTaxDrp" optionLabel="drpOption" optionValue="drpValue"
+                                      formControlName="tax" placeholder="Select Tax"
+                                      [filter]="true" appendTo="body" styleClass="w-full">
+                                  </p-multiSelect>
+                              </div>
+                              <div *ngIf="!isTaxItemWise && itemTaxDrp.length > 0">
+                                  <label class="block text-sm font-medium mb-1">Tax (Order Wise)</label>
+                                  <input pInputText [value]="getConcatenatedTaxes()" class="w-full bg-gray-100" readonly>
+                              </div>
+                  
+                              <div *ngIf="isDiscountItemWise">
+                                  <label class="block text-sm font-medium mb-1">Discount (%)</label>
+                                  <p-select
+                                      [options]="itemDiscountDrp" optionLabel="drpOption" optionValue="drpValue"
+                                      formControlName="discount" placeholder="Select Discount"
+                                      [filter]="true" [showClear]="true" appendTo="body" styleClass="w-full">
+                                  </p-select>
+                              </div>
+                              <div *ngIf="!isDiscountItemWise && itemDiscountDrp.length > 0">
+                                  <label class="block text-sm font-medium mb-1">Discount (Order Wise)</label>
+                                  <input pInputText [value]="getConcatenatedDiscounts()" class="w-full bg-gray-100" readonly>
+                              </div>
+                  
+                              <div>
+                                  <label class="block text-sm font-medium mb-1">Total Price</label>
+                                  <input pInputText formControlName="totalPrice" class="w-full bg-gray-100" type="number" readonly>
+                              </div>
+                  
+                              <div class="md:col-span-3 flex justify-end">
+                                  <p-button label="Add Item" icon="pi pi-plus"
+                                      (click)="AddRow('itemsDetails')"
+                                      styleClass="p-button-sm" severity="primary">
+                                  </p-button>
+                              </div>
+                          </form>
+                  
+                          <div *ngIf="itemsDetailsChildData.length > 0" class="mt-4">
+                              <p-table [value]="itemsDetailsChildData"
+                                  styleClass="p-datatable-sm p-datatable-gridlines"
+                                  [tableStyle]="{'min-width': '50rem'}">
+                                  <ng-template pTemplate="header">
+                                      <tr class="bg-gray-50 text-sm">
+                                          <th class="w-[50px]">S.No</th>
+                                          <th>Item</th>
+                                          <th>Details</th>
+                                          <th class="text-right">Qty</th>
+                                          <th class="text-right">Unit Price</th>
+                                          <th *ngIf="itemTaxDrp.length > 0">Tax</th>
+                                          <th *ngIf="itemDiscountDrp.length > 0">Discount</th>
+                                          <th class="text-right">Total Price</th>
+                                          <th *ngIf="postType !== 'view'" class="w-[80px] text-center">Action</th>
+                                      </tr>
+                                  </ng-template>
+                                  <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                      <tr class="text-sm">
+                                          <td>{{i + 1}}</td>
+                                          <td>{{item.material || item.itemVal}}</td>
+                                          <td>{{item.itemDetail}}</td>
+                                          <td class="text-right">{{item.quantity || item.itemQty}}</td>
+                                          <td class="text-right">{{(item.unitPrice || item.itemUnitPrice) | currency:'INR'}}</td>
+                  
+                                          <td *ngIf="itemTaxDrp.length > 0">
+                                              <span *ngIf="isTaxItemWise">
+                                                  <span *ngIf="item.itemTax && item.itemTax.length > 0">
+                                                      {{ getConcatenatedTaxesForItem(item.itemTax) }}
+                                                  </span>
+                                                  <span *ngIf="!item.itemTax || item.itemTax.length === 0">-</span>
+                                              </span>
+                                              <span *ngIf="!isTaxItemWise">{{ getConcatenatedTaxes() }}</span>
+                                          </td>
+                  
+                                          <td *ngIf="itemDiscountDrp.length > 0">
+                                              <span *ngIf="isDiscountItemWise">
+                                                  <span *ngIf="item.discount">{{ getItemDiscountTextFromArray(item) }}</span>
+                                                  <span *ngIf="!item.discount">-</span>
+                                              </span>
+                                              <span *ngIf="!isDiscountItemWise">{{ getConcatenatedDiscounts() }}</span>
+                                          </td>
+                  
+                                          <td class="text-right font-medium">
+                                              {{(item.totalPrice || item.itemTotalPrice) | currency:'INR'}}
+                                          </td>
+                                          <td *ngIf="postType !== 'view'" class="text-center">
+                                              <button pButton icon="pi pi-trash"
+                                                  class="p-button-text p-button-danger p-button-sm"
+                                                  (click)="deleteChildTableRow(i)">
+                                              </button>
+                                          </td>
+                                      </tr>
+                                  </ng-template>
+                                  <ng-template pTemplate="emptymessage">
+                                      <tr>
+                                          <td [attr.colspan]="getItemTableColspan()" class="text-center p-4 text-gray-500">
+                                              No items added yet.
+                                          </td>
+                                      </tr>
+                                  </ng-template>
+                                  <ng-template pTemplate="footer">
+                                      <tr class="bg-gray-50">
+                                          <td [attr.colspan]="getItemTableFooterColspan()" class="text-right font-semibold">
+                                              <p-button *ngIf="postType !== 'view'"
+                                                  type="button" icon="pi pi-calculator"
+                                                  label="Calculate Grand Total"
+                                                  severity="success" (click)="calculateGrandTotal()"
+                                                  [loading]="isGrandTotalLoading"
+                                                  styleClass="p-button-sm">
+                                              </p-button>
+                                              <span *ngIf="postType === 'view'" class="text-sm font-semibold">Grand Total</span>
+                                          </td>
+                                          <td class="text-right font-bold">
+                                              {{ backendGrandTotal !== null ? (backendGrandTotal | currency:'INR':'symbol') : '--' }}
+                                          </td>
+                                      </tr>
+                                  </ng-template>
+                              </p-table>
+                          </div>
+
+                          <div *ngIf="postType === 'view' && itemsDetailsChildData.length === 0"
+                               class="text-center p-6 text-gray-500">
+                              No items available.
+                          </div>
+                      </div>
+                  </div>
+                  
+                  
+                  
+                <div *ngIf="crmQuotationForm.get('opportunityType')?.value == 10001 && pricelistdetailsform && priceListTableData.length"
+                     class="bg-white shadow-sm rounded-md overflow-hidden mb-4" id="pricelistdata">
+                    <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                      (click)="toggle('showItems')">
+                      <h4 class="text-sm font-semibold flex items-center gap-2">
+                          <i class="pi pi-shopping-bag text-purple-600"></i> Price List
+                      </h4>
+                      <i [class]="showItems ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                  </div>
+              
+                  <div *ngIf="showItems" class="p-4">
+
+                      <div *ngIf="postType !== 'view'" class="flex justify-between items-center mb-4">
+                          <div><label class="text-sm font-medium">Price List</label></div>
+                          <div>
+                              <p-button type="button" icon="pi pi-toggle-off"
+                                  [label]="showChargesSection ? 'Hide Charges' : 'Show Charges'"
+                                  severity="info" (click)="toggleChargesSection()"
+                                  styleClass="p-button-sm ml-2">
+                              </p-button>
+                          </div>
+                      </div>
+              
+                      <p-table [value]="priceListTableData" styleClass="p-datatable-sm p-datatable-gridlines">
+                          <ng-template pTemplate="header">
+                              <tr>
+                                  <th>#</th>
+                                  <th>Item</th>
+                                  <th class="text-center">Quantity</th>
+                                  <th class="text-right">Unit Price</th>
+                                  <th>Tax</th>
+                                  <th>Discount (%)</th>
+                                  <th class="text-right">Total Price</th>
+                              </tr>
+                          </ng-template>
+                          <ng-template pTemplate="body" let-item let-i="rowIndex">
+                              <tr>
+                                  <td>{{i + 1}}</td>
+                                  <td>{{item.item || item.material || item.itemVal || '-'}}</td>
+
+                                  <td class="text-center">
+                                      <input *ngIf="postType !== 'view'" type="number" min="1"
+                                          [(ngModel)]="item.quantity"
+                                          (change)="updateRowData($event, item, 'quantity', i)"
+                                          class="w-20 p-1 text-center border rounded"
+                                          [ngModelOptions]="{standalone: true}">
+                                      <span *ngIf="postType === 'view'">{{item.quantity}}</span>
+                                  </td>
+
+                                  <td class="text-right">
+                                      <input *ngIf="postType !== 'view'" type="number" min="0.01" step="0.01"
+                                          [(ngModel)]="item.unitPrice"
+                                          (change)="updateRowData($event, item, 'unitPrice', i)"
+                                          class="w-28 p-1 text-right border rounded"
+                                          [ngModelOptions]="{standalone: true}">
+                                      <span *ngIf="postType === 'view'">{{item.unitPrice | currency:'INR':'symbol'}}</span>
+                                  </td>
+
+                                  <td>
+                                      <div *ngIf="isTaxItemWise && postType !== 'view'">
+                                          <p-multiSelect [options]="itemTaxDrp" optionLabel="drpOption" optionValue="drpValue"
+                                              [(ngModel)]="item.itemTax" (onChange)="onItemTaxChange(item, i)"
+                                              [ngModelOptions]="{standalone: true}" placeholder="Select Tax"
+                                              [filter]="true" appendTo="body" styleClass="w-full">
+                                          </p-multiSelect>
+                                      </div>
+
+                                      <span *ngIf="postType === 'view' || !isTaxItemWise">
+                                          <span *ngIf="isTaxItemWise && item.itemTax?.length > 0">
+                                              {{ getConcatenatedTaxesForItem(item.itemTax) }}
+                                          </span>
+                                          <span *ngIf="!isTaxItemWise && additionalTaxArray.length">
+                                              {{ getConcatenatedTaxes() }}
+                                          </span>
+                                          <span *ngIf="(!isTaxItemWise && !additionalTaxArray.length) || (isTaxItemWise && !item.itemTax?.length)">
+                                              -
+                                          </span>
+                                      </span>
+                                  </td>
+
+                                  <td>
+                                      <div *ngIf="isDiscountItemWise && postType !== 'view'">
+                                          <p-select [options]="itemDiscountDrp" optionLabel="drpOption" optionValue="drpValue"
+                                              [(ngModel)]="item.discount"
+                                              (onChange)="updateRowData($event, item, 'discount', i)"
+                                              [ngModelOptions]="{standalone: true}" placeholder="Select Discount"
+                                              [filter]="true" appendTo="body" styleClass="w-full">
+                                          </p-select>
+                                      </div>
+                                      <span *ngIf="postType === 'view' || !isDiscountItemWise">
+                                          <span *ngIf="isDiscountItemWise">{{ getItemDiscountText(item) }}</span>
+                                          <span *ngIf="!isDiscountItemWise && discountArray.length">{{ getConcatenatedDiscounts() }}</span>
+                                          <span *ngIf="!isDiscountItemWise && !discountArray.length">-</span>
+                                      </span>
+                                  </td>
+              
+                                  <td class="text-right font-medium">
+                                      {{ (item.quantity * item.unitPrice) | currency:'INR':'symbol' }}
+                                  </td>
+                              </tr>
+                          </ng-template>
+                          <ng-template pTemplate="footer">
+                              <tr class="bg-gray-50">
+                                  <td colspan="6" class="text-right font-semibold">
+                                      <p-button *ngIf="postType !== 'view'"
+                                          type="button" icon="pi pi-calculator"
+                                          label="Calculate Grand Total"
+                                          severity="success" (click)="calculateGrandTotal()"
+                                          [loading]="isGrandTotalLoading"
+                                          styleClass="p-button-sm">
+                                      </p-button>
+                                      <span *ngIf="postType === 'view'" class="text-sm font-semibold">Grand Total</span>
+                                  </td>
+                                  <td class="text-right font-bold">
+                                      {{ backendGrandTotal !== null ? (backendGrandTotal | currency:'INR':'symbol') : '--' }}
+                                  </td>
+                              </tr>
+                          </ng-template>
+                      </p-table>
+                  </div>
+              </div>
+              
+                              
+              <p-dialog 
+                  header="Additional Tax and Other Charges" 
+                  [(visible)]="showChargesSection" 
+                  [modal]="true" 
+                  [style]="{width: '1200px'}" 
+                  [maximizable]="true"
+                  [draggable]="false"
+                  [resizable]="false">
+                  
+                  <p-tabs value="0">
+                    <p-tablist>
+                      <p-tab value="0">
+                        <i class="pi pi-dollar mr-2"></i>
+                        Additional Tax
+                      </p-tab>
+                      <p-tab value="1">
+                        <i class="pi pi-percentage mr-2"></i>
+                        Discount
+                      </p-tab>
+                      <p-tab value="2">
+                        <i class="pi pi-money-bill mr-2"></i>
+                        Other Charges
+                      </p-tab>
+                    </p-tablist>
+
+                    <p-tabpanels>
+                      <!-- Additional Tax Panel -->
+                      <p-tabpanel value="0">
+                        <div class="m-0">
+                          <div *ngIf="postType !== 'view'">
+                            <form [formGroup]="addtionalTaxForm" class="mb-4">
+                              <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Tax For <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="taxFor" 
+                                    [options]="taxForOptions" 
+                                    optionLabel="drpText" 
+                                    optionValue="drpVal" 
+                                    [filter]="true"
+                                    (onChange)="onTaxForChange($event)" 
+                                    placeholder="Select tax for"
+                                    class="w-full" 
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('taxFor', addtionalTaxForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('taxFor', addtionalTaxForm)" class="text-red-500 text-xs mt-1">
+                                    Tax for is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Nature <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="natureId" 
+                                    [options]="natureDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true"
+                                    (onChange)="onSelectNature($event)" 
+                                    placeholder="Select nature"
+                                    class="w-full" 
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('natureId', addtionalTaxForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('natureId', addtionalTaxForm)" class="text-red-500 text-xs mt-1">
+                                    Nature is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Tax <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    appendTo="body"
+                                    formControlName="taxId" 
+                                    [options]="purchaceTaxDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true"
+                                    placeholder="Select tax" 
+                                    class="w-full" 
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('taxId', addtionalTaxForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('taxId', addtionalTaxForm)" class="text-red-500 text-xs mt-1">
+                                    Tax is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Amount</label>
+                                  <input 
+                                    pInputText 
+                                    formControlName="amount" 
+                                    type="number" 
+                                    class="w-full"
+                                    placeholder="Enter amount"
+                                    [disabled]="addtionalTaxForm.get('natureId')?.value !== '10000'">
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Tax Option <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    appendTo="body"
+                                    formControlName="taxOptionId" 
+                                    [options]="taxOptionDrp" 
+                                    optionLabel="drpText" 
+                                    optionValue="drpVal" 
+                                    [filter]="true"
+                                    placeholder="Select tax option" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('taxOptionId', addtionalTaxForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('taxOptionId', addtionalTaxForm)" class="text-red-500 text-xs mt-1">
+                                    Tax option is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Remarks</label>
+                                  <textarea 
+                                    pInputTextarea 
+                                    formControlName="remarks" 
+                                    rows="2" 
+                                    class="w-full resize-none" 
+                                    maxlength="200"
+                                    placeholder="Enter remarks"></textarea>
+                                </div>
+                              </div>
+                              
+                              <div class="mt-4 flex justify-start">
+                                <button 
+                                  pButton 
+                                  type="button" 
+                                  icon="pi pi-plus" 
+                                  label="Add Tax" 
+                                  class="p-button-primary" 
+                                  (click)="AddRow('addtionalTaxForm')"
+                                  [disabled]="addtionalTaxForm.invalid">
+                                </button>
+                              </div>
+                            </form>
+
+                            <!-- Tax Array Table -->
+                            <p-table 
+                              *ngIf="additionalTaxArray.length > 0" 
+                              [value]="additionalTaxArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem', 'margin-top': '20px'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Tax For</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Tax</th>
+                                  <th class="text-sm font-medium">Amount</th>
+                                  <th class="text-sm font-medium">Tax Option</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                  <th class="text-sm font-medium">Action</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.taxForTxt}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.tax}}</td>
+                                  <td class="text-sm">{{item.amount}}</td>
+                                  <td class="text-sm">{{item.taxOption}}</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                  <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                    <button 
+                                      type="button" 
+                                      class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                      (click)="onDeleteRow(i, 'additionalTaxArray', 'addtionalTaxForm', item)">
+                                      <i class="pi pi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                          </div>
+                          
+
+                          <div *ngIf="postType === 'view'">
+                            <p-table 
+                              *ngIf="additionalTaxArray.length > 0" 
+                              [value]="additionalTaxArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Tax For</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Tax</th>
+                                  <th class="text-sm font-medium">Amount</th>
+                                  <th class="text-sm font-medium">Tax Option</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.taxForTxt}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.tax}}</td>
+                                  <td class="text-sm">{{item.amount}}</td>
+                                  <td class="text-sm">{{item.taxOption}}</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                            
+                            <div *ngIf="additionalTaxArray.length === 0" class="text-center p-4 text-gray-500">
+                              No tax details available
+                            </div>
+                          </div>
+                        </div>
+                      </p-tabpanel>
+
+                      <p-tabpanel value="1">
+                        <div class="m-0">
+                          <div *ngIf="postType !== 'view'">
+                            <form [formGroup]="discountForm" class="mb-4">
+                              <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Discount For <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="discountFor" 
+                                    [options]="[{label: 'Item Wise', value: 'Item Wise'}, {label: 'Order Wise', value: 'Order Wise'}]" 
+                                    [filter]="true" 
+                                    placeholder="Select discount for"
+                                    class="w-full" 
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('discountFor', discountForm)}"
+                                    [disabled]="discountForm.get('discountFor')?.disabled ?? false">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('discountFor', discountForm)" class="text-red-500 text-xs mt-1">
+                                    Discount for is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Nature <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="natureId" 
+                                    [options]="natureDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true"
+                                    placeholder="Select nature" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('natureId', discountForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('natureId', discountForm)" class="text-red-500 text-xs mt-1">
+                                    Nature is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Discount (%) <em class="text-red-500">*</em></label>
+                                  <input 
+                                    pInputText 
+                                    formControlName="discount" 
+                                    type="number" 
+                                    maxlength="3"
+                                    placeholder="Enter discount percentage"
+                                    class="w-full" 
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('discount', discountForm)}">
+                                  <p *ngIf="isInvalid('discount', discountForm)" class="text-red-500 text-xs mt-1">
+                                    Discount is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Discount Option <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="DiscountOptionId" 
+                                    [options]="taxOptionDrp" 
+                                    optionLabel="drpText" 
+                                    optionValue="drpVal" 
+                                    [filter]="true"
+                                    placeholder="Select discount option" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('DiscountOptionId', discountForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('DiscountOptionId', discountForm)" class="text-red-500 text-xs mt-1">
+                                    Discount option is required
+                                  </p>
+                                </div>
+                                
+                                <div class="md:col-span-2">
+                                  <label class="text-xs font-medium mb-1 block">Remarks</label>
+                                  <textarea 
+                                    pInputTextarea 
+                                    formControlName="remarks" 
+                                    rows="2" 
+                                    class="w-full resize-none" 
+                                    maxlength="200"
+                                    placeholder="Enter remarks"></textarea>
+                                </div>
+                              </div>
+                              
+                              <div class="mt-4 flex justify-start">
+                                <button 
+                                  pButton 
+                                  type="button" 
+                                  icon="pi pi-plus" 
+                                  label="Add Discount" 
+                                  class="p-button-primary" 
+                                  (click)="AddRow('discountForm')"
+                                  [disabled]="discountForm.invalid">
+                                </button>
+                              </div>
+                            </form>
+
+                            <p-table 
+                              *ngIf="discountArray.length > 0" 
+                              [value]="discountArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem', 'margin-top': '20px'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Discount For</th>
+                                  <th class="text-sm font-medium">Discount Option</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Discount (%)</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                  <th class="text-sm font-medium">Action</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.discountFor}}</td>
+                                  <td class="text-sm">{{item.OptionIdtext}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.discount}}%</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                  <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                    <button 
+                                      type="button" 
+                                      class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                      (click)="onDeleteRow(i, 'discountArray', 'discountForm', item)">
+                                      <i class="pi pi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                          </div>
+                          
+
+                          <div *ngIf="postType === 'view'">
+                            <p-table 
+                              *ngIf="discountArray.length > 0" 
+                              [value]="discountArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Discount For</th>
+                                  <th class="text-sm font-medium">Discount Option</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Discount (%)</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.discountFor}}</td>
+                                  <td class="text-sm">{{item.OptionIdtext}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.discount}}%</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                            
+                            <div *ngIf="discountArray.length === 0" class="text-center p-4 text-gray-500">
+                              No discount details available
+                            </div>
+                          </div>
+                        </div>
+                      </p-tabpanel>
+
+                      <p-tabpanel value="2">
+                        <div class="m-0">
+                          <div *ngIf="postType !== 'view'">
+                            <form [formGroup]="otherChargesForm" class="mb-4">
+                              <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Charges Type <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="chargesTypeId" 
+                                    [options]="chargeTypeDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true"
+                                    placeholder="Select charges type" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('chargesTypeId', otherChargesForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('chargesTypeId', otherChargesForm)" class="text-red-500 text-xs mt-1">
+                                    Charges type is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Nature <em class="text-red-500">*</em></label>
+                                  <p-select 
+                                    formControlName="natureId" 
+                                    [options]="natureDrp" 
+                                    optionLabel="drpOption" 
+                                    optionValue="drpValue" 
+                                    [filter]="true"
+                                    placeholder="Select nature" 
+                                    class="w-full"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('natureId', otherChargesForm)}">
+                                  </p-select>
+                                  <p *ngIf="isInvalid('natureId', otherChargesForm)" class="text-red-500 text-xs mt-1">
+                                    Nature is required
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label class="text-xs font-medium mb-1 block">Amount <em class="text-red-500">*</em></label>
+                                  <input 
+                                    pInputText 
+                                    formControlName="chargeValue" 
+                                    type="number" 
+                                    class="w-full"
+                                    placeholder="Enter amount"
+                                    [ngClass]="{'ng-invalid ng-dirty': isInvalid('chargeValue', otherChargesForm)}">
+                                  <p *ngIf="isInvalid('chargeValue', otherChargesForm)" class="text-red-500 text-xs mt-1">
+                                    Amount is required
+                                  </p>
+                                </div>
+                                
+                                <div class="flex items-center pt-6">
+                                  <p-checkbox 
+                                    formControlName="isBasic" 
+                                    [binary]="true" 
+                                    inputId="isBasic">
+                                  </p-checkbox>
+                                  <label for="isBasic" class="ml-2 text-xs font-medium cursor-pointer">Is Basic</label>
+                                </div>
+                                
+                                <div class="md:col-span-2">
+                                  <label class="text-xs font-medium mb-1 block">Remarks</label>
+                                  <textarea 
+                                    pInputTextarea 
+                                    formControlName="remarks" 
+                                    rows="2" 
+                                    class="w-full resize-none" 
+                                    maxlength="200"
+                                    placeholder="Enter remarks"></textarea>
+                                </div>
+                              </div>
+                              
+                              <div class="mt-4 flex justify-start">
+                                <button 
+                                  pButton 
+                                  type="button" 
+                                  icon="pi pi-plus" 
+                                  label="Add Charge" 
+                                  class="p-button-primary" 
+                                  (click)="AddRow('otherChargesForm')"
+                                  [disabled]="otherChargesForm.invalid">
+                                </button>
+                              </div>
+                            </form>
+
+                            <p-table 
+                              *ngIf="otherChargesArray.length > 0" 
+                              [value]="otherChargesArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem', 'margin-top': '20px'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Charge Type</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Charge Value</th>
+                                  <th class="text-sm font-medium">Is Basic</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                  <th class="text-sm font-medium">Action</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.chargeType}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.chargeValue}}</td>
+                                  <td class="text-sm">{{item.isBasic == 0 ? 'No' : 'Yes'}}</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                  <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                    <button 
+                                      type="button" 
+                                      class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                      (click)="onDeleteRow(i, 'otherChargesArray', 'otherChargesForm', item)">
+                                      <i class="pi pi-trash"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                          </div>
+
+                          <div *ngIf="postType === 'view'">
+                            <p-table 
+                              *ngIf="otherChargesArray.length > 0" 
+                              [value]="otherChargesArray" 
+                              showGridlines
+                              [tableStyle]="{'min-width': '50rem'}">
+                              <ng-template pTemplate="header">
+                                <tr>
+                                  <th class="text-sm font-medium">S.No</th>
+                                  <th class="text-sm font-medium">Charge Type</th>
+                                  <th class="text-sm font-medium">Nature</th>
+                                  <th class="text-sm font-medium">Charge Value</th>
+                                  <th class="text-sm font-medium">Is Basic</th>
+                                  <th class="text-sm font-medium">Remarks</th>
+                                </tr>
+                              </ng-template>
+                              <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr>
+                                  <td class="text-sm">{{i + 1}}</td>
+                                  <td class="text-sm">{{item.chargeType}}</td>
+                                  <td class="text-sm">{{item.nature}}</td>
+                                  <td class="text-sm">{{item.chargeValue}}</td>
+                                  <td class="text-sm">{{item.isBasic == 0 ? 'No' : 'Yes'}}</td>
+                                  <td class="text-sm">{{item.remarks || '-'}}</td>
+                                </tr>
+                              </ng-template>
+                            </p-table>
+                            
+                            <div *ngIf="otherChargesArray.length === 0" class="text-center p-4 text-gray-500">
+                              No charge details available
+                            </div>
+                          </div>
+                        </div>
+                      </p-tabpanel>
+                    </p-tabpanels>
+                  </p-tabs>
+                </p-dialog>
+
+                <div *ngIf="priceListTableData.length || itemsDetailsChildData.length" class="bg-white shadow-sm rounded-md overflow-hidden mb-4">
+                    <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                        (click)="toggle('showStage')">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i class="pi pi-chart-line text-purple-600"></i> Stage Details
+                        </h4>
+                        <i [class]="showStage ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                    </div>
+                    <div *ngIf="showStage" class="p-4">
+                        <div class="mb-4">
+                            <label class="text-xs font-medium mb-1 block">Stage <em class="text-red-500">*</em></label>
+                            <p-select formControlName="stageId" [options]="stageDrp" 
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" [showClear]="true"
+                                appendTo="body" placeholder="Select stage" class="w-full"
+                                [ngClass]="{'ng-invalid ng-dirty': isInvalid('stageId', crmQuotationForm)}"
+                                [disabled]="postType === 'view'">
+                            </p-select>
+                        </div>
+
+                        <div *ngIf="(postType === 'update' || postType === 'view') && quotationStageArray?.length">
+                            <label class="text-xs font-medium mb-2 block">Stage History</label>
+                            <p-table [value]="quotationStageArray" styleClass="p-datatable-sm p-datatable-gridlines">
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Stage</th>
+                                        <th>Stage Date</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                    <tr>
+                                        <td>{{i + 1}}</td>
+                                        <td>{{row.quotationStage}}</td>
+                                        <td>{{row.quotationStageDate }}</td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </div>
+                </div>
+
+            
+                <div *ngIf="priceListTableData.length || itemsDetailsChildData.length" class="bg-white shadow-sm rounded-md overflow-hidden mb-4">
+                    <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                        (click)="toggle('showTerms')">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i class="pi pi-file-edit text-purple-600"></i> Terms & Conditions
+                        </h4>
+                        <i [class]="showTerms ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                    </div>
+                    <div *ngIf="showTerms" class="p-4">
+                        <label class="text-xs font-medium mb-1 block">Details <em class="text-red-500">*</em></label>
+                        <textarea pInputTextarea formControlName="details" rows="4" class="w-full resize-none" maxlength="500"
+                            [ngClass]="{'ng-invalid ng-dirty': isInvalid('details', crmQuotationForm)}"
+                            [readonly]="postType === 'view'"></textarea>
+                    </div>
+                </div>
+
+               
+                <div *ngIf="priceListTableData.length || itemsDetailsChildData.length" class="bg-white shadow-sm rounded-md overflow-hidden mb-4">
+                    <div class="flex justify-between items-center bg-purple-50 px-4 py-3 cursor-pointer"
+                        (click)="toggle('showNotes')">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i class="pi pi-pencil text-purple-600"></i> Notes
+                        </h4>
+                        <i [class]="showNotes ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-purple-600"></i>
+                    </div>
+                    <div *ngIf="showNotes" class="p-4">
+                        <label class="text-xs font-medium mb-1 block">Notes</label>
+                        <textarea pInputTextarea formControlName="notes" rows="4" class="w-full resize-none" maxlength="500"
+                            [readonly]="postType === 'view'"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 p-4 border-t sticky bottom-0 bg-white">
+                <p-button type="button" *ngIf="postType !== 'view'" label="Reset" severity="secondary"
+                    (click)="clearData()"></p-button>
+                <p-button type="button" [label]="postType === 'view' ? 'Close' : (postType === 'update' ? 'Update' : 'Submit')"
+                    (click)="postType === 'view' ? closeDrawer() : OnSubmitModal()"
+                    [severity]="postType === 'view' ? 'secondary' : 'primary'"
+                    [icon]="postType === 'update' ? 'pi pi-save' : (postType === 'view' ? 'pi pi-times' : 'pi pi-check')">
+                </p-button>
+            </div>
+        </div>
+    </p-drawer>
+
+  
+    <p-dialog header="{{modelHeading}}" [(visible)]="dataDialogVisible" [modal]="true" [style]="{width: '50vw'}" 
+              (onHide)="closeDataDialog()">
+        <div class="overflow-x-auto">
+            <p-table [value]="recordViewData" styleClass="p-datatable-sm p-datatable-gridlines">
+                <ng-template pTemplate="header" let-columns>
+                    <tr>
+                        <th>S.No.</th>
+                        <ng-container *ngFor="let key of recordHeaderViewData; let i = index">
+                            <th *ngIf="!hiddenViewKeys.includes(key)" [style.min-width]="key === 'item' ? '200px' : 'auto'">
+                                {{key | titlecase}}
+                            </th>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                    <tr>
+                        <td>{{i + 1}}</td>
+                        <ng-container *ngFor="let key of recordHeaderViewData">
+                            <td *ngIf="!hiddenViewKeys.includes(key)">
+                                {{ item[key] || '-' }}
+                            </td>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td [attr.colspan]="(recordHeaderViewData?.length || 0) + 1" class="text-center p-4">
+                            No data found
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" icon="pi pi-times" (click)="closeDataDialog()"
+                styleClass="p-button-text"></p-button>
+        </ng-template>
+    </p-dialog>
+</div>

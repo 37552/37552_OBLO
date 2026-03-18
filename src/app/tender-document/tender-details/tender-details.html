@@ -1,0 +1,1310 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Tender Details
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            [jsonTemplate1]="jsonTemplateRef1" [jsonTemplate2]="jsonTemplateRef2" [jsonTemplate3]="jsonTemplateRef3"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef1 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist1(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef2 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist2(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef3 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist3(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+
+    </div>
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Ref No. *</label>
+                    <input type="text" maxlength="100" formControlName="refNo" placeholder="Enter Ref No."
+                        [class.border-red-500]="isInvalid('refNo')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('refNo')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('refNo')?.errors?.['required']){
+                        Enter Ref No. is required.
+                        } @else if(groupMasterForm1.get('refNo')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('refNo')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input type="text" maxlength="100" formControlName="title" placeholder="Enter Title"
+                        [class.border-red-500]="isInvalid('title')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('title')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('title')?.errors?.['required']){
+                        Title is required.
+                        } @else if(groupMasterForm1.get('title')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('title')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Organization *</label>
+                    <p-select [options]="organizationDrp" formControlName="organization" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Organization" (onChange)="onStateChange($event)"
+                        [class.border-red-500]="isInvalid('organization')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('organization')){
+                    <p class="text-red-500 text-xs mt-1">Organization is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Type *</label>
+                    <p-select [options]="tenderTypeDrp" formControlName="tenderType" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Tender Type" (onChange)="onStateChange($event)"
+                        [class.border-red-500]="isInvalid('tenderType')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('tenderType')){
+                    <p class="text-red-500 text-xs mt-1">Tender Type is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Category *</label>
+                    <p-select [options]="tenderCategoryDrp" formControlName="tenderCategory" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Tender category" (onChange)="onStateChange($event)"
+                        [class.border-red-500]="isInvalid('tenderCategory')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('tenderCategory')){
+                    <p class="text-red-500 text-xs mt-1">Tender category is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Cost *</label>
+                    <input type="text" maxlength="20" formControlName="tenderCost" placeholder="Enter Tender Cost"
+                        [class.border-red-500]="isInvalid('tenderCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    <p class="text-red-500 text-xs mt-1" *ngIf="isInvalid('tenderCost')">
+                        <span *ngIf="groupMasterForm1.get('tenderCost')?.errors?.['required']">
+                            Tender Cost is required.
+                        </span>
+                        <span *ngIf="groupMasterForm1.get('tenderCost')?.errors?.['pattern']">
+                            Please enter a valid amount (numbers only, max 2 decimals).
+                        </span>
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Description *</label>
+                    <input type="text" maxlength="100" formControlName="description"
+                        placeholder="Enter Tender Description" [class.border-red-500]="isInvalid('description')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('description')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('description')?.errors?.['required']){
+                        Enter Tender Description is required.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Status *</label>
+                    <p-select [options]="tenderStatusDrp" formControlName="tenderStatus" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Tender Status" (onChange)="onStateChange($event)"
+                        [class.border-red-500]="isInvalid('tenderStatus')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('tenderStatus')){
+                    <p class="text-red-500 text-xs mt-1">Tender Status is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Issue Authority *</label>
+                    <input type="text" maxlength="100" formControlName="authority"
+                        placeholder="Enter Tender Issue Authority" [class.border-red-500]="isInvalid('authority')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('authority')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('authority')?.errors?.['required']){
+                        Tender Issue Authority is required.
+                        } @else if(groupMasterForm1.get('authority')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('authority')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+                </div>
+
+            </form>
+
+            <div class="col-span-1 md:col-span-2 mt-6 mb-6">
+                <!-- Tabs Container -->
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <!-- Schedule & Date -->
+                        <button type="button" (click)="activeTab = 'schedule'" [ngClass]="activeTab === 'schedule' 
+                        ? 'border-blue-500 text-blue-600 font-semibold' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-2 px-4 border-b-2 text-lg transition-colors duration-200">
+                            Schedule & Date
+                        </button>
+
+                        <!-- Tender Fee -->
+                        <button type="button" (click)="activeTab = 'fee'" [ngClass]="activeTab === 'fee' 
+                        ? 'border-blue-500 text-blue-600 font-semibold' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-2 px-4 border-b-2 text-lg transition-colors duration-200">
+                            Tender Fee
+                        </button>
+
+                        <!-- Eligibility & Qualification -->
+                        <button type="button" (click)="activeTab = 'eligibility'" [ngClass]="activeTab === 'eligibility' 
+                        ? 'border-blue-500 text-blue-600 font-semibold' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-2 px-4 border-b-2 text-lg transition-colors duration-200">
+                            Eligibility & Qualification
+                        </button>
+
+                        <!-- Document Details -->
+                        <button type="button" (click)="activeTab = 'document'" [ngClass]="activeTab === 'document' 
+                        ? 'border-blue-500 text-blue-600 font-semibold' 
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-2 px-4 border-b-2 text-lg transition-colors duration-200">
+                            Document Details
+                        </button>
+
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Eligibility & Qualification Section -->
+            <form [formGroup]="eligiblityForm" *ngIf="activeTab === 'eligibility'">
+
+                <div class="mt-4 p-4 bg-white rounded-md shadow-sm border border-gray-200 space-y-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Technical Eligibility *</label>
+                            <input type="text" maxlength="100" formControlName="techEligib"
+                                placeholder="Enter Technical Eligibility"
+                                [class.border-red-500]="isEligiblityForm('techEligib')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            @if(isEligiblityForm('techEligib')){
+                            <p class="text-red-500 text-xs mt-1">
+                                @if(eligiblityForm.get('techEligib')?.errors?.['required']){
+                                Technical Eligibility is required.
+                                } @else if(eligiblityForm.get('techEligib')?.errors?.['invalidValue']){
+                                Only dots or blank spaces are not allowed.
+                                } @else if(eligiblityForm.get('techEligib')?.errors?.['noAlphaNumeric']){
+                                Must contain at least one letter or number.
+                                }
+                            </p>
+                            }
+                        </div>
+
+                        <!-- Financial Criteria -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Financial Criteria *</label>
+                            <input type="text" formControlName="financialCriteria"
+                                placeholder="Enter Financial Criteria"
+                                [class.border-red-500]="isEligiblityForm('financialCriteria')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isEligiblityForm('financialCriteria')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="eligiblityForm.get('financialCriteria')?.errors?.['required']">Financial
+                                    Criteria is required.</span>
+                                <span *ngIf="eligiblityForm.get('financialCriteria')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces are not allowed.</span>
+                                <span *ngIf="eligiblityForm.get('financialCriteria')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Experience Criteria -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Experience Criteria *</label>
+                            <input type="text" formControlName="experCriteria" placeholder="Enter Experience Criteria"
+                                [class.border-red-500]="isEligiblityForm('experCriteria')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isEligiblityForm('experCriteria')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="eligiblityForm.get('experCriteria')?.errors?.['required']">Experience
+                                    Criteria is required.</span>
+                                <span *ngIf="eligiblityForm.get('experCriteria')?.errors?.['invalidValue']">Only dots
+                                    or blank spaces are not allowed.</span>
+                                <span *ngIf="eligiblityForm.get('experCriteria')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Mandatory Certificates -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mandatory Certificates *</label>
+                            <input type="text" formControlName="mandatoryCertificates"
+                                placeholder="Enter Mandatory Certificates"
+                                [class.border-red-500]="isEligiblityForm('mandatoryCertificates')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isEligiblityForm('mandatoryCertificates')" class="text-red-500 text-xs mt-1">
+                                <span
+                                    *ngIf="eligiblityForm.get('mandatoryCertificates')?.errors?.['required']">Mandatory
+                                    Certificates is required.</span>
+                                <span *ngIf="eligiblityForm.get('mandatoryCertificates')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces are not allowed.</span>
+                                <span
+                                    *ngIf="eligiblityForm.get('mandatoryCertificates')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- OEM Manufacturer Certificate -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">OEM Manufacturer Certificate
+                                *</label>
+                            <input type="text" formControlName="oemManufactreCrt"
+                                placeholder="Enter OEM Manufacturer Certificate"
+                                [class.border-red-500]="isEligiblityForm('oemManufactreCrt')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isEligiblityForm('oemManufactreCrt')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="eligiblityForm.get('oemManufactreCrt')?.errors?.['required']">OEM
+                                    Manufacturer Certificate is required.</span>
+                                <span *ngIf="eligiblityForm.get('oemManufactreCrt')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces are not allowed.</span>
+                                <span *ngIf="eligiblityForm.get('oemManufactreCrt')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Joint Venture Allowed (Full Row) -->
+
+                        <div class="flex items-center mt-2">
+                            <input type="checkbox" id="jointVentureAllowed" formControlName="jointVentureAllowed"
+                                (change)="onCheckboxChange1('jointVentureAllowed', $event)"
+                                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                            <label for="jointVentureAllowed" class="ml-2 text-sm text-gray-700 font-medium">
+                                Joint Venture Allowed
+                            </label>
+                            <p *ngIf="isInvalid('jointVentureAllowed')" class="text-red-500 text-xs mt-1">This field is
+                                required.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="flex justify-start mt-4">
+                    <button type="button" (click)="addEligibility()" [disabled]="eligiblityForm.invalid" class="px-4 py-2 rounded text-white font-medium
+                               bg-green-600 hover:bg-green-700
+                               disabled:bg-green-300 disabled:cursor-not-allowed
+                               disabled:hover:bg-green-300 transition">
+                        {{ isEditMode ? 'Update' : 'Add' }}
+                    </button>
+                </div>
+
+                <div *ngIf="eligibilityList.length > 0" class="mt-6 overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-md text-sm">
+
+                        <!-- Table Head -->
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r">Technical</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r">Financial</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r">Experience</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r">Certificates</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-700 border-r">OEM Cert</th>
+                                <th class="px-3 py-2 text-center font-semibold text-gray-700 border-r">JV</th>
+                                <th class="px-3 py-2 text-center font-semibold text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Table Body -->
+                        <tbody class="bg-white">
+                            <tr *ngFor="let item of eligibilityList; let i = index" class="hover:bg-gray-50 transition">
+
+                                <td class="px-3 py-2 border-r border-b">{{ item.techEligib }}</td>
+                                <td class="px-3 py-2 border-r border-b">{{ item.financialCriteria }}</td>
+                                <td class="px-3 py-2 border-r border-b">{{ item.experCriteria }}</td>
+                                <td class="px-3 py-2 border-r border-b">{{ item.mandatoryCertificates }}</td>
+                                <td class="px-3 py-2 border-r border-b">{{ item.oemManufactreCrt }}</td>
+
+                                <!-- JV Badge -->
+                                <td class="px-3 py-2 border-r border-b text-center">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="item.jointVentureAllowed
+                                          ? 'bg-green-100 text-green-700'
+                                          : 'bg-red-100 text-red-600'">
+                                        {{ item.jointVentureAllowed ? 'Yes' : 'No' }}
+                                    </span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="px-3 py-2 border-b text-center space-x-4">
+                                    <button
+                                        class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                                        (click)="editEligibility(i)">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <button
+                                        class="inline-flex items-center gap-2 text-red-600 hover:text-red-800 font-medium"
+                                        (click)="deleteEligibility(i)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </form>
+
+            <!-- Schedules and dates -->
+            <form [formGroup]="schedulesForm" *ngIf="activeTab === 'schedule'">
+
+                <div class="mt-4 p-4 bg-white rounded-md shadow-sm border border-gray-200 space-y-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- NIT Publish Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">NIT Publish Date *</label>
+                            <input type="date" (click)="openCalendar($event)" formControlName="nitPublishDate"
+                                (keydown)="blockTyping($event)"
+                                [class.border-red-500]="isSchedulesForm('nitPublishDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('nitPublishDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('nitPublishDate')?.errors?.['required']">NIT Publish Date
+                                    is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Document Download Start Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Document Download Start Date
+                                *</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="docDownStartDate"
+                                [class.border-red-500]="isSchedulesForm('docDownStartDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('docDownStartDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('docDownStartDate')?.errors?.['required']">Document
+                                    Download Start Date is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Bid Submission Start Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bid Submission Start Date
+                                *</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="bidSubStartDate"
+                                [class.border-red-500]="isSchedulesForm('bidSubStartDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('bidSubStartDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('bidSubStartDate')?.errors?.['required']">Bid Submission
+                                    Start Date is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Bid Submission End Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bid Submission End Date
+                                *</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="bidSubEndDate"
+                                [class.border-red-500]="isSchedulesForm('bidSubEndDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('bidSubEndDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('bidSubEndDate')?.errors?.['required']">Bid Submission
+                                    End Date is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Bid Opening Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bid Opening Date *</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="bidOPeningDate"
+                                [class.border-red-500]="isSchedulesForm('bidOPeningDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('bidOPeningDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('bidOPeningDate')?.errors?.['required']">Bid Opening Date
+                                    is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Financial Bid Opening Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Financial Bid Opening Date
+                                *</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="finBidOPenDate"
+                                [class.border-red-500]="isSchedulesForm('finBidOPenDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('finBidOPenDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('finBidOPenDate')?.errors?.['required']">Financial Bid
+                                    Opening Date is required.</span>
+                            </p>
+                        </div>
+
+
+                        <!-- Pre-Bid Meeting Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pre-Bid Meeting Date</label>
+                            <input type="date" (click)="openCalendar($event)" (keydown)="blockTyping($event)"
+                                formControlName="preBidMeetingDate"
+                                [class.border-red-500]="isSchedulesForm('preBidMeetingDate')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isSchedulesForm('preBidMeetingDate')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="schedulesForm.get('preBidMeetingDate')?.errors?.['required']">Pre-Bid
+                                    Meeting Date is required.</span>
+                            </p>
+                        </div>
+
+                        <!-- Bid Validity -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bid Validity *</label>
+                            <input type="text" maxlength="100" formControlName="bidValidity"
+                                placeholder="Enter Bid Validity" [class.border-red-500]="isSchedulesForm('bidValidity')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            @if(isSchedulesForm('bidValidity')){
+                            <p class="text-red-500 text-xs mt-1">
+                                @if(schedulesForm.get('bidValidity')?.errors?.['required']){
+                                Bid Validity is required.
+                                } @else if(schedulesForm.get('bidValidity')?.errors?.['invalidValue']){
+                                Only dots or blank spaces are not allowed.
+                                } @else if(schedulesForm.get('bidValidity')?.errors?.['noAlphaNumeric']){
+                                Must contain at least one letter or number.
+                                }
+                            </p>
+                            }
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="flex justify-start mt-4">
+                    <button type="button" (click)="addSchedule()" [disabled]="schedulesForm.invalid" class="px-4 py-2 rounded text-white font-medium
+               bg-green-600 hover:bg-green-700
+               disabled:bg-green-300 disabled:cursor-not-allowed">
+                        {{ isScheduleEditMode ? 'Update' : 'Add' }}
+                    </button>
+                </div>
+
+                <div *ngIf="schedulesList.length > 0" class="mt-6 overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-md text-sm">
+
+                        <!-- Header -->
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="px-3 py-2 border-r">NIT Date</th>
+                                <th class="px-3 py-2 border-r">Doc Start</th>
+                                <th class="px-3 py-2 border-r">Bid Start</th>
+                                <th class="px-3 py-2 border-r">Bid End</th>
+                                <th class="px-3 py-2 border-r">Bid Open</th>
+                                <th class="px-3 py-2 border-r">Fin Open</th>
+                                <th class="px-3 py-2 border-r">Pre-Bid</th>
+                                <th class="px-3 py-2 border-r">Validity</th>
+                                <th class="px-3 py-2">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Body -->
+                        <tbody class="bg-white">
+                            <tr *ngFor="let item of schedulesList; let i = index" class="hover:bg-gray-50">
+
+                                <td class="px-3 py-2 border-b border-r">{{ item.nitPublishDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.docDownStartDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.bidSubStartDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.bidSubEndDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.bidOPeningDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.finBidOPenDate }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.preBidMeetingDate || '-' }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.bidValidity }}</td>
+
+                                <!-- Actions -->
+
+                                <td class="px-3 py-2 border-b text-center space-x-4">
+                                    <button
+                                        class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                                        (click)="editSchedule(i)">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <button
+                                        class="inline-flex items-center gap-2 text-red-600 hover:text-red-800 font-medium"
+                                        (click)="deleteSchedule(i)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+
+
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </form>
+
+            <!-- Fee And Emd Details -->
+            <form [formGroup]="feeEmdForm" *ngIf="activeTab === 'fee'">
+
+                <div class="mt-4 p-4 bg-white rounded-md shadow-sm border border-gray-200 space-y-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- Tender Fee Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tender Fee Amount *</label>
+                            <input type="text" maxlength="20" formControlName="tenderFeeAmount"
+                                placeholder="Enter Tender Fee Amount"
+                                [class.border-red-500]="isFeeEmdForm('tenderFeeAmount')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p class="text-red-500 text-xs mt-1" *ngIf="isFeeEmdForm('tenderFeeAmount')">
+                                <span *ngIf="feeEmdForm.get('tenderFeeAmount')?.errors?.['required']">
+                                    Tender Fee Amount is required.
+                                </span>
+                                <span *ngIf="feeEmdForm.get('tenderFeeAmount')?.errors?.['pattern']">
+                                    Please enter a valid amount (numbers only, max 2 decimals).
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- EMD Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">EMD Amount *</label>
+                            <input type="text" maxlength="20" formControlName="emdAmount" placeholder="Enter EMD Amount"
+                                [class.border-red-500]="isFeeEmdForm('emdAmount')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p class="text-red-500 text-xs mt-1" *ngIf="isFeeEmdForm('emdAmount')">
+                                <span *ngIf="feeEmdForm.get('emdAmount')?.errors?.['required']">
+                                    EMD Amount is required.
+                                </span>
+                                <span *ngIf="feeEmdForm.get('emdAmount')?.errors?.['pattern']">
+                                    Please enter a valid amount (numbers only, max 2 decimals).
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Payment Mode Dropdown -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Mode *</label>
+                            <p-select [options]="paymentModeDrp" formControlName="paymentMode" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Payment Mode" (onChange)="onStateChange($event)"
+                                [class.border-red-500]="isFeeEmdForm('paymentMode')" class="custom-p-select w-full">
+                            </p-select>
+                            <p *ngIf="isFeeEmdForm('paymentMode')" class="text-red-500 text-xs mt-1">Payment Mode is
+                                required.</p>
+                        </div>
+
+                        <!-- Bank Details -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bank Details *</label>
+                            <input type="text" formControlName="bankDetails" placeholder="Enter Bank Details"
+                                [class.border-red-500]="isFeeEmdForm('bankDetails')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isFeeEmdForm('bankDetails')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="feeEmdForm.get('bankDetails')?.errors?.['required']">Bank Details is
+                                    required.</span>
+                                <span *ngIf="feeEmdForm.get('bankDetails')?.errors?.['invalidValue']">Only dots or blank
+                                    spaces not allowed.</span>
+                                <span *ngIf="feeEmdForm.get('bankDetails')?.errors?.['noAlphaNumeric']">Must contain at
+                                    least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Refund Rules -->
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Refund Rules *</label>
+                            <input type="text" maxlength="100" formControlName="refundRules"
+                                placeholder="Enter Refund Rules " [class.border-red-500]="isFeeEmdForm('refundRules')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            @if(isFeeEmdForm('refundRules')){
+                            <p class="text-red-500 text-xs mt-1">
+                                @if(feeEmdForm.get('refundRules')?.errors?.['required']){
+                                Refund Rules is required.
+                                } @else if(feeEmdForm.get('refundRules')?.errors?.['invalidValue']){
+                                Only dots or blank spaces are not allowed.
+                                } @else if(feeEmdForm.get('refundRules')?.errors?.['noAlphaNumeric']){
+                                Must contain at least one letter or number.
+                                }
+                            </p>
+                            }
+                        </div>
+
+                        <!-- EMD Exemption Checkbox (Full Row) -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="emdExemption" formControlName="emdExemption"
+                                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                            <label for="emdExemption" class="ml-2 text-sm text-gray-700 font-medium">EMD
+                                Exemption</label>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="flex justify-start mt-4">
+                    <button type="button" (click)="addFeeEmd()" [disabled]="feeEmdForm.invalid" class="px-4 py-2 rounded text-white font-medium
+                               bg-green-600 hover:bg-green-700
+                               disabled:bg-green-300 disabled:cursor-not-allowed">
+                        {{ isFeeEditMode ? 'Update' : 'Add' }}
+                    </button>
+                </div>
+
+                <div *ngIf="feeEmdList.length > 0" class="mt-6 overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-md text-sm">
+
+                        <!-- Header -->
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="px-3 py-2 border-r">Tender Fee</th>
+                                <th class="px-3 py-2 border-r">EMD Amount</th>
+                                <th class="px-3 py-2 border-r">Tender Status</th>
+                                <th class="px-3 py-2 border-r">Bank Details</th>
+                                <th class="px-3 py-2 border-r">Refund Rules</th>
+                                <th class="px-3 py-2 border-r">EMD Exemption</th>
+                                <th class="px-3 py-2">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Body -->
+                        <tbody class="bg-white">
+                            <tr *ngFor="let item of feeEmdList; let i = index" class="hover:bg-gray-50">
+                                <td class="px-3 py-2 border-b border-r">₹ {{ item.tenderFeeAmount }}</td>
+                                <td class="px-3 py-2 border-b border-r">₹ {{ item.emdAmount }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.paymentMode }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.bankDetails }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.refundRules }}</td>
+                                <td class="px-3 py-2 border-b border-r">{{ item.emdExemption ? 'Yes' : 'No' }}</td>
+
+                                <!-- Actions -->
+                                <td class="px-3 py-2 border-b text-center space-x-4">
+                                    <button
+                                        class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                                        (click)="editFeeEmd(i)">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <button
+                                        class="inline-flex items-center gap-2 text-red-600 hover:text-red-800 font-medium"
+                                        (click)="deleteFeeEmd(i)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+
+            </form>
+
+            <!-- Document Details -->
+            <form [formGroup]="documentDetailsForm" *ngIf="activeTab === 'document'">
+
+                <div class="mt-4 p-4 bg-white rounded-md shadow-sm border border-gray-200 space-y-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- Upload Document -->
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4 attachResume">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">Upload Documente *</label>
+                                <p-button (click)="openResumeUploadDialog()" label="Upload Documente"
+                                    icon="pi pi-upload" variant="text" [raised]="true" [disabled]="postType === 'view'"
+                                    styleClass="text-xs p-1" />
+                            </div>
+
+                            @if (uploadedDocumentUrl) {
+                            <div
+                                class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <div class="flex-1 flex items-center gap-3">
+                                    <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Current Upload Document</p>
+                                        <a [href]="uploadedDocumentUrl" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+                                @if (postType !== 'view') {
+                                <button type="button" (click)="removeResume()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                                }
+                            </div>
+                            } @else {
+                            <p class="text-xs text-gray-500 italic">No upload document yet.</p>
+                            }
+
+                            @if (isDocumentDetails('uploadDocument')) {
+                            <small class="text-red-500 text-xs mt-2">Upload Document is required.</small>
+                            }
+                        </div>
+
+                        <!-- Addendum Upload -->
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4 attachResume">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">Addendum Upload *</label>
+                                <p-button (click)="openResumeUploadDialog1()" label="Upload Addendum"
+                                    icon="pi pi-upload" variant="text" [raised]="true" [disabled]="postType === 'view'"
+                                    styleClass="text-xs p-1" />
+                            </div>
+
+                            @if (uploadedAddenumUrl) {
+                            <div
+                                class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <div class="flex-1 flex items-center gap-3">
+                                    <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Current Addendum Upload</p>
+                                        <a [href]="uploadedAddenumUrl" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+                                @if (postType !== 'view') {
+                                <button type="button" (click)="removeResume1()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                                }
+                            </div>
+                            } @else {
+                            <p class="text-xs text-gray-500 italic">No addendum upload yet.</p>
+                            }
+
+                            @if (isDocumentDetails('addenumUpload')) {
+                            <small class="text-red-500 text-xs mt-2">Addendum Upload is required.</small>
+                            }
+                        </div>
+
+                        <!-- Document Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Document Type *</label>
+                            <input type="text" formControlName="documentType" placeholder="Enter Document Type"
+                                [class.border-red-500]="isDocumentForm('documentType')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isDocumentForm('documentType')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="documentDetailsForm.get('documentType')?.errors?.['required']">Document
+                                    Document Type is required.</span>
+                                <span *ngIf="documentDetailsForm.get('documentType')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces not allowed.</span>
+                                <span *ngIf="documentDetailsForm.get('documentType')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Specification -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Specification *</label>
+                            <input type="text" formControlName="specification" placeholder="Enter Specification"
+                                [class.border-red-500]="isDocumentForm('specification')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isDocumentForm('specification')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="documentDetailsForm.get('specification')?.errors?.['required']">
+                                    Specification is required.</span>
+                                <span *ngIf="documentDetailsForm.get('specification')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces not allowed.</span>
+                                <span *ngIf="documentDetailsForm.get('specification')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- termsAndCondition -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Terms And Condition *</label>
+                            <input type="text" formControlName="TermsAndcondition"
+                                placeholder="Enter Terms And Condition"
+                                [class.border-red-500]="isDocumentForm('TermsAndcondition')"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" />
+                            <p *ngIf="isDocumentForm('TermsAndcondition')" class="text-red-500 text-xs mt-1">
+                                <span *ngIf="documentDetailsForm.get('TermsAndcondition')?.errors?.['required']">
+                                    Terms And Condition is required.</span>
+                                <span
+                                    *ngIf="documentDetailsForm.get('TermsAndcondition')?.errors?.['invalidValue']">Only
+                                    dots or blank spaces not allowed.</span>
+                                <span
+                                    *ngIf="documentDetailsForm.get('TermsAndcondition')?.errors?.['noAlphaNumeric']">Must
+                                    contain at least one letter or number.</span>
+                            </p>
+                        </div>
+
+                        <!-- Upload Document Dialog -->
+                        <p-dialog [(visible)]="showUploadDialog" [modal]="true" header="Upload Document"
+                            [style]="{ width: '40vw' }" (onHide)="closeResumeUploadDialog()">
+
+                            <ng-template pTemplate="content">
+                                <div class="flex flex-col gap-4">
+                                    <p-fileUpload #docFileUpload name="resume[]" customUpload="true"
+                                        (onSelect)="onResumeFileSelect($event)" accept=".pdf,.doc,.docx"
+                                        [multiple]="false" [showCancelButton]="false" [showUploadButton]="false"
+                                        chooseLabel="Select Resume" class="w-full">
+                                    </p-fileUpload>
+
+                                    @if(selectedDocumentFile){
+                                    <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                        <i class="pi pi-file text-xl text-blue-500"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium">{{selectedDocumentFile.name}}</span>
+                                            <span
+                                                class="text-xs text-gray-500 ml-2">({{getFileSize(selectedDocumentFile.size)}})</span>
+                                        </div>
+                                        <button type="button" (click)="clearResumeSelection()"
+                                            class="text-red-500 hover:text-red-700">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <div class="flex justify-end space-x-3">
+                                    <p-button label="Cancel" (click)="closeResumeUploadDialog()" severity="secondary"
+                                        [disabled]="isUploadingDocument" />
+                                    <p-button label="Upload" (click)="uploadResume()" [loading]="isUploadingDocument"
+                                        [disabled]="!selectedDocumentFile || isUploadingDocument" />
+                                </div>
+                            </ng-template>
+                        </p-dialog>
+
+                        <!-- Addenum Upload Dialog -->
+                        <p-dialog [(visible)]="showAddenumDialog" [modal]="true" header="Upload Addenum"
+                            [style]="{ width: '40vw' }" (onHide)="closeResumeUploadDialog1()">
+
+                            <ng-template pTemplate="content">
+                                <div class="flex flex-col gap-4">
+                                    <p-fileUpload #addenumFileUpload name="resume[]" customUpload="true"
+                                        (onSelect)="onResumeFileSelect1($event)" accept=".pdf,.doc,.docx"
+                                        [multiple]="false" [showCancelButton]="false" [showUploadButton]="false"
+                                        chooseLabel="Select Addenum" class="w-full">
+                                    </p-fileUpload>
+
+                                    @if(selectedAddenumFile){
+                                    <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                        <i class="pi pi-file text-xl text-blue-500"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium">{{selectedAddenumFile.name}}</span>
+                                            <span
+                                                class="text-xs text-gray-500 ml-2">({{getFileSize1(selectedAddenumFile.size)}})</span>
+                                        </div>
+                                        <button type="button" (click)="clearResumeSelection1()"
+                                            class="text-red-500 hover:text-red-700">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <div class="flex justify-end space-x-3">
+                                    <p-button label="Cancel" (click)="closeResumeUploadDialog1()" severity="secondary"
+                                        [disabled]="isUploadingAddenum" />
+                                    <p-button label="Upload" (click)="uploadResume1()" [loading]="isUploadingAddenum"
+                                        [disabled]="!selectedAddenumFile || isUploadingAddenum" />
+                                </div>
+                            </ng-template>
+                        </p-dialog>
+
+
+                    </div>
+
+                </div>
+
+                <div class="flex justify-start mt-4">
+                    <button type="button" (click)="addDocumentDetails()" [disabled]="documentDetailsForm.invalid" class="px-4 py-2 rounded text-white font-medium
+                               bg-green-600 hover:bg-green-700
+                               disabled:bg-green-300 disabled:cursor-not-allowed">
+                        {{ isDocumentEditMode ? 'Update' : 'Add' }}
+                    </button>
+                </div>
+
+                <div *ngIf="documentList.length > 0" class="mt-6 overflow-x-auto">
+                    <table class="min-w-full border border-gray-300 rounded-md text-sm">
+                        <!-- Header -->
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="px-4 py-2 text-left border-r">Document</th>
+                                <th class="px-4 py-2 text-left border-r">Addendum</th>
+                                <th class="px-4 py-2 text-left border-r">Document Type</th>
+                                <th class="px-4 py-2 text-left border-r">Specification</th>
+                                <th class="px-4 py-2 text-left border-r">Terms & Condition</th>
+                                <th class="px-4 py-2 text-center">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <!-- Body -->
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr *ngFor="let doc of documentList; let i = index" class="hover:bg-gray-50">
+                                <!-- Document Link -->
+                                <td class="px-4 py-2 border-r">
+                                    <a [href]="doc.uploadDocument" target="_blank"
+                                        class="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                                        <i class="pi pi-eye"></i> View
+                                    </a>
+                                </td>
+
+                                <!-- Addendum Link -->
+                                <td class="px-4 py-2 border-r">
+                                    <a [href]="doc.addenumUpload" target="_blank"
+                                        class="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                                        <i class="pi pi-eye"></i> View
+                                    </a>
+                                </td>
+
+                                <!-- Document Type -->
+                                <td class="px-4 py-2 border-r">{{ doc.documentType }}</td>
+
+                                <!-- Specification -->
+                                <td class="px-4 py-2 border-r">{{ doc.specification }}</td>
+
+                                <!-- Terms & Condition -->
+                                <td class="px-4 py-2 border-r">{{ doc.TermsAndcondition }}</td>
+
+                                <!-- Actions -->
+                                <td class="px-4 py-2 text-center flex justify-center gap-2">
+                                    <button (click)="editDocumentDetails(i)" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button (click)="deleteDocumentDetails(i)" class="text-red-600 hover:text-red-800">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </form>
+
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+    </p-drawer>
+
+
+    <!-- schedules List-->
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Schedules & Date</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>NIT Publish Date</th>
+                        <th>Document Download Start Date</th>
+                        <th>Bid Submission Start Date</th>
+                        <th>Bid Submission End Date</th>
+                        <th>Bid Opening Date</th>
+                        <th>Financial Bid Opening Date</th>
+                        <th>Pre-Bid Meeting Date</th>
+                        <th>Bid Validity </th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ detail.nitPublishDate }}</td>
+                        <td>{{ detail.docDownStartDate }}</td>
+                        <td>{{ detail.bidSubStartDate }}</td>
+                        <td>{{ detail.bidSubEndDate }}</td>
+                        <td>{{ detail.bidOPeningDate }}</td>
+                        <td>{{ detail.finBidOPenDate }}</td>
+                        <td>{{ detail.preBidMeetingDate }}</td>
+                        <td>{{ detail.bidValidity }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+
+    </p-dialog>
+
+
+    <!-- feeEmd List-->
+    <p-dialog [modal]="true" [(visible)]="itemDailog1" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Tender Fee</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray1 || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Tender Fee Amount </th>
+                        <th>EMD Amoun</th>
+                        <th>Payment Mode</th>
+                        <th>Bank Details</th>
+                        <th>Refund Rules</th>
+                        <th>EMD Exemption</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ detail.tenderFeeAmount}}</td>
+                        <td>{{ detail.emdAmount }}</td>
+                        <td>{{ detail.PaymentMode }}</td>
+                        <td>{{ detail.bankDetails }}</td>
+                        <td>{{ detail.refundRules }}</td>
+                        <td>{{ detail.emdExemption }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+    </p-dialog>
+
+
+    <!-- Eligibility List-->
+    <p-dialog [modal]="true" [(visible)]="itemDailog2" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Eligibility Qualification</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray2 || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Technical Eligibility</th>
+                        <th>Financial Criteria</th>
+                        <th>Experience Criteria</th>
+                        <th>Mandatory Certificates</th>
+                        <th>OEM Manufacturer Certificate</th>
+                        <th>Joint Venture Allowed</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ detail.techEligib }}</td>
+                        <td>{{ detail.financialCriteria }}</td>
+                        <td>{{ detail.experCriteria }}</td>
+                        <td>{{ detail.mandatoryCertificates }}</td>
+                        <td>{{ detail.oemManufactreCrt }}</td>
+                        <td>{{ detail.jointVentureAllowed }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+
+    </p-dialog>
+
+
+    <!-- Document Details -->
+    <p-dialog [modal]="true" [(visible)]="itemDailog3" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Document Details</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray3 || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Upload Documente</th>
+                        <th>Addendum Upload</th>
+                        <th>Document Type</th>
+                        <th>Specification</th>
+                        <th>Terms And Condition</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                            <a [href]="detail.uploadDoc" target="_blank">
+                                <i class="pi pi-eye mr-1"></i> View
+                            </a>
+                        </td>
+                        <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                            <a [href]="detail.addendum" target="_blank">
+                                <i class="pi pi-eye mr-1"></i> View
+                            </a>
+                        </td>
+                        <td>{{ detail.docType}}</td>
+                        <td>{{ detail.specification}}</td>
+                        <td>{{ detail.termsAndCondition}}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+
+    </p-dialog>
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+</div>

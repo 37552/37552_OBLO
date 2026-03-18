@@ -1,0 +1,48 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        @if (allData.length > 0) {
+          <p-button
+            (click)="exportAsXLSX()"
+            label="Export"
+            icon="pi pi-file-excel"
+            styleClass="p-button-sm p-button-success p-button-outlined"
+            [raised]="true"
+          >
+          </p-button>
+        }
+      </div>
+    </div>
+
+    <app-table-template
+      [data]="viewData"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      (pageChange)="onPageChange($event)"
+      (refresh)="showData()"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSort($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      [jsonTemplate]="holidayTpl" >
+    </app-table-template>
+
+    <ng-template #holidayTpl let-item>
+      <div class="flex items-center gap-3">
+        <img
+          [src]="buildImageUrl(item.image || item.holiday || 'holiday')"
+          alt=""
+          class="w-9 h-9 rounded-lg object-cover border border-slate-200 shadow-sm flex-shrink-0"
+          (error)="onImgError($event)"
+        />
+        <span class="font-medium text-slate-800">{{ item.holiday }}</span>
+      </div>
+    </ng-template>
+  </div>
+</div>

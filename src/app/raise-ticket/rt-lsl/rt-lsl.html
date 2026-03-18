@@ -1,0 +1,168 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+    <div class="bg-white rounded-md shadow-sm mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+            <div class="mb-3 sm:mb-0">
+                <h2 class="text-base font-semibold text-gray-800">
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <p-button label=" New Ticket for {{nameList}}" icon="pi pi-plus"
+                    styleClass="orange-button p-button-warning" (click)="showDialog('add', [])"></p-button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-0">
+        <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onsearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            [actionTemplate]="actionTemplateRef">
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <button (click)="onView(item); op.hide()" title="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-eye"></i>
+                        </button>
+
+                        <button (click)="onEdit(item); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-pencil"></i>
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+        </app-table-template>
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true"
+        [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+                        {{ header }}
+                    </span>
+                    <div class="bg-blue-50 p-2 rounded-full shrink-0">
+                        <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="h-full flex flex-col justify-between bg-gray-50/50">
+            <div class="flex-grow overflow-y-auto p-4 space-y-4 transition-all duration-200">
+                <form [formGroup]="rticketLsl" (ngSubmit)="onSubmitTicketForm()">
+                    <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+                            (click)="toggleOverview()">
+                            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="pi pi-ticket text-indigo-600"></i>
+                                <span>Ticket Details</span>
+                            </h4>
+                            <i [class]="
+                  showOverview
+                    ? 'pi pi-chevron-up text-indigo-600'
+                    : 'pi pi-chevron-down text-indigo-600'
+                "></i>
+                        </div>
+
+                        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5" *ngIf="showOverview">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-semibold text-gray-600">
+                                    Category <span class="text-red-500">*</span>
+                                </label>
+                                <p-select [options]="categoryDrp" formControlName="category" optionLabel="drpOption"
+                                    optionValue="drpValue" placeholder="Select Category" appendTo="body"
+                                    styleClass="w-full p-inputtext-sm" [filter]="true"
+                                    (onChange)="onCategoryChange($event)" [ngClass]="{
+                    'p-invalid':
+                      rticketLsl.get('category')?.invalid &&
+                      rticketLsl.get('category')?.touched
+                  }"></p-select>
+                                @if (isInvalid('category')) {
+                                <small class="text-red-500 text-xs mt-1 block">Category is required.</small>
+                                }
+                            </div>
+
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-semibold text-gray-600">
+                                    Sub Category <span class="text-red-500">*</span>
+                                </label>
+                                <p-select [options]="subCategoryDrp" formControlName="subCategory"
+                                    optionLabel="drpOption" optionValue="drpValue" placeholder="Select Sub Category"
+                                    appendTo="body" styleClass="w-full p-inputtext-sm" [filter]="true"
+                                    (onChange)="onSubCategoryChange($event)" [ngClass]="{
+                    'p-invalid':
+                      rticketLsl.get('subCategory')?.invalid &&
+                      rticketLsl.get('subCategory')?.touched
+                  }"></p-select>
+                                @if (isInvalid('subCategory')) {
+                                <small class="text-red-500 text-xs mt-1 block">Sub Category is required.</small>
+                                }
+                            </div>
+
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-semibold text-gray-600">
+                                    Fleet <span class="text-red-500">*</span>
+                                </label>
+                                <p-select [options]="fleetDrp" formControlName="fleet" optionLabel="drpOption"
+                                    optionValue="drpValue" placeholder="Select Fleet" appendTo="body"
+                                    styleClass="w-full p-inputtext-sm" [filter]="true"
+                                    (onChange)="onFleetChange($event)" [ngClass]="{
+                    'p-invalid':
+                      rticketLsl.get('fleet')?.invalid &&
+                      rticketLsl.get('fleet')?.touched
+                  }"></p-select>
+                                @if (isInvalid('fleet')) {
+                                <small class="text-red-500 text-xs mt-1 block">Fleet is required.</small>
+                                }
+                            </div>
+
+                            <div class="md:col-span-2 flex flex-col gap-1">
+                                <label class="text-xs font-semibold text-gray-600">
+                                    Remarks <span class="text-red-500">*</span>
+                                </label>
+                                <textarea pInputTextarea formControlName="remarks" rows="3"
+                                    class="w-full p-inputtext-sm resize-none border-2 border-gray-300 rounded-md focus:border-blue-500"
+                                    placeholder="Enter your remarks here..." [ngClass]="{
+                                        'p-invalid':
+                                            rticketLsl.get('remarks')?.invalid &&
+                                            rticketLsl.get('remarks')?.touched
+                                        }">
+                                    </textarea>
+
+                                @if (isInvalid('remarks')) {
+                                <small class="text-red-500 text-xs mt-1 block">Remarks is required.</small>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="flex justify-end gap-3 p-4 border-t bg-white z-10">
+                <p-button *ngIf="postType === 'add'" type="button" label="Reset" severity="secondary"
+                    icon="pi pi-refresh" styleClass="p-button-outlined p-button-sm"
+                    (click)="rticketLsl.reset()"></p-button>
+
+                <p-button type="button" label="Close" severity="secondary" styleClass="p-button-outlined p-button-sm"
+                    (click)="onDrawerHide()"></p-button>
+
+                <p-button *ngIf="postType !== 'view'" type="submit"
+                    [label]="postType === 'update' ? 'Update Ticket' : 'Submit Ticket'" icon="pi pi-check"
+                    styleClass="p-button-sm p-button-primary" (click)="onSubmitTicketForm()"></p-button>
+            </div>
+        </div>
+    </p-drawer>
+</div>

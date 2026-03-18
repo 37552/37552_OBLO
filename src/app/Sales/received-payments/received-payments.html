@@ -1,0 +1,172 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-6 lg:p-0">
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <!-- No Add button needed -->
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      (refresh)="getTableData(true)" [searchText]="searchText" [actionTemplate]="actionTemplateRef"
+      (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="showDrawer('update', item); op.hide()" pTooltip="Update Payment Date"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-calendar-plus"></i>
+              <span class="text-sm">Update Payment</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <!-- Drawer for Update Payment -->
+  <p-drawer [(visible)]="visible" [position]="drawerPosition" [style]="{ width: '60vw' }" (onHide)="onDrawerHide()"
+    [modal]="true" [showCloseIcon]="true" [closeOnEscape]="true">
+
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-3">
+        <i class="pi pi-calendar-plus text-blue-500 text-lg"></i>
+        <div>
+          <h3 class="font-semibold text-lg text-gray-800">Update Payment Date</h3>
+          <p class="text-sm text-gray-500 mt-1">Record Payment for Order #{{selectedItem?.soText || ''}}</p>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex flex-col items-center justify-center min-h-[300px] px-4">
+        <p-progress-spinner strokeWidth="6" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '40px', height: '40px' }" />
+        <p class="mt-3 text-gray-600 font-medium text-sm">
+          Loading payment details...
+        </p>
+      </div>
+      } @else {
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmit($event)" class="space-y-6 p-2">
+
+        <!-- Order Information -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+          <h4 class="font-medium text-gray-700 text-sm mb-2">Order Information</h4>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Order Number</label>
+              <div class="text-sm font-medium text-gray-800">{{selectedItem?.soText || 'N/A'}}</div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Order Date</label>
+              <div class="text-sm font-medium text-gray-800">{{selectedItem?.soCreatedDate || 'N/A'}}</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Customer Name</label>
+            <div class="text-sm font-medium text-gray-800">{{selectedItem?.customerName || 'N/A'}}</div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Customer Address</label>
+            <div class="text-sm text-gray-700">{{selectedItem?.customerAddress || 'N/A'}}</div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+              <div class="text-sm font-medium text-green-600">{{selectedItem?.paymentAmt || '₹0.00'}}</div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-500 mb-1">Voucher Type</label>
+              <div class="text-sm font-medium text-gray-800">{{selectedItem?.voucherType || 'N/A'}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="space-y-4">
+          <h4 class="font-medium text-gray-700 text-sm">Payment Details</h4>
+
+          <!-- Payment Date -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Payment Date <span class="text-red-500">*</span>
+            </label>
+            <div class="w-full">
+              <p-datePicker formControlName="paymentDate" [class.p-invalid]="isInvalid('paymentDate')"
+                styleClass="w-full" placeholder="Select payment date" [showIcon]="true" dateFormat="dd/mm/yy"
+                inputStyleClass="w-full" [style]="{'width': '100%'}" [showButtonBar]="true" yearRange="2010:2030">
+              </p-datePicker>
+              @if(isInvalid('paymentDate')){
+              <small class="text-red-500 text-xs mt-1 block">Payment Date is required.</small>
+              }
+            </div>
+          </div>
+
+
+
+          <!-- Current Payment Status -->
+          <!-- <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700">Current Payment Status:</span>
+                <span [class]="selectedItem?.paymentDate ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" 
+                      class="px-3 py-1 rounded-full text-xs font-medium">
+                  {{selectedItem?.paymentDate ? 'Paid' : 'Not Paid'}}
+                </span>
+              </div>
+              @if(selectedItem?.paymentDate){
+                <div class="mt-2 text-sm text-gray-600">
+                  Last paid on: {{selectedItem?.paymentDate}}
+                </div>
+              }
+            </div> -->
+        </div>
+      </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-between items-center w-full">
+        <div class="text-sm text-gray-500">
+          @if(selectedItem?.tallyPaymentStatus){
+          <div class="flex items-center gap-2">
+            <i class="pi pi-check-circle text-green-500"></i>
+            <span>Synced with Tally</span>
+          </div>
+          }
+        </div>
+        <div class="flex gap-2">
+          <button pButton type="button" (click)="onDrawerHide()" label="Cancel"
+            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition text-sm"
+            [disabled]="isFormLoading">
+          </button>
+          <button pButton type="submit" (click)="onSubmit($event)"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition text-sm"
+            [disabled]="isFormLoading || paymentForm.invalid">
+            @if(isFormLoading){
+            <i class="pi pi-spin pi-spinner mr-2"></i>
+            Processing...
+            } @else {
+            <i class="pi pi-check mr-2"></i>
+            Update Payment
+            }
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,372 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Workstation</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+    </div>
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" (ngSubmit)="onSubmit($event)"
+                class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Workstation Name *</label>
+                    <input type="text" maxlength="100" formControlName="workstationName"
+                        placeholder="Enter Workstation Name" [class.border-red-500]="isInvalid('workstationName')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('workstationName')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('workstationName')?.errors?.['required']){
+                        Workstation Name is required.
+                        } @else if(groupMasterForm1.get('workstationName')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('workstationName')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Capacity *</label>
+                    <input type="text" maxlength="500" formControlName="jobCapacity" placeholder="Enter Job Capacitye"
+                        [class.border-red-500]="isInvalid('jobCapacity')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('jobCapacity')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('jobCapacity')?.errors?.['required']){
+                        Job Capacity is required.
+                        } @else if(groupMasterForm1.get('jobCapacity')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('jobCapacity')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Workstation Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Workstation Type *</label>
+                    <p-select [options]="workStationDrp" formControlName="workstationType" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Workstation Type" [class.border-red-500]="isInvalid('workstationType')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('workstationType')){
+                    <p class="text-red-500 text-xs mt-1">Workstation Type is required.</p>
+                    }
+                </div>
+
+                <!-- Warehouse-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
+                    <p-select [options]="wareHouseDrp" formControlName="warehouse" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Warehouse" [class.border-red-500]="isInvalid('warehouse')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('warehouse')){
+                    <p class="text-red-500 text-xs mt-1">Warehouse is required.</p>
+                    }
+                </div>
+
+                <!-- Plant Floor-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Plant Floor *</label>
+                    <p-select [options]="plantFloorDrp" formControlName="plantFloor" optionLabel="drpOPtion"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOPtion" [showClear]="true"
+                        placeholder="Select Plant Floor" [class.border-red-500]="isInvalid('plantFloor')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('plantFloor')){
+                    <p class="text-red-500 text-xs mt-1">Plant Floor is required.</p>
+                    }
+                </div>
+
+                <!-- Electricity Cost-->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Electricity Cost *</label>
+                    <input type="text" maxlength="18" formControlName="electricityCost" (keypress)="allowFloat($event)"
+                        placeholder="Enter Electricity Cost" [class.border-red-500]="isInvalid('electricityCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('electricityCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('electricityCost')?.errors?.['required']){
+                        Electricity Cost is required.
+                        } @else if(groupMasterForm1.get('electricityCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('electricityCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Rent Cost-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rent Cost *</label>
+                    <input type="text" maxlength="18" formControlName="rentCost" placeholder="Enter Rent Cost"
+                        (keypress)="allowFloat($event)" [class.border-red-500]="isInvalid('rentCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('rentCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('rentCost')?.errors?.['required']){
+                        Rent Cost is required.
+                        } @else if(groupMasterForm1.get('rentCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('rentCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Consumable Cost-->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Consumable Cost *</label>
+                    <input type="text" maxlength="18" formControlName="consumableCost" (keypress)="allowFloat($event)"
+                        placeholder="Enter Consumable Cost" [class.border-red-500]="isInvalid('consumableCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('consumableCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('consumableCost')?.errors?.['required']){
+                        Consumable Cost is required.
+                        } @else if(groupMasterForm1.get('consumableCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('consumableCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Wages Cost-->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Wages Cost *</label>
+                    <input type="text" maxlength="18" formControlName="wagesCost" placeholder="Enter Wages Cost"
+                        (keypress)="allowFloat($event)" [class.border-red-500]="isInvalid('wagesCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('wagesCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('wagesCost')?.errors?.['required']){
+                        Wages Cost is required.
+                        } @else if(groupMasterForm1.get('wagesCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('wagesCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Status-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                    <p-select [options]="workStationStatusDrp" formControlName="status" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Status" [class.border-red-500]="isInvalid('status')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('status')){
+                    <p class="text-red-500 text-xs mt-1">Status is required.</p>
+                    }
+                </div>
+
+                <!-- Total Working Hours-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Working Hours *</label>
+                    <input type="text" maxlength="5" formControlName="totalWorkingHours"
+                        placeholder="Enter Total Working Hours" (keypress)="allowFloat($event)"
+                        [class.border-red-500]="isInvalid('totalWorkingHours')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('totalWorkingHours')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('totalWorkingHours')?.errors?.['required']){
+                        Total Working Hoursis required.
+                        } @else if(groupMasterForm1.get('totalWorkingHours')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('totalWorkingHours')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Description-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <input type="text" maxlength="500" formControlName="description" placeholder="Enter Description"
+                        [class.border-red-500]="isInvalid('description')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('description')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('description')?.errors?.['required']){
+                        Description required.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
+
+                    <p-datepicker formControlName="startTime" [timeOnly]="true" [showIcon]="true" icon="pi pi-clock"
+                        inputId="startTimePicker" [class.border-red-500]="isInvalid('startTime')" class="w-full custom-timepicker rounded-md border-2 border-gray-300
+                             focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200">
+                    </p-datepicker>
+
+                    @if(isInvalid('startTime')){
+                    <p class="text-red-500 text-xs mt-1">
+                        Start Time is required.
+                    </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+
+                    <p-datepicker formControlName="endTime" [timeOnly]="true" [showIcon]="true" icon="pi pi-clock"
+                        inputId="endTimePicker" [class.border-red-500]="isInvalid('endTime')" class="w-full custom-timepicker rounded-md border-2 border-gray-300
+                             focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200">
+                    </p-datepicker>
+
+                    @if(isInvalid('endTime')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('endTime')?.errors?.['required']){
+                        End Time is required.
+                        }
+                        @else if(groupMasterForm1.get('endTime')?.errors?.['timeInvalid']){
+                        End Time must be greater than Start Time.
+                        }
+                    </p>
+                    }
+                </div>
+
+            </form>
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Customer Type</span>
+                <i class="text-blue-500 pi pi-list text-xl shrink-0"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="flex flex-wrap gap-2 mt-4">
+                @for(item of groupListArray; track $index) {
+                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-lg">
+                    {{ item['CustomerValue'] }}
+                </span>
+                }
+            </div>
+        </ng-template>
+    </p-dialog>
+
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+</div>

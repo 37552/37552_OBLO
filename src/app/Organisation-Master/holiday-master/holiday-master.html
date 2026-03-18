@@ -1,0 +1,493 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-4 lg:p-0">
+  
+  <div class="bg-white">
+    <!-- Mobile optimized header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200">
+      <div class="flex items-center justify-between w-full sm:w-auto mb-2 sm:mb-0">
+        <h2 class="text-sm sm:text-base font-semibold text-gray-800 truncate">
+          <p-breadcrumb 
+            [model]="breadcrumbItems"  
+            [styleClass]="'custom-breadcrumb text-xs sm:text-sm'">
+          </p-breadcrumb>
+        </h2>
+      </div>
+      <div class="flex items-center justify-end sm:space-x-2 w-full sm:w-auto">
+        <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+          styleClass="orange-button text-sm px-3 py-2" />
+      </div>
+    </div>
+
+    <!-- Responsive table container -->
+    <div class="overflow-x-auto">
+      <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-table-template>
+      
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer text-sm"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col min-w-[120px]">
+            <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+              class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+              <i class="pi pi-eye text-xs"></i>
+              <span>View</span>
+            </button>
+            <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+              class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+              <i class="pi pi-pencil text-xs"></i>
+              <span>Update</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Right side drawer -->
+  <p-drawer [(visible)]="visible" position="right" [modal]="true"
+    [style]="{ width: '60%', 'min-width': '300px'}" (onHide)="onDrawerHide()"
+    styleClass="right-drawer">
+    
+    <ng-template pTemplate="header">
+      <div class="w-full flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="text-blue-500" [ngClass]="headerIcon"></i>
+          <span class="font-semibold text-lg sm:text-xl truncate">{{header}}</span>
+        </div>
+        <!-- <button (click)="visible = false" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <i class="pi pi-times text-gray-600"></i>
+        </button> -->
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <div class="h-full overflow-y-auto p-4 sm:p-6">
+        @if(isFormLoading){
+        <div class="flex flex-col items-center justify-center min-h-[300px]">
+          <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+            [style]="{ width: '50px', height: '50px' }" />
+          <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">Loading holiday data...</p>
+        </div>
+        }@else {
+        <form [formGroup]="holidayForm" (ngSubmit)="onSubmit($event)" class="space-y-4 sm:space-y-6">
+
+          <!-- Holiday Details -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-calendar text-indigo-600 text-sm"></i>
+                Holiday Details
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+              <!-- Holiday Date -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-sm sm:text-base font-medium text-gray-700 pt-2">
+                  Holiday Date <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <div class="p-inputgroup w-full">
+                    <p-datepicker 
+                      formControlName="holidayDate" 
+                      [showIcon]="true"
+                      dateFormat="dd-mm-yy"
+                      inputStyleClass="w-full"
+                     [class.p-invalid]="isInvalid('holidayDate')"
+                      class="w-full"
+                      placeholder="Select holiday date"
+                      >
+                    </p-datepicker>
+                  </div>
+                  @if(isInvalid('holidayDate')){
+                  <small class="text-red-500 text-xs mt-1 block">Holiday Date is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Holiday -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-sm sm:text-base font-medium text-gray-700 pt-2">
+                  Holiday <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <p-select 
+                    formControlName="holidayId" 
+                    [options]="holidays" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select holiday"
+                    [class.p-invalid]="isInvalid('holidayId')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('holidayId')){
+                  <small class="text-red-500 text-xs mt-1 block">Holiday is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Holiday Type -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-sm sm:text-base font-medium text-gray-700 pt-2">
+                  Holiday Type <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <p-select 
+                    formControlName="holidayTypeId" 
+                    [options]="holidayTypes" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select holiday type"
+                    [class.p-invalid]="isInvalid('holidayTypeId')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('holidayTypeId')){
+                  <small class="text-red-500 text-xs mt-1 block">Holiday Type is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Region -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-sm sm:text-base font-medium text-gray-700 pt-2">
+                  Region <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <p-select 
+                    formControlName="regionId" 
+                    [options]="regions" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select region"
+                    [class.p-invalid]="isInvalid('regionId')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('regionId')){
+                  <small class="text-red-500 text-xs mt-1 block">Region is required.</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop Image -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-desktop text-green-600 text-sm"></i>
+                Desktop Image
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div class="flex-1">
+                  <p class="text-sm sm:text-base text-gray-700 mb-2">Upload desktop banner image</p>
+                  <p class="text-xs text-gray-500">Recommended: 1920×600px, JPG/PNG (Max 2MB)</p>
+                </div>
+                <button 
+                  type="button"
+                  (click)="openImageUploadDialog('image')" 
+                  pButton 
+                  icon="pi pi-upload" 
+                  label="Upload Image"
+                  [disabled]="postType === 'view'"
+                  class="text-sm w-full sm:w-auto">
+                </button>
+              </div>
+
+              @if(uploadedImageUrl){
+              <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div class="flex-shrink-0">
+                    <img 
+                      [src]="uploadedImageUrl" 
+                      alt="Desktop Image Preview" 
+                      class="h-20 w-32 sm:h-24 sm:w-40 rounded-lg shadow border cursor-pointer object-cover"
+                      (click)="openImagePreview(uploadedImageUrl!)" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm sm:text-base font-medium text-gray-800">Current Desktop Image</p>
+                    <a [href]="uploadedImageUrl" 
+                       target="_blank" 
+                       class="text-xs text-blue-500 hover:underline inline-flex items-center gap-1 mt-1">
+                      <i class="pi pi-external-link"></i>
+                      View Full Size
+                    </a>
+                  </div>
+                  @if(postType !== 'view'){
+                  <button 
+                    type="button" 
+                    (click)="removeImage('image')" 
+                    class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors">
+                    <i class="pi pi-trash text-sm"></i>
+                  </button>
+                  }
+                </div>
+              </div>
+              }@else{
+              <div class="mt-4 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
+                <p class="text-sm text-gray-500">No desktop image uploaded yet</p>
+              </div>
+              }
+              
+              @if(isInvalid('image')){
+              <small class="text-red-500 text-xs mt-2 block">Desktop image is required.</small>
+              }
+            </div>
+          </div>
+
+          <!-- Mobile Image -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-mobile text-purple-600 text-sm"></i>
+                Mobile Image
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div class="flex-1">
+                  <p class="text-sm sm:text-base text-gray-700 mb-2">Upload mobile banner image</p>
+                  <p class="text-xs text-gray-500">Recommended: 800×400px, JPG/PNG (Max 1MB)</p>
+                </div>
+                <button 
+                  type="button"
+                  (click)="openImageUploadDialog('mobileImage')" 
+                  pButton 
+                  icon="pi pi-upload" 
+                  label="Upload Mobile Image"
+                  [disabled]="postType === 'view'"
+                  class="text-sm w-full sm:w-auto">
+                </button>
+              </div>
+
+              @if(uploadedMobileImageUrl){
+              <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div class="flex-shrink-0">
+                    <img 
+                      [src]="uploadedMobileImageUrl" 
+                      alt="Mobile Image Preview" 
+                      class="h-16 w-24 sm:h-20 sm:w-32 rounded-lg shadow border cursor-pointer object-cover"
+                      (click)="openImagePreview(uploadedMobileImageUrl!)" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm sm:text-base font-medium text-gray-800">Current Mobile Image</p>
+                    <a [href]="uploadedMobileImageUrl" 
+                       target="_blank" 
+                       class="text-xs text-blue-500 hover:underline inline-flex items-center gap-1 mt-1">
+                      <i class="pi pi-external-link"></i>
+                      View Full Size
+                    </a>
+                  </div>
+                  @if(postType !== 'view'){
+                  <button 
+                    type="button" 
+                    (click)="removeImage('mobileImage')" 
+                    class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors">
+                    <i class="pi pi-trash text-sm"></i>
+                  </button>
+                  }
+                </div>
+              </div>
+              }@else{
+              <div class="mt-4 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
+                <p class="text-sm text-gray-500">No mobile image uploaded yet</p>
+              </div>
+              }
+              
+              @if(isInvalid('mobileImage')){
+              <small class="text-red-500 text-xs mt-2 block">Mobile image is required.</small>
+              }
+            </div>
+          </div>
+
+          <!-- Add some bottom padding for mobile keyboards -->
+          <div class="h-8 sm:h-0"></div>
+        </form>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="border-t border-gray-200 py-3 px-4">
+        <div class="flex flex-col sm:flex-row justify-end gap-3">
+          @if(postType === 'add'){
+          <button 
+            pButton 
+            type="button" 
+            (click)="onClear()"
+            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm sm:text-base font-medium w-full sm:w-auto">
+            Reset
+          </button>
+          }
+          <button 
+            pButton 
+            type="submit" 
+            (click)="onSubmit($event)"
+            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow text-sm sm:text-base font-medium w-full sm:w-auto">
+            {{ postType === 'add' ? 'Submit' : 'Update' }}
+          </button>
+        </div>
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <!-- Image Upload Dialog -->
+  <p-dialog 
+    [(visible)]="showImageUploadDialog" 
+    [modal]="true" 
+    [style]="{ width: '90vw', 'max-width': '500px' }" 
+    (onHide)="closeImageUploadDialog()">
+    
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-image text-blue-500"></i>
+        <span class="font-semibold text-lg">{{currentUploadType === 'image' ? 'Upload Desktop Image' : 'Upload Mobile Image'}}</span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <div class="space-y-4">
+        <!-- File Upload -->
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <p-fileUpload 
+            #imageFileUpload
+            name="image[]" 
+            customUpload="true"
+            (onSelect)="onImageFileSelect($event, currentUploadType)"
+            accept="image/*" 
+            [multiple]="false"
+            [showCancelButton]="false"
+            [showUploadButton]="false"
+            chooseLabel="Select Image"
+            class="w-full">
+          </p-fileUpload>
+        </div>
+
+        <!-- Selected File -->
+        @if(currentUploadType === 'image' && selectedImageFile){
+        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <i class="pi pi-image text-xl text-blue-500"></i>
+              <div>
+                <p class="text-sm font-medium text-gray-800">{{selectedImageFile.name}}</p>
+                <p class="text-xs text-gray-500">{{getFileSize(selectedImageFile.size)}}</p>
+              </div>
+            </div>
+            <button type="button" (click)="clearImageSelection('image')" 
+                    class="text-red-500 hover:text-red-700 p-1">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          
+          <!-- Image Preview -->
+          @if(currentUploadType === 'image' && imagePreviewUrl){
+          <div class="mt-3 p-3 bg-white rounded border">
+            <p class="text-xs text-gray-600 mb-2">Preview:</p>
+            <img [src]="imagePreviewUrl" alt="Image Preview" 
+                 class="max-h-48 w-full object-contain rounded" />
+          </div>
+          }
+        </div>
+        }
+
+        @if(currentUploadType === 'mobileImage' && selectedMobileImageFile){
+        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <i class="pi pi-image text-xl text-blue-500"></i>
+              <div>
+                <p class="text-sm font-medium text-gray-800">{{selectedMobileImageFile.name}}</p>
+                <p class="text-xs text-gray-500">{{getFileSize(selectedMobileImageFile.size)}}</p>
+              </div>
+            </div>
+            <button type="button" (click)="clearImageSelection('mobileImage')" 
+                    class="text-red-500 hover:text-red-700 p-1">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          
+          <!-- Mobile Image Preview -->
+          @if(currentUploadType === 'mobileImage' && mobileImagePreviewUrl){
+          <div class="mt-3 p-3 bg-white rounded border">
+            <p class="text-xs text-gray-600 mb-2">Preview:</p>
+            <img [src]="mobileImagePreviewUrl" alt="Mobile Image Preview" 
+                 class="max-h-48 w-full object-contain rounded" />
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Image Requirements -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div class="flex items-start gap-2">
+            <i class="pi pi-info-circle text-yellow-600 mt-0.5"></i>
+            <div>
+              <p class="text-sm font-medium text-yellow-800 mb-1">Image Requirements:</p>
+              <ul class="text-xs text-yellow-700 space-y-1">
+                <li class="flex items-center gap-1">
+                  <i class="pi pi-check text-xs"></i>
+                  <span>{{currentUploadType === 'image' ? 'Desktop: 1920×600px' : 'Mobile: 800×400px'}}</span>
+                </li>
+                <li class="flex items-center gap-1">
+                  <i class="pi pi-check text-xs"></i>
+                  <span>Formats: JPG, PNG, WebP</span>
+                </li>
+                <li class="flex items-center gap-1">
+                  <i class="pi pi-check text-xs"></i>
+                  <span>Max size: {{currentUploadType === 'image' ? '2MB' : '1MB'}}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex flex-col sm:flex-row justify-end gap-3">
+        <button 
+          pButton 
+          type="button" 
+          (click)="closeImageUploadDialog()" 
+          severity="secondary"
+          [disabled]="isUploadingImage || isUploadingMobileImage"
+          class="w-full sm:w-auto">
+          Cancel
+        </button>
+        <button 
+          pButton 
+          type="button" 
+          (click)="uploadImage(currentUploadType)" 
+          [loading]="currentUploadType === 'image' ? isUploadingImage : isUploadingMobileImage"
+          [disabled]="(currentUploadType === 'image' ? !selectedImageFile : !selectedMobileImageFile) || (currentUploadType === 'image' ? isUploadingImage : isUploadingMobileImage)"
+          severity="primary"
+          class="w-full sm:w-auto">
+          @if(!(currentUploadType === 'image' ? isUploadingImage : isUploadingMobileImage)){
+          <i class="pi pi-upload mr-2"></i>
+          }
+          Upload {{currentUploadType === 'image' ? 'Desktop' : 'Mobile'}} Image
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast position="top-center"></p-toast>
+</div>

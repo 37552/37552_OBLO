@@ -1,0 +1,30 @@
+
+::ng-deep .p-inputtext {
+    width: 100% !important;
+}
+
+.poFromPrData input {
+    border:1px solid #e2e8f0 !important;
+    padding: 2px;
+}
+
+.availableQty input {
+    background: #e2e8f0 !important;
+}
+
+.text-danger {
+    color: #a94442 !important;
+}
+
+input:disabled {
+    background: #e2e8f0 !important;
+}
+
+.grandTotal {
+    width: 100%;
+    float: left;
+    background-color: #cce5ff;
+    padding: 10px;
+    color: #004085;
+}
+

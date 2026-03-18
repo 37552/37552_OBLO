@@ -1,0 +1,40 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="flex items-center justify-between p-3 border-b border-gray-200">
+        <h2 class="text-base font-semibold text-gray-800">
+            Complete Jobs
+        </h2>
+        <div class="flex items-center space-x-2">
+            <!-- <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                styleClass="orange-button"></p-button> -->
+        </div>
+
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+    </app-table-template>
+    <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+            <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+            <div class="flex flex-col">
+                <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                    <i class="pi pi-eye"></i>
+                </button>
+                <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                    <i class="pi pi-pencil"></i>
+                </button>
+                <!-- <button (click)="deleteItem(item);op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                    pTooltip="Delete">
+                    <i class="pi pi-trash"></i>
+                </button> -->
+            </div>
+        </p-popover>
+    </ng-template>
+</div>

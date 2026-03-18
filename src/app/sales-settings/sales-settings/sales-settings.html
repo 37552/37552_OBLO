@@ -1,0 +1,366 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <div class="bg-white  overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800"> Sales Setting</h2>
+
+            <!-- refresh button 
+            <p-button (click)="refreshData( )" icon="pi pi-refresh" variant="text" [raised]="true" /> -->
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+        <app-table-template [data]="resData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+
+
+
+            <ng-template #actionTemplateRef let-item>
+                <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v cursor-pointer"></i>
+                </button>
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-eye"></i>
+                        </button>
+                        <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-pencil"></i>
+                        </button>
+
+                        <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                            pTooltip="Delete">
+                            <i class="pi pi-trash"></i>
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+
+
+        </app-table-template>
+
+
+    </div>
+    <!-- DRAWER -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '50%', 'min-width': '600px' }"
+        (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <i class="pi pi-cog text-blue-500"></i>
+                <span class="font-semibold text-xl">
+                    {{ postType === 'add' ? 'Add Sales Settings' : postType === 'update' ? 'Update Sales Settings' :
+                    'View Sales Settings' }}
+                </span>
+
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <form [formGroup]="salesSettingsForm" (ngSubmit)="onSubmit($event)" class="space-y-6">
+                <!-- 🟦 CUSTOMER DEFAULTS SECTION -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i>
+                            CUSTOMER DEFAULTS
+                        </h4>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <!-- 👇 Two fields in one row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Customer Naming By
+                                </label>
+                                <p-select [options]="tblNamingBy" formControlName="customerNamingBy" appendTo="body"
+                                    optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                    [showClear]="true" placeholder="Select Customer Naming By"
+                                    [class.border-red-500]="isInvalid('customerNamingBy')"
+                                    class="custom-p-select w-full">
+                                </p-select>
+                                @if(isInvalid('customerNamingBy')){
+                                <p class="text-red-500 text-xs mt-1">
+                                    Customer Naming By is required.
+                                </p>
+                                }
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Default Customer Group
+                                </label>
+                                <p-select [options]="tblCustGroup" formControlName="defaultCustomerGroup"
+                                    appendTo="body" optionLabel="drpOption" optionValue="drpValue" [filter]="true"
+                                    filterBy="drpOption" [showClear]="true" [style]="{ width: '100%' }"
+                                    placeholder="Select Customer Group">
+                                </p-select>
+                                @if(isInvalid('defaultCustomerGroup')){
+                                <p class="text-red-500 text-xs mt-1">
+                                    Customer Naming By is required.
+                                </p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- 👇 Full width field below -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Default Territory
+                            </label>
+                            <p-select [options]="territoryOptions" formControlName="defaultTerritory" appendTo="body"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" [style]="{ width: '100%' }" placeholder="Select Territory">
+                            </p-select>
+                            @if(isInvalid('defaultTerritory')){
+                            <p class="text-red-500 text-xs mt-1">
+                                Default Territory is required.
+                            </p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 🟩 ITEM PRICING SETTINGS SECTION -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <!-- Section Header -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i>
+                            ITEM PRICING SETTINGS
+                        </h4>
+                    </div>
+
+                    <div class="p-5 space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Default Price List
+                                </label>
+                                <p-select [options]="PriceList" formControlName="defaultPriceList" appendTo="body"
+                                    optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                    [showClear]="true" [style]="{ width: '100%' }" placeholder="Select Price List">
+                                </p-select>
+                                @if(isInvalid('defaultPriceList')){
+                                <p class="text-red-500 text-xs mt-1">
+                                    Default Price List is required.
+                                </p>
+                                }
+                            </div>
+
+                            <div class="flex items-center mt-6">
+                                <p-checkbox [binary]="true" formControlName="maintainSameRate"
+                                    inputId="maintainSameRate"></p-checkbox>
+                                <label for="maintainSameRate" class="ml-2 text-sm text-gray-700">
+                                    Maintain Same Rate Throughout Sales Cycle
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Second Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowUserEditPrice"
+                                    inputId="allowUserEditPrice"></p-checkbox>
+                                <label for="allowUserEditPrice" class="ml-2 text-sm text-gray-700">
+                                    Allow User to Edit Price List Rate in Transactions
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="validateSellingPrice"
+                                    inputId="validateSellingPrice"></p-checkbox>
+                                <label for="validateSellingPrice" class="ml-2 text-sm text-gray-700">
+                                    Validate Selling Price for Item Against Purchase or Valuation Rate
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Third Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="calculateBundlePrice"
+                                    inputId="calculateBundlePrice"></p-checkbox>
+                                <label for="calculateBundlePrice" class="ml-2 text-sm text-gray-700">
+                                    Calculate Product Bundle Price Based on Child Items
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowNegativeRates"
+                                    inputId="allowNegativeRates"></p-checkbox>
+                                <label for="allowNegativeRates" class="ml-2 text-sm text-gray-700">
+                                    Allow Negative Rates for Items
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 🟩 TRANSACTION SETTINGS SECTION -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mt-6">
+                    <!-- Section Header -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-cog text-indigo-600"></i>
+                            TRANSACTION SETTINGS
+                        </h4>
+                    </div>
+
+                    <!-- Section Body -->
+                    <div class="p-5 space-y-5">
+                        <!-- 👇 Row 1 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Is Sales Order Required for Sales Invoice and Delivery Note Creation
+                                </label>
+                                <p-select [options]="yesNoOptions" formControlName="salesOrderRequired" appendTo="body"
+                                    optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                    [showClear]="true" placeholder="Select Yes/No" class="w-full">
+                                </p-select>
+                                @if(isInvalid('salesOrderRequired')){
+                                <p class="text-red-500 text-xs mt-1">
+                                    Sales Order Required is required.
+                                </p>
+                                }
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Is Delivery Note Required for Sales Invoice Generation
+                                </label>
+                                <p-select [options]="yesNoOptions" formControlName="deliveryNoteRequired"
+                                    appendTo="body" optionLabel="drpOption" optionValue="drpValue" [filter]="true"
+                                    filterBy="drpOption" [showClear]="true" placeholder="Select Yes/No" class="w-full">
+                                </p-select>
+                                @if(isInvalid('deliveryNoteRequired')){
+                                <p class="text-red-500 text-xs mt-1">
+                                    Delivery Note Required is required.
+                                </p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- 👇 Row 2 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Blanket Order Allowance (%)
+                                </label>
+                                <input type="number" pInputText formControlName="blanketOrderAllowance"
+                                    placeholder="Enter %" class="w-full" />
+                            </div>
+
+                            <div class="flex items-center mt-6">
+                                <p-checkbox [binary]="true" formControlName="allowMultipleItems"
+                                    inputId="allowMultipleItems"></p-checkbox>
+                                <label for="allowMultipleItems" class="ml-2 text-sm text-gray-700">
+                                    Allow Item to be Added Multiple Times in a Transaction
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Row 3 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowMultipleSO"
+                                    inputId="allowMultipleSO"></p-checkbox>
+                                <label for="allowMultipleSO" class="ml-2 text-sm text-gray-700">
+                                    Allow Multiple Sales Orders Against a Customer's Purchase Order
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowSOExpiredQuote"
+                                    inputId="allowSOExpiredQuote"></p-checkbox>
+                                <label for="allowSOExpiredQuote" class="ml-2 text-sm text-gray-700">
+                                    Allow Sales Order Creation for Expired Quotation
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Row 4 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="dontReserveQtyOnReturn"
+                                    inputId="dontReserveQtyOnReturn"></p-checkbox>
+                                <label for="dontReserveQtyOnReturn" class="ml-2 text-sm text-gray-700">
+                                    Don't Reserve Sales Order Qty on Sales Return
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="hideCustomerTaxId"
+                                    inputId="hideCustomerTaxId"></p-checkbox>
+                                <label for="hideCustomerTaxId" class="ml-2 text-sm text-gray-700">
+                                    Hide Customer's Tax ID from Sales Transactions
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Row 5 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="enableDiscountAccounting"
+                                    inputId="enableDiscountAccounting"></p-checkbox>
+                                <label for="enableDiscountAccounting" class="ml-2 text-sm text-gray-700">
+                                    Enable Discount Accounting for Selling
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowQuotationZeroQty"
+                                    inputId="allowQuotationZeroQty"></p-checkbox>
+                                <label for="allowQuotationZeroQty" class="ml-2 text-sm text-gray-700">
+                                    Allow Quotation with Zero Quantity
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 👇 Row 6 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex items-center">
+                                <p-checkbox [binary]="true" formControlName="allowSOZeroQty"
+                                    inputId="allowSOZeroQty"></p-checkbox>
+                                <label for="allowSOZeroQty" class="ml-2 text-sm text-gray-700">
+                                    Allow Sales Order with Zero Quantity
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- 🟨 ACTION BUTTONS -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+
+                    <!-- Reset button always visible -->
+                    <button pButton type="button" label="Reset" icon="pi pi-times" class="p-button-text"
+                        (click)="onClear()"></button>
+
+                    <!-- Submit button -->
+                    <button *ngIf="postType !== 'view'" pButton type="submit"
+                        [label]="postType === 'update' ? 'Update Sales Settings' : 'Submit Sales Settings'"
+                        icon="pi pi-check">
+                    </button>
+
+                </div>
+
+            </form>
+        </ng-template>
+    </p-drawer>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+
+</div>

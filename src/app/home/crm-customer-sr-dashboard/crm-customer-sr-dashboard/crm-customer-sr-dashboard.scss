@@ -1,0 +1,30 @@
+::ng-deep .p-dialog {
+  .p-dialog-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .p-dialog-content {
+    padding: 1.25rem;
+  }
+}
+
+::ng-deep .p-datatable {
+  .p-datatable-thead > tr > th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .p-datatable-tbody > tr:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.pi-star {
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+}

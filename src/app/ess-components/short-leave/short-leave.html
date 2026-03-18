@@ -1,0 +1,177 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <!-- Breadcrumb Header -->
+        <div class="flex items-center justify-between p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"
+                    styleClass="text-sm bg-transparent border-none p-0"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center gap-2">
+                @if (hasData) {
+                <p-button (click)="exportAsXLSX()" label="Export" icon="pi pi-file-excel"
+                    styleClass="p-button-sm text-xs p-button-success p-button-outlined" [raised]="true">
+                </p-button>
+                }
+
+                <p-button (click)="showDialog('add', [])" label="Apply Short Leave" icon="pi pi-plus"
+                    styleClass="orange-button px-4 py-2 text-xs" [raised]="true">
+                </p-button>
+            </div>
+        </div>
+
+        <div class="p-4 lg:p-6">
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                <!-- Header Title -->
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                        <i class="pi pi-history"></i> Short Leave History
+                    </h3>
+                </div>
+
+                <!-- History Content -->
+                <div class="p-0">
+                    <app-table-template [data]="empShortLeaveData" [columns]="tableHeaders" [pageSize]="pageSize"
+                        [totalCount]="totalCount" [isLoading]="loading" [currentPage]="pageNo"
+                        (pageChange)="onPageChange($event)" (refresh)="getAppliedShortLeave()"
+                        (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+                        [actionTemplate]="actionTpl" [jsonTemplate]="reasonTpl" [jsonTemplate1]="statusTpl">
+                    </app-table-template>
+                </div>
+
+                <!-- Template for Reason column (Long Text) -->
+                <ng-template #reasonTpl let-item>
+                    <div class="flex flex-col">
+                        <span class="text-sm text-gray-700 leading-relaxed min-w-[200px]">
+                            {{ item.isExpanded ? item.reason : getTruncatedText(item.reason, 10) }}
+                        </span>
+                        <button *ngIf="getWordCount(item.reason) > 20" (click)="toggleExpand(item)"
+                            class="text-blue-600 hover:text-blue-800 text-xs font-semibold mt-1 self-start transition-all focus:outline-none">
+                            {{ item.isExpanded ? 'Show Less' : 'Show More' }}
+                        </button>
+                    </div>
+                </ng-template>
+
+                <!-- Template for Status column -->
+                <ng-template #statusTpl let-item>
+                    <div class="flex items-center justify-start">
+                        <p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"
+                            class="px-2 py-0.5 font-semibold text-[10px] uppercase">
+                        </p-tag>
+                    </div>
+                </ng-template>
+
+                <!-- Template for Table Actions -->
+                <ng-template #actionTpl let-item>
+                    <div class="flex items-center justify-start">
+                        <button *ngIf="item.statusId == 0 || item.allowAction" pButton icon="pi pi-undo"
+                            label="Withdraw" class="p-button-sm p-button-danger p-button-text hover:bg-red-50"
+                            (click)="withdrawShortLeave(item)"></button>
+                    </div>
+                </ng-template>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Short Leave Drawer -->
+<p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '40%', 'max-width': '100%' }"
+    appendTo="body">
+    <!-- Header -->
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <i [class]="headerIcon" class="text-xl text-blue-600"></i>
+            <h3 class="text-lg font-semibold text-gray-800 m-0">{{ header }}</h3>
+        </div>
+    </ng-template>
+
+    <!-- Content -->
+    <ng-template pTemplate="content">
+        <div class="p-4 bg-white">
+            <form [formGroup]="shortLeaveForm" class="flex flex-col gap-6">
+                <!-- Select Date -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">Select Date*</label>
+                    <p-datepicker formControlName="date" [minDate]="minDate" [showIcon]="true" appendTo="body"
+                        [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}" class="w-full "
+                        placeholder="Choose date">
+                    </p-datepicker>
+                </div>
+
+                <!-- Session To (Using button grid like leave-application) -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">Session To*</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button *ngFor="let opt of sessionData" type="button" (click)="selectSession(opt.drpValue)"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border" [ngClass]="{
+                        'bg-blue-600 text-white shadow-md border-blue-600': sessionFrom === opt.drpValue,
+                        'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100':
+                          sessionFrom !== opt.drpValue,   }"> {{ opt.drpOption }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CC To Selector (Matching leave-application template) -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">Cc To</label>
+                    <p-select formControlName="ccId" [options]="ccData" optionLabel="drpOption" [filter]="true"
+                        filterBy="drpOption" placeholder="Search employee..." styleClass="w-full" appendTo="body">
+                        <ng-template pTemplate="selectedItem" let-selected>
+                            <span *ngIf="selected" class="text-sm font-medium">
+                                {{ selected.drpOption.split('/')[0] }}
+                            </span>
+                        </ng-template>
+
+                        <ng-template pTemplate="item" let-option>
+                            <div class="flex flex-col py-1">
+                                <span class="text-sm font-medium text-gray-800">
+                                    {{ option.drpOption.split('/')[0] }}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{ option.drpOption.split('/')[1] || '' }}
+                                </span>
+                            </div>
+                        </ng-template>
+                    </p-select>
+                </div>
+
+                <!-- Reason -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">Reason*</label>
+                    <textarea pInputTextarea formControlName="reason" placeholder="Enter detailed reason..."
+                        maxlength="12" class="w-full" rows="2"></textarea>
+
+                    <div class="flex justify-between text-xs">
+                        <small class="text-red-500" *ngIf="
+                shortLeaveForm.get('reason')?.touched &&
+                shortLeaveForm.get('reason')?.errors?.['required']
+              ">
+                            Reason is required
+                        </small>
+                        <small class="text-gray-400 ml-auto">
+                            {{ shortLeaveForm.get('reason')?.value?.length || 0 }} / 100
+                        </small>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <div class="gap-4 flex justify-end p-2 px-4 border-t border-gray-100 bg-gray-50/50">
+            <p-button label="Reset " icon="pi pi-refresh" styleClass="p-button-outlined p-button-warning p-button-sm"
+                (click)="resetForm()"></p-button>
+            <p-button label="Submit  " icon="pi pi-check" styleClass="orange-button px-4 py-2 text-xs"
+                [loading]="loading" (click)="submitLeaveData()">
+            </p-button>
+        </div>
+        <!-- Submit Button inside form content (Matching leave-application) -->
+        <div class="pt-4 border-t border-gray-100 flex justify-end gap-2"></div>
+    </ng-template>
+</p-drawer>
+
+<ngx-spinner bdColor="rgba(0, 0, 0, 0.8)" size="medium" color="#fff" type="ball-scale-multiple" [fullScreen]="true">
+    <p style="color: white">Processing...</p>
+</ngx-spinner>

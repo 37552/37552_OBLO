@@ -1,0 +1,322 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Technical Bid Submission
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Tender Type-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tender Type *</label>
+                    <p-select [options]="tenderTypeDrp" formControlName="tenderType" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Tender Type" [class.border-red-500]="isInvalid('tenderType')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('tenderType')){
+                    <p class="text-red-500 text-xs mt-1">Tender Type is required.</p>
+                    }
+                </div>
+                <!-- Compliance Remarks  -->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Compliance Remarks </label>
+                    <input type="text" maxlength="100" formControlName="customerName"
+                        placeholder="Enter Compliance Remarks"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                </div>
+
+                <!-- Submission Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Submission Date *</label>
+                    <input type="date" formControlName="submissionDate"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1" (keydown)="blockTyping($event)"
+                        (click)="openCalendar($event)" [class.border-red-500]="isInvalid('submissionDate')" />
+                    @if(isInvalid('submissionDate')){
+                    <p class="text-red-500 text-xs mt-1">Submission Date is required.</p>
+                    }
+                </div>
+
+            </form>
+
+            <form [formGroup]="DocumentDetails" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="col-span-full mt-6 border-t pt-4" *ngIf="postType != 'view'">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Document Details </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+
+                        <!-- Tender Document -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tender Document *</label>
+                            <p-select [options]="tenderDocument" formControlName="documentName" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Tender Document" [class.border-red-500]="isInvalid1('documentName')"
+                                class="custom-p-select w-full">
+                            </p-select>
+                            @if(isInvalid1('documentName')){
+                            <p class="text-red-500 text-xs mt-1">Tender Document is required.</p>
+                            }
+                        </div>
+
+                        <!-- Attach File -->
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4 attachResume">
+
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">Document File *</label>
+                                <p-button (click)="openResumeUploadDialog()" label="Document File" icon="pi pi-upload"
+                                    variant="text" [raised]="true" [disabled]="postType === 'view'"
+                                    styleClass="text-xs p-1" />
+                            </div>
+
+                            <div *ngIf="uploadedResumeUrl; else noFile"
+                                class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <div class="flex-1 flex items-center gap-3">
+                                    <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Uploaded Document File</p>
+                                        <a [href]="uploadedResumeUrl" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+                                <button *ngIf="postType !== 'view'" type="button" (click)="removeResume()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+
+                            <ng-template #noFile>
+                                <p class="text-xs text-gray-500 italic">No document uploaded yet.</p>
+                            </ng-template>
+
+                            <p *ngIf="DocumentDetails.get('fileUploadControl')?.touched && DocumentDetails.get('fileUploadControl')?.invalid"
+                                class="text-red-500 text-xs mt-2">
+                                Document File is required.
+                            </p>
+                        </div>
+
+                        <!-- Resume Upload Dialog -->
+                        <p-dialog [(visible)]="showResumeUploadDialog" [modal]="true" header="Document File"
+                            [style]="{ width: '40vw' }" (onHide)="closeResumeUploadDialog()">
+
+                            <ng-template pTemplate="content">
+                                <div class="flex flex-col gap-4">
+                                    <p-fileUpload #FileUpload name="resume[]" customUpload="true"
+                                        (onSelect)="onResumeFileSelect($event)" accept=".pdf,.doc,.docx"
+                                        [multiple]="false" [showCancelButton]="false" [showUploadButton]="false"
+                                        chooseLabel="Select Document File" class="w-full">
+                                    </p-fileUpload>
+
+                                    @if(selectedResumeFile){
+                                    <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                        <i class="pi pi-file text-xl text-blue-500"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium">{{selectedResumeFile.name}}</span>
+                                            <span
+                                                class="text-xs text-gray-500 ml-2">({{getFileSize(selectedResumeFile.size)}})</span>
+                                        </div>
+                                        <button type="button" (click)="clearResumeSelection()"
+                                            class="text-red-500 hover:text-red-700">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <div class="flex justify-end space-x-3">
+                                    <p-button label="Cancel" (click)="closeResumeUploadDialog()" severity="secondary"
+                                        [disabled]="isUploadingResume" />
+                                    <p-button label="Upload" (click)="uploadResume()" [loading]="isUploadingResume"
+                                        [disabled]="!selectedResumeFile || isUploadingResume" />
+                                </div>
+                            </ng-template>
+                        </p-dialog>
+
+
+                    </div>
+
+                </div>
+
+            </form>
+
+            <div class="col-span-2 flex justify-start mt-4" *ngIf="postType != 'view'">
+                <button type="button" (click)="addDocument()"
+                    class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition">
+                    <i class="pi pi-plus mr-1"></i>
+                    {{ editIndex > -1 ? 'Update' : 'Add' }}
+                </button>
+            </div>
+
+            <div *ngIf="tableData.length > 0" class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Added Documents</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border border-gray-200 border-collapse rounded-lg">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-2 border border-gray-300 text-left text-sm">Document Name</th>
+                                <th class="p-2 border border-gray-300 text-left text-sm">Uploaded File</th>
+                                <th class="p-2 border border-gray-300 text-center text-sm">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let doc of tableData; let i = index" class="hover:bg-gray-50">
+                                <td class="p-2 border border-gray-300 text-sm">{{ doc.documentNameText }}</td>
+                                <td class="p-2 border border-gray-300 text-sm">
+                                    <a [href]="doc.fileUrl" target="_blank" class="text-blue-600 hover:underline">
+                                        {{ doc.fileUploadControl?.name || 'View / Download' }}
+                                    </a>
+                                </td>
+                                <td class="p-2 border border-gray-300 text-center flex justify-center gap-2 text-sm">
+                                    <button (click)="editDocument(i)" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button (click)="removeDocument(i)" class="text-red-600 hover:text-red-800">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+    <!-- Folder Data SHowing -->
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Document Details</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Document Type</th>
+                        <th>Documente File</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ detail.DocumentType}}</td>
+                        <td class="px-4 py-2 text-sm text-center">
+                            <button type="button" (click)="viewAttachment(detail.Document)"
+                                class="text-blue-500 hover:text-blue-700 text-lg">
+                                <i class="pi pi-eye"> View File</i>
+                            </button>
+                        </td>
+
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+
+    </p-dialog>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

@@ -1,0 +1,305 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between p-3 border-b border-gray-200 gap-3">
+      <h2 class="text-base font-semibold text-gray-800">Targets Management</h2>
+
+      <div class="flex items-center space-x-2">
+        <p-button
+          (click)="showDialog('add', [])"
+          label="Add"
+          icon="pi pi-plus"
+          variant="text"
+          [raised]="true"
+          styleClass="orange-button"
+        >
+        </p-button>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="w-full overflow-auto">
+      <app-table-template
+        [data]="data"
+        [columns]="columns"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [isLoading]="isLoading"
+        [currentPage]="pageNo"
+        [sortColumn]="sortColumn"
+        [sortDirection]="sortDirection"
+        [searchText]="searchText"
+        [actionTemplate]="actionTemplateRef"
+        (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      >
+      </app-table-template>
+    </div>
+
+    <!-- Action Template -->
+    <ng-template #actionTemplateRef let-item>
+      <button type="button" class="text-gray-400 hover:text-gray-600" (click)="op.toggle($event)">
+        <i class="pi pi-ellipsis-v"></i>
+      </button>
+
+      <p-popover #op>
+        <div class="flex flex-col">
+          <button
+            (click)="showDialog('view', item); op.hide()"
+            class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
+          >
+            <i class="pi pi-eye"></i> View
+          </button>
+
+          <button
+            (click)="showDialog('update', item); op.hide()"
+            class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
+          >
+            <i class="pi pi-pencil"></i> Update
+          </button>
+
+          <button
+            (click)="deleteItem(item); op.hide()"
+            class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
+          >
+            <i class="pi pi-trash"></i> Delete
+          </button>
+        </div>
+      </p-popover>
+    </ng-template>
+  </div>
+
+  <!-- DRAWER -->
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    (onHide)="onDrawerHide()"
+    class="sm:w-[60%] w-full"
+    [style]="{ width: '80%', 'max-width': '100%' }"
+  >
+  <ng-template pTemplate="header">
+  <div class="flex items-center gap-3 py-2 px-1 border-b border-gray-200">
+    <!-- Icon Circle -->
+    <div class="w-9 h-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+      <i [ngClass]="headerIcon" class="text-lg"></i>
+    </div>
+
+    <!-- Title -->
+    <span class="font-semibold text-xl text-gray-800">
+      {{ header }}
+    </span>
+  </div>
+</ng-template>
+
+
+    <ng-template pTemplate="content" [style]="{ padding: '2rem' }">
+      <div *ngIf="isFormLoading" class="flex justify-center items-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          [style]="{ width: '50px', height: '50px' }"
+        >
+        </p-progress-spinner>
+      </div>
+
+      <div *ngIf="!isFormLoading">
+        <p-card class="rounded-lg border border-gray-200 mb-6">
+          <div class="flex justify-between items-center p-3 bg-gray-50 w-full">
+            <span class="font-semibold text-lg">Target Details</span>
+          </div>
+
+          <form
+            [formGroup]="targetsForm"
+            class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 px-4 pb-6 mt-6"
+          >
+            <!-- Target Type -->
+            <div>
+              <label
+               class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-bullseye text-blue-500"></i>
+Target Type*</label>
+              <p-select
+                [options]="targetTypeList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Target Type"
+                formControlName="targetType"
+                class="custom-p-select w-full"
+                (onChange)="onchangeType($event)"
+                [invalid]="isInvalid('targetType', targetsForm)"
+              ></p-select>
+            </div>
+
+            <!-- Employee -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-user text-green-500 mr-1"></i>Employee</label>
+              <p-select
+                [disabled]="targetsForm.get('targetType')?.value != '10000'"
+                id="employee"
+                [filter]="true"
+                filterBy="drpOption"
+                appendTo="body"
+                [options]="employeeList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Employee"
+                [virtualScroll]="true"
+                [virtualScrollItemSize]="38"
+                formControlName="employee"
+                class="custom-p-select w-full"
+              ></p-select>
+            </div>
+
+            <!-- Department -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-building text-yellow-500 mr-1"></i>Department</label>
+              <p-select
+                [disabled]="targetsForm.get('targetType')?.value != '10001'"
+                id="department"
+                [filter]="true"
+                appendTo="body"
+                [options]="departmentList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Department"
+                formControlName="department"
+                class="custom-p-select w-full"
+              ></p-select>
+            </div>
+
+            <!-- Fiscal Year dropdown with validation -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-calendar text-purple-500 mr-1"></i>Fiscal Year*</label>
+              <p-select
+                id="fiscalYear"
+                [options]="fiscalYearList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Fiscal Year"
+                formControlName="fiscalYear"
+                class="custom-p-select w-full"
+                [ngClass]="{ 'border border-red-500': isInvalid('fiscalYear', targetsForm) }"
+                [invalid]="isInvalid('fiscalYear', targetsForm)"
+              ></p-select>
+              <p *ngIf="isInvalid('fiscalYear', targetsForm)" class="text-red-500 text-xs mt-1">
+                Fiscal Year is required.
+              </p>
+            </div>
+
+            <!-- Currency dropdown with validation -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-money-bill text-indigo-500 mr-1"></i>Currency*</label>
+              <p-select
+                id="currency"
+                [options]="currencyList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Currency"
+                formControlName="currency"
+                class="custom-p-select w-full"
+                [ngClass]="{ 'border border-red-500': isInvalid('currency', targetsForm) }"
+                [invalid]="isInvalid('currency', targetsForm)"
+              ></p-select>
+              <p *ngIf="isInvalid('currency', targetsForm)" class="text-red-500 text-xs mt-1">
+                Currency is required.
+              </p>
+            </div>
+
+            <!-- Target Amount -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-chart-line  text-red-500 mr-1"></i>Target Amount*</label>
+              <input
+                type="number"
+                 (input)="onNumberInput($event)"
+                  max="999999999"
+                formControlName="targetAmount"
+                placeholder="Select Target Amount"
+                class="custom-p-select w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 placeholder:text-gray-500 placeholder:text-sm placeholder:font-medium"
+              />
+            </div>
+
+            <!-- Target Status dropdown with validation -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-info-circle text-orange-500 mr-1"></i>Target Status*</label>
+              <p-select
+                id="targetStatus"
+                [options]="targetStatusList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                placeholder="Select Status"
+                formControlName="targetStatus"
+                class="custom-p-select w-full"
+                [ngClass]="{ 'border border-red-500': isInvalid('targetStatus', targetsForm) }"
+                [invalid]="isInvalid('targetStatus', targetsForm)"
+              ></p-select>
+              <p *ngIf="isInvalid('targetStatus', targetsForm)" class="text-red-500 text-xs mt-1">
+                Target Status is required.
+              </p>
+            </div>
+
+            <!-- Target Period dropdown with validation -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-clock text-teal-500 mr-1"></i>Target Period*</label>
+              <p-select
+                id="targetPeriod"
+                [options]="targetPeriodList"
+                optionLabel="drpOption"
+                optionValue="drpValue"
+                
+                placeholder="Select Period"
+                formControlName="targetPeriod"
+                class="custom-p-select w-full"
+                [ngClass]="{ 'border border-red-500': isInvalid('targetPeriod', targetsForm) }"
+                [invalid]="isInvalid('targetPeriod', targetsForm)"
+              ></p-select>
+              <p *ngIf="isInvalid('targetPeriod', targetsForm)" class="text-red-500 text-xs mt-1">
+                Target Period is required.
+              </p>
+            </div>
+
+            <!-- Target Description -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-2"><i class="pi pi-align-left text-gray-500 mr-1"></i>Target Description</label>
+              <textarea
+                formControlName="targetDescription"
+                placeholder="Enter Target Description"
+                maxlength="150"
+                class="w-full rounded-md border-2 border-gray-300 px-3 py-4 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 placeholder-gray-400 placeholder-center"
+              ></textarea>
+              <p
+                *ngIf="isInvalid('targetDescription', targetsForm)"
+                class="text-red-500 text-xs mt-1"
+              >
+                Required field.
+              </p>
+            </div>
+          </form>
+        </p-card>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div
+        *ngIf="postType !== 'view'"
+        class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4"
+      >
+        <button pButton (click)="onSubmit()" class="px-6 py-2 bg-indigo-600 text-white rounded-lg">
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+
+        <button
+          *ngIf="postType === 'add'"
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 rounded-lg"
+        ></button>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

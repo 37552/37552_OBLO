@@ -1,0 +1,257 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">User Form Acces</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" (onHide)="onDrawerHide()"
+        class="sm:w-[60%] w-full !max-w-full" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content" [style]="{padding: '2rem'}">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }@else {
+            <form [formGroup]="userSharingAccessForm" (ngSubmit)="onSubmit($event)"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-2 ">
+                    <label class="block text-sm text-red-500 font-medium text-red-700 mb-2">From User*</label>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Organisation*</label>
+                    <p-select [options]="fromUserOrgDrp" formControlName="fromUserorg" optionLabel="drpOption"
+                        [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select organisation"
+                        (onChange)="getDepartment('from')" [class.border-red-500]="isInvalid('fromUserorg')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('fromUserorg')){
+                    <p class="text-red-500 text-xs mt-1">Organisation is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department*</label>
+                    <p-select [options]="fromUserDepartmentDrp" formControlName="fromUserdept" optionLabel="drpOption"
+                        [loading]="isLoadingFromDep" (onChange)="getDesignation('from')" [filter]="true"
+                        filterBy="drpOption" [showClear]="true" placeholder="Select department"
+                        [class.border-red-500]="isInvalid('fromUserdept')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('fromUserdept')){
+                    <p class="text-red-500 text-xs mt-1">Department is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Designation*</label>
+                    <p-select [options]="fromUserDesignationDrp" formControlName="fromUserdesg" optionLabel="drpOption"
+                        [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select designation"
+                        (onChange)="getUser('from')" [class.border-red-500]="isInvalid('fromUserdesg')"
+                        class="custom-p-select w-full" [loading]="isLoadingFromDes">
+                    </p-select>
+                    @if(isInvalid('fromUserdesg')){
+                    <p class="text-red-500 text-xs mt-1">Designation is required.</p>
+                    }
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">User*</label>
+                    <p-select [options]="fromUserEmpDrp" formControlName="fromUserEmp" optionLabel="drpOption"
+                        [filter]="true" [loading]="isLoadingFromUser" filterBy="drpOption" [showClear]="true"
+                        (onChange)="getActivity()" placeholder="Select user"
+                        [class.border-red-500]="isInvalid('fromUserEmp')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('fromUserEmp')){
+                    <p class="text-red-500 text-xs mt-1">User is required.</p>
+                    }
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Activity*</label>
+                    <p-select [options]="fromUserActivityDrp" formControlName="fromUserActivity" optionLabel="drpOption"
+                        [filter]="true" [loading]="isLoadingToActivity" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select activity" [class.border-red-500]="isInvalid('fromUserActivity')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('fromUserActivity')){
+                    <p class="text-red-500 text-xs mt-1">Activity is required.</p>
+                    }
+                </div>
+                <!-------------------------- To user -------------------------->
+                <div class="col-span-2 mt-4">
+                    <label class="block text-sm  font-medium text-red-700 mb-2">To User*</label>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Organisation*</label>
+                    <p-select [options]="toUserOrgDrp" formControlName="toUserorg" optionLabel="drpOption"
+                        [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select organisation"
+                        (onChange)="getDepartment('to')" [class.border-red-500]="isInvalid('toUserorg')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('toUserorg')){
+                    <p class="text-red-500 text-xs mt-1">Organisation is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department*</label>
+                    <p-select [options]="toUserDepartmentDrp" formControlName="toUserdept" optionLabel="drpOption"
+                        [loading]="isLoadingToDep" (onChange)="getDesignation('to')" [filter]="true"
+                        filterBy="drpOption" [showClear]="true" placeholder="Select department"
+                        [class.border-red-500]="isInvalid('toUserdept')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('toUserdept')){
+                    <p class="text-red-500 text-xs mt-1">Department is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Designation*</label>
+                    <p-select [options]="toUserDesignationDrp" formControlName="toUserdesg" optionLabel="drpOption"
+                        [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select designation"
+                        (onChange)="getUser('to')" [class.border-red-500]="isInvalid('toUserdesg')"
+                        class="custom-p-select w-full" [loading]="isLoadingToDes">
+                    </p-select>
+                    @if(isInvalid('toUserdesg')){
+                    <p class="text-red-500 text-xs mt-1">Designation is required.</p>
+                    }
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">User*</label>
+                    <p-select [options]="toUserEmpDrp" formControlName="toUserEmp" optionLabel="drpOption"
+                        [filter]="true" [loading]="isLoadingToUser" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select user" [class.border-red-500]="isInvalid('toUserEmp')"
+                        (onChange)="onChangeToUser()" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('toUserEmp')){
+                    <p class="text-red-500 text-xs mt-1">User is required.</p>
+                    }
+                </div>
+                <!-- <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Activity*</label>
+                    <p-select [options]="toUserActivityDrp" formControlName="toUserActivity" optionLabel="drpOption"
+                        [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select activity"
+                        [class.border-red-500]="isInvalid('toUserActivity')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('toUserActivity')){
+                    <p class="text-red-500 text-xs mt-1">Activity is required.</p>
+                    }
+                </div> -->
+
+                <!-------------------------- permissions -------------------------->
+                @if(postType != 'add'){
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-red-700 mb-2">Permissions*</label>
+                    <!-- <div class="overflow-x-auto rounded-lg"> -->
+                    <table class="min-w-full divide-y divide-gray-200 mt-6 raised shadow-md rounded-lg"
+                        id="permissionsTable">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Input Type</th>
+                                <th class="px-4 py-2 text-center">Add</th>
+                                <th class="px-4 py-2 text-center">View</th>
+                                <th class="px-4 py-2 text-center">Edit</th>
+                                <th class="px-4 py-2 text-center">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @for (row of inputTypeData; track $index) {
+                            <tr class="hover:bg-[#F9FAFB]">
+                                <td class="px-4 py-2">{{ row.fieldType }}</td>
+
+                                <!-- Add -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="checkbox" [checked]="isCheckedValue(row.canAdd)" class="cursor-pointer"
+                                        [disabled]="postType === 'view'"
+                                        (change)="onPermissionChange(row, 'canAdd', $event.target.checked)" />
+                                </td>
+
+                                <!-- View -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="checkbox" [checked]="isCheckedValue(row.canView)"
+                                        class="cursor-pointer" [disabled]="postType === 'view'"
+                                        (change)="onPermissionChange(row, 'canView', $event.target.checked)" />
+                                </td>
+
+                                <!-- Edit -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="checkbox" [checked]="isCheckedValue(row.canEdit)"
+                                        class="cursor-pointer" [disabled]="postType === 'view'"
+                                        (change)="onPermissionChange(row, 'canEdit', $event.target.checked)" />
+                                </td>
+
+                                <!-- Delete -->
+                                <td class="px-4 py-2 text-center">
+                                    <input type="checkbox" [checked]="isCheckedValue(row.canDelete)"
+                                        class="cursor-pointer" [disabled]="postType === 'view'"
+                                        (change)="onPermissionChange(row, 'canDelete', $event.target.checked)" />
+                                </td>
+                            </tr>
+                            }
+
+                        </tbody>
+                    </table>
+                    <!-- </div> -->
+                </div>
+                }
+
+            </form>
+            }
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+    </p-drawer>
+</div>
+<p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>

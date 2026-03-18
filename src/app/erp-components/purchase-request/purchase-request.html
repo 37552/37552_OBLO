@@ -1,0 +1,631 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+       <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div> 
+
+        <p-button icon="pi pi-file-excel" class="mr-2 text-green-600 hover:text-green-700" styleClass="p-button-text"
+          pTooltip="Excel Download" (onClick)="exportAsXLSXCustom()"></p-button>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+        (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button 
+                     (click)="openprintModalData(item.id); op.hide()"
+                      class="px-4 py-2 hover:bg-gray-100 text-left"
+                       pTooltip="Print">
+                     <i class="pi pi-print"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+       <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="openDetail(item.details,'Item Details')">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+</div>  
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{ header }}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+     <div class="tabbable">
+     <form [formGroup]="purchaseRequestForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Division *</label>
+      <p-select
+        [options]="divisionDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="divisionId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Division"
+        [class.border-red-500]="isInvalid('divisionId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('divisionId')){
+      <p class="text-red-500 text-xs mt-1">Division is required.</p>
+      }
+    </div>  
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
+      <p-select
+        [options]="warehouseDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="warehouseId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Warehouse"
+        [class.border-red-500]="isInvalid('warehouseId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('warehouseId')){
+      <p class="text-red-500 text-xs mt-1">Warehouse is required.</p>
+      }
+    </div> 
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Source *</label>
+      <p-select
+        [options]="sourceDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="sourceDocumentId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Source"
+        [class.border-red-500]="isInvalid('sourceDocumentId')"
+        class="custom-p-select w-full"
+        appendTo="body"
+        (onChange)="onSourceItemChange($event)">
+      </p-select>
+      @if(isInvalid('sourceDocumentId')){
+      <p class="text-red-500 text-xs mt-1">Source is required.</p>
+      }
+    </div> 
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Reference Number <em class="marked"*ngIf="!isDirect">*</em></label>
+      <p-select
+        [options]="sourceDocumentNumberDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="referenceId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Reference Number"
+        [class.border-red-500]="isInvalid('referenceId')"
+        class="custom-p-select w-full"
+        (onChange)="getMaintenanceDetail($event)"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('referenceId')){
+      <p class="text-red-500 text-xs mt-1">Reference Number is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Request Type *</label>
+      <p-select
+        [options]="PRTypeDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="requestTypeId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Purchase Request Type"
+        [class.border-red-500]="isInvalid('requestTypeId')"
+        class="custom-p-select w-full"
+        (onChange)="getItems($event)"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('requestTypeId')){
+      <p class="text-red-500 text-xs mt-1">Purchase Request Type is required.</p>
+      }
+    </div>
+
+      <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Cost Center *</label>
+      <p-select
+        [options]="costCenterDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="costCenterId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Cost Center"
+        [class.border-red-500]="isInvalid('costCenterId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('costCenterId')){
+      <p class="text-red-500 text-xs mt-1">Cost Center is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+      <p-select
+        [options]="departmentDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="departmentId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Department"
+        [class.border-red-500]="isInvalid('departmentId')"
+        class="custom-p-select w-full"
+        (onChange)="getEmployees()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('departmentId')){
+      <p class="text-red-500 text-xs mt-1">Department is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Employee *</label>
+      <input
+        type="text"
+        formControlName="RequestedByName"
+        placeholder="Enter Requested By"
+        [class.border-red-500]="isInvalid('RequestedByName')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('RequestedByName')){
+      <p class="text-red-500 text-xs mt-1">Requested By is required.</p>
+      }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Date *</label>
+    <p-datepicker
+      formControlName="dateOfRequest" 
+      [minDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Choose a date"
+      [class.border-red-500]="isInvalid('dateOfRequest')"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      class="w-full">
+      </p-datepicker>
+      <p *ngIf="isInvalid('dateOfRequest')" class="text-red-500 text-xs mt-1">Purchase Date is required.</p>
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Required Date *</label>
+    <p-datepicker
+      formControlName="requiredDate" 
+      [minDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Choose a date"
+      [class.border-red-500]="isInvalid('requiredDate')"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      class="w-full">
+      </p-datepicker>
+      <p *ngIf="isInvalid('requiredDate')" class="text-red-500 text-xs mt-1">Required Date is required.</p>
+    </div>
+
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+      <textarea
+        formControlName="remarks"
+        rows="2"
+        maxlength="200"
+        placeholder="Enter Remark"
+        [class.border-red-500]="isInvalid('remarks')"
+        class="w-full resize-none rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      ></textarea>
+       @if(isInvalid('remarks')){
+        <p class="text-red-500 text-xs mt-1">
+        @if(purchaseRequestForm.get('remarks')?.errors?.['invalidValue'])
+        { Only dots or blank spaces are not allowed. 
+        } @else if(purchaseRequestForm.get('remarks')?.errors?.['noAlphaNumeric']){ 
+        Must contain at least one letter or number. 
+        }
+        </p>
+        }
+    </div>
+
+    </form>
+
+    <div class="col-span-full mt-6 border-t pt-4">
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Other Details</h3>
+    <form [formGroup]="itemDetailForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="isDirect && postType != 'view'">
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Items *</label>
+      <p-select
+        [options]="itemsDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="itemId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Items"
+        [class.border-red-500]="isInvalid('itemId')"
+        class="custom-p-select w-full"
+        (onChange)="getMakerCode($event)"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('itemId')){
+      <p class="text-red-500 text-xs mt-1">Item is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Maker Code *</label>
+      <p-select
+        [options]="itemsCodeDrp"
+        optionLabel="drpoption"
+        optionValue="drpvalue"
+        formControlName="itemCodeId"
+        [filter]="true"
+        filterBy="drpoption"
+        [showClear]="true"
+        placeholder="Select Maker Code"
+        [class.border-red-500]="isInvalid('itemCodeId')"
+        class="custom-p-select w-full"
+        (onChange)="reloadPrStellment()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('itemCodeId')){
+      <p class="text-red-500 text-xs mt-1">Maker Code is required.</p>
+      }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">UOM *</label>
+      <p-select
+        [options]="uomDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="unitId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select UOM"
+        [class.border-red-500]="isInvalid('unitId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('unitId')){
+      <p class="text-red-500 text-xs mt-1">UOM is required.</p>
+      }
+    </div>
+
+    <div>
+     <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+     <input type="text" maxlength="20" formControlName="quantity"
+      placeholder="Enter Quantity" (keypress)="allowOnlyNumbers($event)"
+      [class.border-red-500]="isInvalid('quantity')"
+      class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+      @if(isInvalid('quantity')){
+      <p class="text-red-500 text-xs mt-1">
+      @if(itemDetailForm.get('quantity')?.errors?.['required']){
+       Quantity is required.
+       } @else if(itemDetailForm.get('quantity')?.errors?.['onlyNumbers']){
+       Only numeric values are allowed.
+       }
+       </p>
+        }
+    </div>
+
+    <div>
+     <label class="block text-sm font-medium text-gray-700 mb-1">Rate *</label>
+     <input type="text" maxlength="20" formControlName="rate"
+      placeholder="Enter Quantity" (keypress)="allowOnlyNumbers($event)"
+      [class.border-red-500]="isInvalid('rate')"
+      class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+      @if(isInvalid('rate')){
+      <p class="text-red-500 text-xs mt-1">
+      @if(itemDetailForm.get('rate')?.errors?.['required']){
+       Rate is required.
+       } @else if(itemDetailForm.get('rate')?.errors?.['onlyNumbers']){
+       Only numeric values are allowed.
+       }
+       </p>
+        }
+    </div>
+
+  <div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">PR Settlement *</label>
+  <p-select
+    [options]="prStellmentDrp"
+    optionLabel="label"
+    optionValue="value"
+    formControlName="prStellmentId"
+    [filter]="true"
+    [showClear]="true"
+    placeholder="Select PR Settlement"
+    [class.border-red-500]="isInvalid('prStellmentId')"
+    class="custom-p-select w-full"
+    (onChange)="onChangePrStellment($event,null)"
+    appendTo="body"
+    [disabled]="
+      itemDetailForm.get('itemId')?.value == '' ||
+      itemDetailForm.get('itemCodeId')?.value == '' ||
+      itemDetailForm.get('quantity')?.value < 1">
+   </p-select>
+   @if(isInvalid('prStellmentId')){
+   <p class="text-red-500 text-xs mt-1">PR Settlement is required.</p>
+   }
+   </div>
+ 
+      <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Tech Specification</label>
+      <input
+        type="text"
+        maxlength="10"
+        formControlName="techSpec"
+        placeholder="Enter Tech Specification"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+
+    <div class="col-span-full flex justify-start mt-4">
+        <button type="button" [disabled]="postType=='view'"
+        class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition"
+        (click)="AddRow()"><i class="pi pi-plus mr-1"></i>Add</button>
+    </div>
+    </form>
+
+    <p-table *ngIf="showItemTable" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Item</th>
+               <th class="text-sm font-medium">Maker Code</th>
+               <th class="text-sm font-medium">Requested Quantity</th>
+               <th class="text-sm font-medium">Indent Quantity</th>
+               <th class="text-sm font-medium">Rate</th>
+               <th class="text-sm font-medium">Tech Spec.</th>
+               <th class="text-sm font-medium">PR Settlement</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of itemDetailData; let i=index">
+                <td class="text-sm"><a title="Click here to see last 10 purchase rates" href="javascript:void(0)"
+                (click)="getRateList(item)">{{item['itemName']?item['itemName']:''}}</a></td>
+                <td class="text-sm">{{item['itemCode']}}</td>
+                <td class="text-sm">{{item['uom']}}</td>
+                <td class="text-sm">{{item['quantity']}}</td>
+                <td class="text-sm" style="display: none;">
+                <input minlength="0" maxlength="4" type="number" (onChange)="changeQuantity($event,i)"
+                [value]="item['indentQuantity']"></td>
+                <td class="text-sm">{{item['rate']}}</td>
+                <td class="text-sm">
+                <input maxlength="200" type="text" (input)="changeTechSpec($event, i)" style="width:100%; padding:2px; border:1px solid #cbd5e1;">
+                </td>
+                <td class="text-sm">
+                <div class="flex items-center gap-2 w-full">
+                <p-select
+                [options]="getPrSettlementOptions()"
+                optionLabel="label"
+                optionValue="value"
+                [(ngModel)]="item.prStellmentId"
+                [ngModelOptions]="{ standalone: true }"
+                (onChange)="onChangePrStellment($event, item, i)"
+                placeholder="Select PR Settlement"
+                class="w-full"
+                appendTo="body">
+               </p-select>
+               <button *ngIf="item.prStellmentId == '10002'" type="button" class="btn btn-link opendetail"
+               (click)="getAvailabletWarehouse(item,'edit')">
+               <i class="pi pi-pen-to-square"></i>
+               </button>
+              </div>
+              </td>
+              <td class="py-2 px-4 flex justify-start items-center space-x-2">
+              <button type="button"
+              class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+              (click)="deleteRecord(item,i)">
+              <i class="pi pi-trash"></i>
+              </button>
+              </td>
+            </tr>
+      </ng-template>
+    </p-table>
+
+    <p-table  *ngIf="((itemDetailData.length>0 && isDirect) || postType == 'view')" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Item</th>
+               <th class="text-sm font-medium">Maker Code</th>
+               <th class="text-sm font-medium">UOM</th>
+               <th class="text-sm font-medium">Quantity</th>
+               <th class="text-sm font-medium">Rate</th>
+               <th class="text-sm font-medium">Tech Spec.</th>
+               <th class="text-sm font-medium">PR Settlement</th>
+               <th class="text-sm font-medium" style="text-align: center;" *ngIf="postType != 'view'">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of itemDetailData; let i=index">
+                <td class="text-sm">{{item['itemName']?item['itemName']:''}}</td>
+                <td class="text-sm">{{item['itemCode']}}</td>
+                <td class="text-sm">{{item['uom']}}</td>
+                <td class="text-sm">{{item['quantity']}}</td>
+                <td class="text-sm">{{item['rate']}}</td>
+                <td class="text-sm">{{item['techSpec']}}</td>
+                <td class="text-sm" *ngIf="(item['prStellmentId']=='10002') && postType != 'view'">
+                <div style="display: flex; align-items: center;">
+                <span style="margin-right: 10px;">{{item['prStellment']}}</span>
+                <button class="btn btn-link opendetail" (click)="getAvailabletWarehouse(item,'edit')">
+                <i class="pi pi-pen-to-square"></i>
+                </button>
+                </div>
+                </td>
+               <td *ngIf="(item['prStellmentId'] !='10002') || postType == 'view'">{{item['prStellment']}}</td>
+               <td class="py-2 px-4 flex justify-start items-center space-x-2 text-sm" *ngIf="postType != 'view'">
+               <button type="button"
+               class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+              (click)="deleteRecord(item,i)">
+              <i class="pi pi-trash"></i>
+              </button>
+              </td>
+            </tr>
+      </ng-template>
+    </p-table>
+
+    </div>
+
+   </div>
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"
+        >
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"
+        ></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+<p-dialog [(visible)]="itemDailog" [modal]="true" [closable]="true" [style]="{ width: '70vw', 'max-width': '100%' }" header="{{ modelHeading }}"
+(onHide)="closeDataDialog()">
+  
+  <div class="overflow-x-auto">
+    <p-table [value]="recordViewData" showGridlines [responsiveLayout]="'scroll'" [tableStyle]="{'min-width':'100%'}" class="min-w-full border-gray-300 rounded-lg">
+      
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-100">
+          <ng-container *ngFor="let key of recordHeaderViewData;let i= index">
+          <th *ngIf="i==0" class="px-3 py-2 text-sm">S.No.</th>
+          <th class="px-3 py-2 text-sm" style="text-transform:capitalize"
+               [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='makeId' || key == 'prStellmentId' || key =='unitId'">
+            {{ key | titlecase }}
+          </th>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 text-sm">{{ i + 1 }}</td>
+          <ng-container *ngFor="let key of recordHeaderViewData;">
+                <td class="px-3 py-2 text-sm" [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='makeId' || key == 'prStellmentId' || key =='unitId'">
+                  <span>{{ item[key] }}</span>
+                </td>
+            </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="recordHeaderViewData.length + 1" class="text-center text-sm no-border">
+            No data found
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+</p-dialog>
+
+
+<p-dialog [(visible)]="printDialog" header="Print Preview" [modal]="true"
+  [style]="{ width: '60rem', maxWidth: '100%' }" id="printWrapper">
+
+  <div #poPrintWrapper [innerHTML]="printContent"></div>
+
+  <div class="printFooter">
+    <button pButton type="button" label="Print" (click)="print()"></button>
+  </div>
+
+</p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>      
+

@@ -1,0 +1,72 @@
+ /* Scrollbar Styling */
+
+ ::-webkit-scrollbar {
+     width: 6px;
+ }
+
+ ::-webkit-scrollbar-thumb {
+     background: #d1d5db;
+     border-radius: 10px;
+ }
+
+ ::-webkit-scrollbar-thumb:hover {
+     background: #9ca3af;
+ }
+
+ @keyframes zoomIn {
+     0% {
+         transform: scale(0.4);
+         opacity: 0;
+     }
+
+     70% {
+         transform: scale(1.05);
+     }
+
+     100% {
+         transform: scale(1);
+         opacity: 1;
+     }
+ }
+
+ :host ::ng-deep {
+     .work-progress-bar {
+         .p-progressbar {
+             background-color: #f1f5f9; // Light gray background
+             border-radius: 20px;
+             overflow: hidden;
+             border: 1px solid #e2e8f0;
+         }
+
+         .p-progressbar-value {
+             background: #0f172a; // Dark blue/black fill from image
+             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+             border-radius: 20px 0 0 20px;
+         }
+
+         .p-progressbar-label {
+             color: #ffffff;
+             font-weight: 700;
+             font-size: 12px;
+             line-height: 22px; // Match progress bar height
+         }
+
+         &.p-progressbar-complete .p-progressbar-value {
+             background: #22c55e; // Keep green for success
+         }
+     }
+ }
+
+ @keyframes pulse-green {
+     0% {
+         box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+     }
+
+     70% {
+         box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+     }
+
+     100% {
+         box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+     }
+ }

@@ -1,0 +1,105 @@
+<div class="bg-white min-h-screen p-4 sm:p-4 lg:p-6">
+    <p-toast></p-toast>
+    <!-- Breadcrumb -->
+    <p-breadcrumb [model]="[{ label: 'Home', routerLink: '/home' }, { label: menulabel() }, { label: formlable() }]"
+        class="mb-6">
+    </p-breadcrumb>
+
+    <!-- Search Card -->
+    <div class="bg-gray-50 rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">Final Attendance</h2>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 items-end">
+            <!-- From Date -->
+            <div>
+                <label class="text-sm font-medium text-gray-600 mb-1 block"> From Date </label>
+
+                <p-datepicker [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event)"
+                    placeholder="Select From Date" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+                    [inputStyleClass]="isInvalid('fromDate') ? 'w-full p-invalid' : 'w-full'">
+                </p-datepicker>
+                @if (isInvalid('fromDate')) {
+                <small class="text-red-500 text-xs mt-1">
+                    From Date is required
+                </small>
+                }
+            </div>
+
+            <!-- To Date -->
+            <div>
+                <label class="text-sm font-medium text-gray-600 mb-1 block"> To Date </label>
+
+                <p-datepicker [ngModel]="toDate()" (ngModelChange)="toDate.set($event)" placeholder="Select To Date"
+                    dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+                    [inputStyleClass]="isInvalid('toDate') ? 'w-full p-invalid' : 'w-full'">
+                </p-datepicker>
+                @if (isInvalid('toDate')) {
+                <small class="text-red-500 text-xs mt-1">
+                    To Date is required
+                </small>
+                }
+            </div>
+
+            <!-- Organisation -->
+            @if (roleID === 'HR Admin') {
+            <div>
+                <label class="text-sm font-medium text-gray-600 mb-1 block"> Organisation </label>
+
+                <p-select [options]="org()" optionLabel="drpOption" [ngModel]="selectedOrg()"
+                    (ngModelChange)="selectedOrg.set($event); getDrpdownEmp()" placeholder="Select Organisation"
+                    class="w-full">
+                </p-select>
+            </div>
+            }
+
+            <!-- Employee -->
+            <div>
+                <label class="text-sm font-medium text-gray-600 mb-1 block"> Employee </label>
+
+                <p-select [options]="emp()" optionLabel="drpOption" [ngModel]="selectedEmp()"
+                    (ngModelChange)="selectedEmp.set($event)" placeholder="Select Employee" class="w-full">
+                </p-select>
+            </div>
+
+            <!-- Search Button -->
+            <div class="flex justify-end">
+                <button pButton label="Search" icon="pi pi-search" class="w-full md:w-auto"
+                    (click)="showData()"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    @if (viewData()) {
+    <div class="bg-white rounded-xl shadow-md p-6 mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Attendance List</h2>
+
+            @if (allFinalTableData()?.length) {
+            <button pButton icon="pi pi-file-excel" label="Export" class="p-button-success p-button-sm"
+                (click)="exportAsXLSX()"></button>
+            }
+        </div>
+
+        <!-- No Data Found -->
+        @if (noDatafoundCard()) {
+        <div class="text-center text-gray-500 font-medium py-10">
+            No Attendance Data Found
+        </div>
+        } @else {
+        <!-- Table -->
+        <div class="w-full max-w-full overflow-hidden">
+            <div class="w-full max-w-full overflow-x-auto">
+                <app-table-template [data]="paginatedTableData()" [columns]="columns()" [pageSize]="pageSize()"
+                    [totalCount]="totalCount()" [isLoading]="isLoading()" [currentPage]="pageNo()"
+                    [searchText]="searchText()" [sortColumn]="sortColumn()" [sortDirection]="sortDirection()"
+                    (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+                    (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+                    (refresh)="showData()">
+                </app-table-template>
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>

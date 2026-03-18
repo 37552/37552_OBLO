@@ -1,0 +1,3431 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+       <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+                 <p-button (click)="importFile()" label="Import" icon="pi pi-file-import" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>    
+
+        <p-button 
+          icon="pi pi-file-excel"
+          class="mr-2 text-green-600 hover:text-green-700"
+          styleClass="p-button-text"
+          pTooltip="Excel Download"
+          (onClick)="exportAsXLSXCustom()">
+        </p-button>
+
+     <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+        [jsonTemplate1]="jsonTemplate1Ref" [jsonTemplate2]="jsonTemplate2Ref" [jsonTemplate3]="jsonTemplate3Ref"
+        [jsonTemplate4]="jsonTemplate4Ref" [jsonTemplate5]="jsonTemplate5Ref" [jsonTemplate6]="jsonTemplate6Ref"
+        [jsonTemplate7]="jsonTemplate7Ref" [jsonTemplate8]="jsonTemplate8Ref" [jsonTemplate9]="jsonTemplate9Ref"
+        (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+      </app-table-template>
+
+      <ng-template #jsonTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.addressDetails,'Address Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate1Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.familyDetails,'Family Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate2Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.performanceDetails,'Performance Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate3Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.qualificationDetails,'Qualification Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate4Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.prevExpDetails,'Previous Experience Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate5Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.bankDetails,'Bank Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate6Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.transferDetails,'Transfer Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate7Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.identityProofDetails,'Identity Proof Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate8Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.weeklyOffDetails,'Weekly Off Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+      <ng-template #jsonTemplate9Ref let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="openDetail(item.reportingDetails,'Reporting Details')">
+        <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <ng-container *ngIf="item.isActive">
+                    <button (click)="onItemAction(item.empMasterId, 'Inactive'); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Inactive">
+                        <i class="pi pi-plus-circle"></i>
+                    </button>
+                    </ng-container>
+                    <ng-container *ngIf="!item.isActive">
+                    <button (click)="onItemAction(item.empMasterId, 'Active'); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Active">
+                        <i class="pi pi-minus-circle"></i>
+                    </button>
+                    </ng-container>
+                    <button (click)="onItemAction(item.empMasterId, 'Delete'); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+  </div>
+
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '70%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{ header }}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+      <div class="tabbable employee-details-main">
+       <form [formGroup]="employeeForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+
+<!-- Selection Type -->
+<div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">Selection Type</label>
+  <div class="flex gap-4 mt-2">
+    <div class="flex items-center gap-2">
+      <p-radioButton
+        name="selectionType"
+        value="Direct"
+        [(ngModel)]="selectionType"
+        [disabled]="isSelectionTypeDisabled"
+        [ngModelOptions]="{ standalone: true }"
+        (onClick)="onSelectionTypeChange()"
+        inputId="directType"
+      ></p-radioButton>
+      <label for="directType" class="text-sm text-gray-700">Direct</label>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <p-radioButton
+        name="selectionType"
+        value="By Request"
+        [(ngModel)]="selectionType"
+        [disabled]="isSelectionTypeDisabled"
+        [ngModelOptions]="{ standalone: true }"
+        (onClick)="onSelectionTypeChange()"
+        inputId="byRequestType"
+      ></p-radioButton>
+      <label for="byRequestType" class="text-sm text-gray-700">By Request</label>
+    </div>
+  </div>
+</div>
+
+<!-- Request No -->
+<div>
+  <div class="flex items-center justify-between mb-1">
+    <label
+      [ngClass]="{
+        'text-gray-700': !employeeForm.get('requestNoIdControl')?.disabled,
+        'text-gray-400': employeeForm.get('requestNoIdControl')?.disabled
+      }"
+      class="block text-sm font-medium">
+      Request No
+      <em *ngIf="selectionType === 'By Request'">*</em>
+    </label>
+  </div>
+
+  <p-select
+    [options]="requestDataDrp"
+    optionLabel="drpOption"
+    optionValue="drpValue"
+    formControlName="requestNoIdControl"
+    placeholder="Select Request No"
+    [filter]="true"
+    [showClear]="true"
+    class="custom-p-select w-full"
+    (onChange)="getSelectedCandidate()"
+    [class.border-red-500]="isInvalid('requestNoIdControl')"
+  ></p-select>
+
+  @if(isInvalid('requestNoIdControl')){
+    <p class="text-xs text-red-500 mt-1">Request No is required.</p>
+  }
+</div>
+
+<!-- Candidate -->
+<div>
+  <div class="flex items-center justify-between mb-1">
+    <label
+      [ngClass]="{
+        'text-gray-700': !employeeForm.get('candidateNameControl')?.disabled,
+        'text-gray-400': employeeForm.get('candidateNameControl')?.disabled
+      }"
+      class="block text-sm font-medium">
+      Candidate
+      <em *ngIf="selectionType === 'By Request'">*</em>
+    </label>
+  </div>
+
+  <p-select
+    [options]="candidateDataDrp"
+    optionLabel="drpOption"
+    optionValue="drpValue"
+    formControlName="candidateNameControl"
+    placeholder="Select Candidate"
+    [filter]="true"
+    [showClear]="true"
+    class="custom-p-select w-full"
+    (onChange)="getCandidateDetail()"
+    [class.border-red-500]="isInvalid('candidateNameControl')"
+  ></p-select>
+
+  @if(isInvalid('candidateNameControl')){
+    <p class="text-xs text-red-500 mt-1">Candidate is required.</p>
+  }
+</div>
+    
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Employee Id *</label>
+    <input
+      type="text"
+      formControlName="empIdControl"
+      placeholder="Enter Employee Id"
+      [class.border-red-500]="isInvalid('empIdControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('empIdControl')){
+      <p class="text-xs text-red-500 mt-1">Employee Id is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name *</label>
+    <input
+      type="text"
+      formControlName="employeeNameControl"
+      maxlength="35"
+      appOnlyString
+      placeholder="Enter Employee Name"
+      [class.border-red-500]="isInvalid('employeeNameControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('employeeNameControl')){
+    <p class="text-xs text-red-500 mt-1">
+      @if(employeeForm.get('employeeNameControl')?.errors?.['required']){
+        Name is required.
+      } @else if(employeeForm.get('employeeNameControl')?.errors?.['minlength']){
+        Must be greater than 3 characters.
+      } @else if(employeeForm.get('employeeNameControl')?.errors?.['maxlength']){
+        Must be less than 35 characters.
+      } @else if(employeeForm.get('employeeNameControl')?.errors?.['whitespace']){
+        Name cannot be just whitespace.
+      }
+    </p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Father/Husband *</label>
+    <input
+      type="text"
+      formControlName="fhNameControl"
+      maxlength="35"
+      appOnlyString
+      placeholder="Enter Father/Husband Name"
+      [class.border-red-500]="isInvalid('fhNameControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('fhNameControl')){
+    <p class="text-xs text-red-500 mt-1">
+      @if(employeeForm.get('fhNameControl')?.errors?.['required']){
+        Father/Husband name is required.
+      } @else if(employeeForm.get('fhNameControl')?.errors?.['minlength']){
+        Must be greater than 3 characters.
+      } @else if(employeeForm.get('fhNameControl')?.errors?.['maxlength']){
+        Must be less than 35 characters.
+      }
+    </p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Aadhar *</label>
+    <input
+      type="text"
+      formControlName="aadharControl"
+      maxlength="12"
+      appOnlyNumber
+      placeholder="Enter Aadhar Number"
+      [class.border-red-500]="isInvalid('aadharControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('aadharControl')){
+      <p class="text-xs text-red-500 mt-1">Aadhar must be 12 characters.</p>
+    }
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblBloodGroupMaster', 'Blood Group', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="bloodGroupDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="bloodGroupIdControl"
+      placeholder="Select Blood Group"
+      [filter]="true"
+      class="custom-p-select w-full"
+    ></p-select>
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeGenderMaster', 'Gender', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="genderDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="genderIdControl"
+      placeholder="Select Gender"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('genderIdControl')"
+    ></p-select>
+    @if(isInvalid('genderIdControl')){
+      <p class="text-xs text-red-500 mt-1">Gender is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Organisation Name *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblOrgMaster', 'Organisation Name', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="organizationDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="orgMasterIdControl"
+      placeholder="Select Organisation Name"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('orgMasterIdControl')"
+    ></p-select>
+    @if(isInvalid('orgMasterIdControl')){
+      <p class="text-xs text-red-500 mt-1">Organisation name is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">     
+    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblDepartmentMaster', 'Department', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="departmentDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      placeholder="Select Department"
+      formControlName="departmentIdControl"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.ng-invalid.ng-dirty]="isInvalid('departmentIdControl')"
+    ></p-select>
+
+    @if(isInvalid('departmentIdControl')){
+      <p class="text-xs text-red-500 mt-1">Department is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Designation *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblDesignationMaster', 'Designation', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="designationDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="designationIdControl"
+      placeholder="Select Designation"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('designationIdControl')"
+    ></p-select>
+    @if(isInvalid('designationIdControl')){
+      <p class="text-xs text-red-500 mt-1">Designation is required.</p>
+    }
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Employee Category *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeeCategory', 'Employee Category', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="empCategoryDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="employeeCategoryIdControl"
+      placeholder="Select Employee Category"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('employeeCategoryIdControl')"
+    ></p-select>
+    @if(isInvalid('employeeCategoryIdControl')){
+      <p class="text-xs text-red-500 mt-1">Employee Category is required.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Reporting To *</label>
+    <p-select
+      [options]="reportingToDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="reportingToIdControl"
+      placeholder="Select Reporting To"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('reportingToIdControl')"
+    ></p-select>
+    @if(isInvalid('reportingToIdControl')){
+      <p class="text-xs text-red-500 mt-1">Reporting To is required.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Office Email <em class="marked" *ngIf="this.employeeTypeId =='10000'">*</em></label>
+    <input
+      type="text"
+      formControlName="officeEmailIdControl"
+      placeholder="Enter Office Email"
+      [class.border-red-500]="isInvalid('officeEmailIdControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('officeEmailIdControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid email.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Personal Email</label>
+    <input
+      pInputText
+      formControlName="personalEmailControl"
+      placeholder="Enter Personal Email"
+      [class.border-red-500]="isInvalid('personalEmailControl')"
+      class="w-full rounded-md !text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('personalEmailControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid email.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+    <input
+      appOnlyNumber
+      pInputText
+      formControlName="phoneControl"
+      placeholder="Enter Phone No"
+      [class.border-red-500]="isInvalid('phoneControl')"
+      class="w-full rounded-md !text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('phoneControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid phone no.</p>
+    }
+   </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Office Mobile No</label>
+    <input
+      appOnlyNumber
+      pInputText
+      maxlength="10"
+      formControlName="officeMobileNoControl"
+      placeholder="Enter Office Mobile No"
+      [class.border-red-500]="isInvalid('officeMobileNoControl')"
+      class="w-full rounded-md !text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('officeMobileNoControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid Office Mobile No.</p>
+    }
+   </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Personal Mobile No *</label>
+    <input
+      type="text"
+      maxlength="10"
+      appOnlyNumber
+      formControlName="personalMobileNoControl"
+      placeholder="Enter Personal Mobile Number"
+      [class.border-red-500]="isInvalid('personalMobileNoControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('personalMobileNoControl')){
+      <p class="text-xs text-red-500 mt-1">Personal Mobile No is required.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
+    <p-datepicker
+      formControlName="dobControl" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Select DOB"
+      [class.border-red-500]="isInvalid('dobControl')"
+      [iconDisplay]="'input'"
+      class="w-full"
+      ></p-datepicker>
+      <p *ngIf="isInvalid('dobControl')" class="text-red-500 text-xs mt-1">Date of Birth is required.</p>
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Joining *</label>
+    <p-datepicker
+      formControlName="dojControl" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Select DOJ"
+      [class.border-red-500]="isInvalid('dojControl')"
+      [iconDisplay]="'input'"
+      class="w-full"
+      ></p-datepicker>
+      <p *ngIf="isInvalid('dojControl')" class="text-red-500 text-xs mt-1">Date of Joining is required.</p>
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Real DOB</label>
+    <p-datepicker
+      formControlName="realDob" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Select DOB"
+      [iconDisplay]="'input'"
+      class="w-full"
+      ></p-datepicker>
+    </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">   
+    <label class="block text-sm font-medium text-gray-700 mb-1">Employee Type *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmpTypeMaster', 'Employee Type', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="employeeTypeDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="empTypeIdControl"
+      placeholder="Select Employee Type"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('empTypeIdControl')"
+      (onChange)="onChangeEmployeeType()"
+    ></p-select>
+    @if(isInvalid('empTypeIdControl')){
+      <p class="text-xs text-red-500 mt-1">Employee Type is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">   
+    <label class="block text-sm font-medium text-gray-700 mb-1">Profile *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblResourceProfileMaster', 'Profile', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="profileDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="profileIdControl"
+      placeholder="Select Profile"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('profileIdControl')"
+    ></p-select>
+    @if(isInvalid('profileIdControl')){
+      <p class="text-xs text-red-500 mt-1">Profile is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">     
+    <label class="block text-sm font-medium text-gray-700 mb-1">SBU *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblSbuMaster', 'SBU', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="SBUDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="sbuMstIdControl"
+      placeholder="Select SBU"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('sbuMstIdControl')"
+    ></p-select>
+    @if(isInvalid('sbuMstIdControl')){
+      <p class="text-xs text-red-500 mt-1">SBU is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Resource Type *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmpResourceTypeMaster', 'Resource Type', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="resourceTypeDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="empResTypeIdControl"
+      placeholder="Select Resource Type"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('empResTypeIdControl')"
+    ></p-select>
+    @if(isInvalid('empResTypeIdControl')){
+      <p class="text-xs text-red-500 mt-1">Resource Type is required.</p>
+    }
+    </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">   
+    <label class="block text-sm font-medium text-gray-700 mb-1">Punch Type *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblPunchTypeMaster', 'Punch Type', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="punchTypeDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="punchTypeIdControl"
+      placeholder="Select Punch Type"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('punchTypeIdControl')"
+    ></p-select>
+    @if(isInvalid('punchTypeIdControl')){
+      <p class="text-xs text-red-500 mt-1">Punch Type is required.</p>
+    }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">File No</label>
+    <input
+      type="text"
+      maxlength=50
+      formControlName="fileNoControl"
+      placeholder="Enter File No"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Previous Experience </label>
+    <input
+      type="text"
+      maxlength="2"
+      appOnlyNumber
+      formControlName="prevExpControl"
+      placeholder="Enter Experience"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1"> 
+    <label class="block text-sm font-medium text-gray-700 mb-1">Marital Status *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeeMariedMaster', 'Marital Status', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="maritalStatusDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="maritalStatusIdControl"
+      placeholder="Select Marital Status"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('maritalStatusIdControl')"
+    ></p-select>
+    @if(isInvalid('maritalStatusIdControl')){
+      <p class="text-xs text-red-500 mt-1">Marital status is required.</p>
+    }
+  </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">   
+    <label class="block text-sm font-medium text-gray-700 mb-1">Grade *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeeGradeMaster', 'Grade', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="gradeDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="gradeIdControl"
+      placeholder="Select Grade"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('gradeIdControl')"
+    ></p-select>
+    @if(isInvalid('gradeIdControl')){
+      <p class="text-xs text-red-500 mt-1">Grade is required.</p>
+    }
+    </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Religion *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeeReligionMaster', 'Religion', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="religionDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="religionId"
+      placeholder="Select Religion"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('religionId')"
+    ></p-select>
+    @if(isInvalid('religionId')){
+      <p class="text-xs text-red-500 mt-1">Religion is required.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Esic Branch Office</label>
+    <input
+      type="text"
+      maxlength=20
+      formControlName="esicBranch"
+      placeholder="Enter Esic Branch Office"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+     <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Dispensary</label>
+    <input
+      type="text"
+      maxlength=20
+      formControlName="dispensaryId"
+      placeholder="Enter Dispensary"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+
+<div *ngIf="profileImageUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ profileImageUpload.label }} *</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(profileImageUpload)"
+      *ngIf="postType !== 'view'">
+    </p-button>
+  </div>
+
+  <div *ngIf="profileImageUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2"> 
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(profileImageUpload.uploadedFileUrl)" [src]="profileImageUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+      <a [href]="profileImageUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+    </div>
+    <button type="button" (click)="removeFile(profileImageUpload)" class="text-red-500 hover:text-red-700" *ngIf="postType !== 'view'">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!profileImageUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+    No {{ profileImageUpload.label }} uploaded yet.
+  </p>
+
+  <p *ngIf="profileImageUpload.form.get(profileImageUpload.controlName)?.touched && !profileImageUpload.uploadedFileUrl" 
+     class="text-xs text-red-500 mt-1">
+    {{ profileImageUpload.label }} is required.
+  </p>
+</div>
+
+<!-- Signature Image Upload -->
+<div *ngIf="signatureImageUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ signatureImageUpload.label }} *</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(signatureImageUpload)"
+      *ngIf="postType !== 'view'">
+    </p-button>
+  </div>
+
+  <div *ngIf="signatureImageUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(signatureImageUpload.uploadedFileUrl)" [src]="signatureImageUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+      <a [href]="signatureImageUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+    </div>
+    <button type="button" (click)="removeFile(signatureImageUpload)" class="text-red-500 hover:text-red-700" *ngIf="postType !== 'view'">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!signatureImageUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+    No {{ signatureImageUpload.label }} uploaded yet.
+  </p>
+
+  <p *ngIf="signatureImageUpload.form.get(signatureImageUpload.controlName)?.touched && !signatureImageUpload.uploadedFileUrl" 
+     class="text-xs text-red-500 mt-1">
+    {{ signatureImageUpload.label }} is required.
+  </p>
+</div>
+
+       </form>
+      </div>
+
+      <div class="col-span-2 -mx-3 sm:-mx-3 mt-4 mb-4">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            Other Details
+          </h3>
+          <div class="flex items-center space-x-2"></div>
+        </div>
+      </div>
+
+      <div class="tabbable">
+        <div class="card">
+         <p-accordion value="0">
+        <p-accordion-panel value="0">
+            <p-accordion-header>Address Details *</p-accordion-header>
+            <p-accordion-content>
+            <form [formGroup]="addressForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+  <div class="space-y-4">
+     <h3 class="text-base font-semibold text-gray-700 mb-4">Permanent Address</h3>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+      <p-select
+        [options]="stateDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="perm_stateIdControl"
+        placeholder="Select State"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full"
+        (onChange)="getCityDrp('permanent')"
+        [class.border-red-500]="isInvalid('perm_stateIdControl')"
+      ></p-select>
+      @if(isInvalid('perm_stateIdControl')){
+        <p class="text-xs text-red-500 mt-1">State is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+      <p-select
+        [options]="permCityDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="perm_districtIdControl"
+        placeholder="Select City"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full"
+        [class.border-red-500]="isInvalid('perm_districtIdControl')"
+      ></p-select>
+      @if(isInvalid('perm_districtIdControl')){
+        <p class="text-xs text-red-500 mt-1">City is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pin Code *</label>
+      <input
+        type="text"
+        maxlength="6"
+        formControlName="perm_pincodeControl"
+        appOnlyNumber
+        placeholder="Enter Pin Code"
+        class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+        [class.border-red-500]="isInvalid('perm_pincodeControl')"
+      />
+      @if(isInvalid('perm_pincodeControl')){
+        <p class="text-xs text-red-500 mt-1">Enter a valid 6-digit pin code.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
+      <input
+        type="text"
+        maxlength="300"
+        formControlName="perm_addressControl"
+        placeholder="Enter full address"
+        class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+        [class.border-red-500]="isInvalid('perm_addressControl')"
+      />
+      @if(isInvalid('perm_addressControl')){
+        <p class="text-xs text-red-500 mt-1">Full address is required.</p>
+      }
+    </div>
+
+    <div *ngIf="permanentAddressProofUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-semibold text-gray-700">{{ permanentAddressProofUpload.label }}</label>
+        <p-button
+          label="Upload"
+          icon="pi pi-upload"
+          styleClass="text-xs p-1"
+          variant="text"
+          [raised]="true"
+          (click)="openDialog(permanentAddressProofUpload)">
+        </p-button>
+      </div>
+
+      <div *ngIf="permanentAddressProofUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+        <div class="flex items-center gap-3">
+          <img *ngIf="isImageFile(permanentAddressProofUpload.uploadedFileUrl)" [src]="permanentAddressProofUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+          <a [href]="permanentAddressProofUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+        </div>
+        <button type="button" (click)="removeFile(permanentAddressProofUpload)" class="text-red-500 hover:text-red-700">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <p *ngIf="!permanentAddressProofUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+        No {{ permanentAddressProofUpload.label }} uploaded yet.
+      </p>
+    </div>
+  </div>
+
+ <div class="space-y-4">
+    <div class="mb-3">
+      <h3 class="text-base font-semibold text-gray-700 mb-4">Current Address</h3>
+
+      <div class="flex items-center gap-2">
+        <p-checkbox
+          inputId="sameAsPermanent"
+          binary="true"
+          [(ngModel)]="sameAsPermanent"
+          [ngModelOptions]="{standalone: true}"
+          (onChange)="onSameAsPermanentChange($event)"
+          [disabled]="(selectedPermanentEdit || selectedCurrentEdit) || isPermanentAddressIncomplete">
+        </p-checkbox>
+        <label for="sameAsPermanent" class="text-sm text-gray-700">Same as Permanent Address</label>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+      <p-select
+        [options]="stateDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="stateIdControl"
+        placeholder="Select State"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full"
+        (onChange)="getCityDrp('current')"
+        [class.border-red-500]="isInvalid('stateIdControl')"
+      ></p-select>
+      @if(isInvalid('stateIdControl')){
+        <p class="text-xs text-red-500 mt-1">State is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+      <p-select
+        [options]="currCityDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="districtIdControl"
+        placeholder="Select City"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full"
+        [class.border-red-500]="isInvalid('districtIdControl')"
+      ></p-select>
+      @if(isInvalid('districtIdControl')){
+        <p class="text-xs text-red-500 mt-1">City is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Pin Code *</label>
+      <input
+        type="text"
+        maxlength="6"
+        formControlName="pincodeControl"
+        appOnlyNumber
+        [readonly]="sameAsPermanent"
+        placeholder="Enter Pin Code"
+        class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+        [class.border-red-500]="isInvalid('pincodeControl')"
+      />
+      @if(isInvalid('pincodeControl')){
+        <p class="text-xs text-red-500 mt-1">Enter a valid 6-digit pin code.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
+      <input
+        type="text"
+        maxlength="300"
+        formControlName="addressControl"
+        placeholder="Enter full address"
+        [readonly]="sameAsPermanent"
+        class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+        [class.border-red-500]="isInvalid('addressControl')"
+      />
+      @if(isInvalid('addressControl')){
+        <p class="text-xs text-red-500 mt-1">Full address is required.</p>
+      }
+    </div>
+
+    <div *ngIf="currentAddressProofUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-semibold text-gray-700">{{ currentAddressProofUpload.label }}</label>
+        <p-button
+          label="Upload"
+          icon="pi pi-upload"
+          styleClass="text-xs p-1"
+          variant="text"
+          [raised]="true"
+          (click)="openDialog(currentAddressProofUpload)">
+        </p-button>
+      </div>
+
+      <div *ngIf="currentAddressProofUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+        <div class="flex items-center gap-3">
+          <img *ngIf="isImageFile(currentAddressProofUpload.uploadedFileUrl)" [src]="currentAddressProofUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+          <a [href]="currentAddressProofUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+        </div>
+        <button type="button" (click)="removeFile(currentAddressProofUpload)" class="text-red-500 hover:text-red-700">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <p *ngIf="!currentAddressProofUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+        No {{ currentAddressProofUpload.label }} uploaded yet.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if((selectedPermanentEdit || selectedCurrentEdit) && addressChildData.length > 0){  
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow1()" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('AddressDetail')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow1()" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+        </form>
+
+          <p-table *ngIf="addressChildData.length > 0" [value]="[1]" showGridlines
+            [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">State</th>
+               <th class="text-sm font-medium">City</th>
+               <th class="text-sm font-medium">Pin Code</th>
+               <th class="text-sm font-medium">Address</th>
+               <th class="text-sm font-medium">Permanent Address proof</th>
+               <th class="text-sm font-medium">Curent Address proof</th>
+               <th class="text-sm font-medium">Is Permanent</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of addressChildData; let i=index">
+                <td class="text-sm">{{item.state_Text}}</td>
+                <td class="text-sm">{{item.district_Text}}</td>
+                <td class="text-sm">{{item.pincode}}</td>
+                <td class="text-sm">{{item.Address}}</td> 
+                 <td>
+                <p-button *ngIf="item.isPermanent && item.addressProof" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.addressProof)" pTooltip="Address Proof">
+                </p-button>
+                </td>
+               <td>
+               <p-button *ngIf="!item.isPermanent && item.addressProof" icon="pi pi-download" styleClass="p-button-text p-button-md"
+              (click)="filedownloadview(item.addressProof)" pTooltip="Address Proof">
+              </p-button>
+              </td>
+              <td class="text-sm">{{item.isPermanent ? 'Yes' : 'No'}}</td>
+             <td class="actionButtons flex gap-2">
+             <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow1('AddressDetail',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('addressChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+         </p-table>
+
+    <ng-container *ngIf="addressChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="1">
+            <p-accordion-header>Family Details</p-accordion-header>
+            <p-accordion-content>
+              <form [formGroup]="familyForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+         <div>
+         <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+          <input
+          type="text"
+          formControlName="nameControl"
+          maxlength="35"
+          appOnlyString
+          placeholder="Enter Name"
+          [class.border-red-500]="isInvalid('nameControl')"
+          class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+         />
+        @if(isInvalid('nameControl')){
+      <p class="text-xs text-red-500 mt-1">
+      @if(familyForm.get('nameControl')?.errors?.['required']){
+        Name is required.
+      } @else if(familyForm.get('nameControl')?.errors?.['minlength']){
+        Must be greater than 3 characters.
+      } @else if(familyForm.get('nameControl')?.errors?.['maxlength']){
+        Must be less than 35 characters.
+      } @else if(familyForm.get('nameControl')?.errors?.['whitespace']){
+        Name cannot be just whitespace.
+      }
+    </p>
+    }
+   </div>
+
+    <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Relationship *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmplyRelatnShpMaster', 'Relationship', [getRelationshipDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="relationshipDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="relationShipIdControl"
+      placeholder="Select Relationship"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('relationShipIdControl')"
+    ></p-select>
+    @if(isInvalid('relationShipIdControl')){
+      <p class="text-xs text-red-500 mt-1">Relationship is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth *</label>
+    <p-datepicker
+      formControlName="familyDob" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Select DOB"
+      [class.border-red-500]="isInvalid('familyDob')"
+      [iconDisplay]="'input'"
+      class="w-full"
+      ></p-datepicker>
+      <p *ngIf="isInvalid('familyDob')" class="text-red-500 text-xs mt-1">Date of Birth is required.</p>
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+    <input
+      readonly
+      pInputText
+      maxlength="2"
+      appOnlyNumber
+      formControlName="ageControl"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+    <input
+      type="text"
+      maxlength="10"
+      appOnlyNumber
+      formControlName="familyPhoneControl"
+      placeholder="Enter Phone Number"
+      [class.border-red-500]="isInvalid('familyPhoneControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('familyPhoneControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a phone number.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+    <input
+      type="text"
+      formControlName="familyaddress"
+      maxlength="35"
+      placeholder="Enter Address"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+<div *ngIf="familyAddressProofUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ familyAddressProofUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(familyAddressProofUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="familyAddressProofUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(familyAddressProofUpload.uploadedFileUrl)" [src]="familyAddressProofUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+      <a [href]="familyAddressProofUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+    </div>
+    <button type="button" (click)="removeFile(familyAddressProofUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!familyAddressProofUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">No {{ familyAddressProofUpload.label }} uploaded yet.</p>
+</div>
+
+<div *ngIf="familyIdProofUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ familyIdProofUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(familyIdProofUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="familyIdProofUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(familyIdProofUpload.uploadedFileUrl)" [src]="familyIdProofUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+      <a [href]="familyIdProofUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+    </div>
+    <button type="button" (click)="removeFile(familyIdProofUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!familyIdProofUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">No {{ familyIdProofUpload.label }} uploaded yet.</p>
+</div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedFamilyEdit && familyChildData.length > 0){  
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('familyForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('FamilyDetail')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('familyForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+             </form>
+
+             <p-table *ngIf="familyChildData.length > 0" [value]="[1]" showGridlines
+              [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Name</th>
+               <th class="text-sm font-medium">Relationship</th>
+               <th class="text-sm font-medium">DOB</th>
+               <th class="text-sm font-medium">Age</th>
+               <th class="text-sm font-medium">Phone</th>
+               <th class="text-sm font-medium">Address</th>
+               <th class="text-sm font-medium">Address Proof</th>
+               <th class="text-sm font-medium">ID Proof</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of familyChildData; let i=index">
+                <td class="text-sm">{{item.name}}</td>
+                <td class="text-sm">{{item.relationShip_Text}}</td>
+                <td class="text-sm">{{item.dob | date:'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.age}}</td>
+                <td class="text-sm">{{item.phone}}</td>
+                <td class="text-sm">{{item.address}}</td>
+                <td>
+                <p-button [disabled]="!item.addressProof" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.addressProof)" pTooltip="Address Proof">
+                </p-button>
+                </td>
+               <td>
+               <p-button [disabled]="!item.idProof" icon="pi pi-download" styleClass="p-button-text p-button-md"
+              (click)="filedownloadview(item.idProof)" pTooltip="ID Proof">
+              </p-button>
+                </td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('FamilyDetail',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('familyChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+             </p-table>
+
+    <ng-container *ngIf="familyChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container> 
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="2">
+            <p-accordion-header>Performance Details</p-accordion-header>
+            <p-accordion-content>
+
+                <form [formGroup]="performanceForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+                    <div>
+                     <div class="flex items-center justify-between mb-1">  
+                     <label class="block text-sm font-medium text-gray-700 mb-1">Task *</label>
+                     <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblHrTaskMaster', 'Task', [getTaskDrp])"
+                     styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+                     </div>
+                     <p-select
+                     [options]="taskDataDrp"
+                     optionLabel="drpOption"
+                     optionValue="drpValue"
+                     formControlName="taskIdControl"
+                     placeholder="Select Task"
+                     [filter]="true"
+                     [showClear]="true"
+                     class="custom-p-select w-full"
+                     [class.border-red-500]="isInvalid('taskIdControl')"
+                     ></p-select>
+                     @if(isInvalid('taskIdControl')){
+                    <p class="text-xs text-red-500 mt-1">Task is required.</p>
+                    }
+                    </div>
+
+                    <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Score</label>
+                    <input
+                    type="text"
+                    formControlName="scoreControl"
+                    maxlength="20"
+                    placeholder="Enter Score"
+                    class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    />
+                    </div>
+
+                    <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <input
+                    type="text"
+                    formControlName="statusControl"
+                    maxlength="20"
+                    placeholder="Enter Status"
+                    class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    />
+                    </div>
+
+<div *ngIf="performanceUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ performanceUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(performanceUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="performanceUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(performanceUpload.uploadedFileUrl)" [src]="performanceUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+      <a [href]="performanceUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+    </div>
+    <button type="button" (click)="removeFile(performanceUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!performanceUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">No {{ performanceUpload.label }} uploaded yet.</p>
+</div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedPerformanceEdit && performanceChildData.length > 0){  
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('performanceForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('PerformanceDetail')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('performanceForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+
+</form>    
+
+ <p-table *ngIf="performanceChildData.length > 0" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Task</th>
+               <th class="text-sm font-medium">Score</th>
+               <th class="text-sm font-medium">Status</th>
+               <th class="text-sm font-medium">Attach File</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of performanceChildData; let i=index">
+                <td class="text-sm">{{item.task_Text}}</td>
+                <td class="text-sm">{{item.score}}</td>
+                <td class="text-sm">{{item.status}}</td>
+                <td>
+                <p-button [disabled]="!item.upload" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.upload)" pTooltip="Attach File">
+                </p-button>
+                </td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('PerformanceDetail',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('performanceChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <ng-container *ngIf="performanceChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+        </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="3">
+            <p-accordion-header>Qualification Details</p-accordion-header>
+            <p-accordion-content>
+              <form [formGroup]="qualificationForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+    <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Qualification *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmployeeQualificationMaster', 'Qualification', [getQualificationDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="qualificationDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="empQualifnIdControl"
+      placeholder="Select Qualification"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('empQualifnIdControl')"
+    ></p-select>
+    @if(isInvalid('empQualifnIdControl')){
+      <p class="text-xs text-red-500 mt-1">Qualification is required.</p>
+    }
+  </div>
+
+     <div>
+    <div class="flex items-center justify-between mb-1">   
+    <label class="block text-sm font-medium text-gray-700 mb-1">Branch *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblEmplyQualfBranchMaster', 'Branch', [getQualificationDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="branchDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="qualfBrnchIdControl"
+      placeholder="Select Branch"
+      [filter]="true"
+      [showClear]="true"
+      class="custom-p-select w-full"
+      [class.border-red-500]="isInvalid('qualfBrnchIdControl')"
+    ></p-select>
+    @if(isInvalid('qualfBrnchIdControl')){
+      <p class="text-xs text-red-500 mt-1">Branch is required.</p>
+    }
+  </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Institute/University *</label>
+    <input
+      type="text"
+       maxLength="100"
+      formControlName="universityControl"
+      placeholder="Enter Institute/University"
+      [class.border-red-500]="isInvalid('universityControl')"
+      class="w-full rounded-md text-sm border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+    @if(isInvalid('universityControl')){
+      <p class="text-xs text-red-500 mt-1">Institute/University is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Date From <em>*</em>
+    </label>
+    <p-datepicker
+      formControlName="dateFromControl"
+      [showIcon]="true"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.border-red-500]="isInvalid('dateFromControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('dateFromControl')){
+      <p class="text-xs text-red-500 mt-1">Date From is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Date To <em>*</em>
+    </label>
+    <p-datepicker
+      formControlName="dateToControl"
+      [showIcon]="true"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.border-red-500]="isInvalid('dateToControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('dateToControl')){
+      <p class="text-xs text-red-500 mt-1">Date To is required.</p>
+    }
+  </div>
+
+<div *ngIf="qualificationDegreeUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ qualificationDegreeUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(qualificationDegreeUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="qualificationDegreeUpload.uploadedFileUrl"
+       class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(qualificationDegreeUpload.uploadedFileUrl)" [src]="qualificationDegreeUpload.uploadedFileUrl"
+           class="w-12 h-12 rounded-full border" />
+         <a [href]="qualificationDegreeUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">
+         View / Download
+      </a>
+    </div>
+    <button type="button" (click)="removeFile(qualificationDegreeUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!qualificationDegreeUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+    No {{ qualificationDegreeUpload.label }} uploaded yet.
+  </p>
+</div>
+
+<div *ngIf="qualificationTwelveUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ qualificationTwelveUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(qualificationTwelveUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="qualificationTwelveUpload.uploadedFileUrl"
+       class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(qualificationTwelveUpload.uploadedFileUrl)" [src]="qualificationTwelveUpload.uploadedFileUrl"
+           class="w-12 h-12 rounded-full border" />
+      <a [href]="qualificationTwelveUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">
+         View / Download
+      </a>
+    </div>
+    <button type="button" (click)="removeFile(qualificationTwelveUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!qualificationTwelveUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+    No {{ qualificationTwelveUpload.label }} uploaded yet.
+  </p>
+</div>
+
+<div *ngIf="qualificationTenthUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ qualificationTenthUpload.label }}</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      (click)="openDialog(qualificationTenthUpload)">
+    </p-button>
+  </div>
+
+  <div *ngIf="qualificationTenthUpload.uploadedFileUrl"
+       class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+    <div class="flex items-center gap-3">
+      <img *ngIf="isImageFile(qualificationTenthUpload.uploadedFileUrl)" [src]="qualificationTenthUpload.uploadedFileUrl"
+           class="w-12 h-12 rounded-full border" />
+      <a [href]="qualificationTenthUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">
+         View / Download
+      </a>
+    </div>
+    <button type="button" (click)="removeFile(qualificationTenthUpload)" class="text-red-500 hover:text-red-700">
+      <i class="pi pi-trash"></i>
+    </button>
+  </div>
+
+  <p *ngIf="!qualificationTenthUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+    No {{ qualificationTenthUpload.label }} uploaded yet.
+  </p>
+</div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedQualificationEdit && qualificationChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('qualificationForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('QualificationDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('qualificationForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+              </form>
+
+    <p-table *ngIf="qualificationChildData.length > 0" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+              <tr>
+              <th class="text-sm font-medium">Qualification</th>
+              <th class="text-sm font-medium">Branch</th>
+              <th class="text-sm font-medium">Institute/University</th>
+              <th class="text-sm font-medium">Date From</th>
+              <th class="text-sm font-medium">Date To</th>
+              <th class="text-sm font-medium">Highest degree</th>
+              <th class="text-sm font-medium">12th</th>
+              <th class="text-sm font-medium">10th</th>
+              <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of qualificationChildData; let i=index">
+                <td class="text-sm">{{item.empQualifn_Text}}</td>
+                <td class="text-sm">{{item.qualfBrnch_Text}}</td>
+                <td class="text-sm">{{item.university}}</td>
+                <td class="text-sm">{{item.dateFrom | date:'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.dateTo | date:'dd-MM-yyyy'}}</td>
+                <td>
+                <p-button [disabled]="!item.degreeDoc" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.degreeDoc)" pTooltip="Degree">
+                </p-button>
+                </td>
+               <td>
+               <p-button [disabled]="!item.twelveDoc" icon="pi pi-download" styleClass="p-button-text p-button-md"
+              (click)="filedownloadview(item.twelveDoc)" pTooltip="12th">
+              </p-button>
+                </td>
+                <td>
+               <p-button [disabled]="!item.tenthDoc" icon="pi pi-download" styleClass="p-button-text p-button-md"
+              (click)="filedownloadview(item.tenthDoc)" pTooltip="10th">
+              </p-button>
+                </td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('QualificationDetails',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('qualificationChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+
+    <ng-container *ngIf="qualificationChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+
+
+    </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="4">
+            <p-accordion-header>Previous Experience Details</p-accordion-header>
+            <p-accordion-content>
+                <form [formGroup]="prevExpForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Previous Company <em>*</em>
+    </label>
+    <p-select
+      [options]="prevCompanyDataDrp"
+      optionValue="drpValue"
+      optionLabel="drpOption"
+      formControlName="prevCompanyIdControl"
+      placeholder="Select Previous Company"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('prevCompanyIdControl')"
+    ></p-select>
+
+    @if(isInvalid('prevCompanyIdControl')){
+      <p class="text-xs text-red-500 mt-1">Previous company is required.</p>
+    }
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Designation *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblDesignationMaster', 'Designation', [getprevCompanyDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="prevDesignationDataDrp"
+      optionValue="drpValue"
+      optionLabel="drpOption"
+      formControlName="designationIdControl"
+      placeholder="Select Designation"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('designationIdControl')"
+    ></p-select>
+
+    @if(isInvalid('designationIdControl')){
+      <p class="text-xs text-red-500 mt-1">Designation is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Reporting Manager
+    </label>
+    <input
+      type="text"
+      pInputText
+      maxlength="50"
+      appOnlyString
+      formControlName="reportingMngControl"
+      placeholder="Enter manager name"
+      class="w-full !text-sm rounded-md border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Reporting Manager Phone
+    </label>
+    <input
+      type="text"
+      pInputText
+      formControlName="reprtMngPhoneControl"
+      placeholder="Enter phone number"
+      maxlength="10"
+      appOnlyNumber
+      class="w-full !text-sm rounded-md border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Reporting Manager Email
+    </label>
+    <input
+      type="email"
+      pInputText
+      formControlName="reprtMngEmailControl"
+      placeholder="Enter email"
+      class="w-full !text-sm rounded-md border-1 border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('reprtMngEmailControl')"
+    />
+
+     @if(isInvalid('reprtMngEmailControl')){
+      <p class="text-red-500 text-xs mt-1">Enter a valid email.</p>
+      }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Date From <em>*</em>
+    </label>
+    <p-datepicker
+      formControlName="prevDateFromControl"
+      [showIcon]="true"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.border-red-500]="isInvalid('prevDateFromControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('prevDateFromControl')){
+      <p class="text-xs text-red-500 mt-1">Date From is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Date To <em>*</em>
+    </label>
+    <p-datepicker
+      formControlName="prevDateToControl"
+      [showIcon]="true"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.border-red-500]="isInvalid('prevDateToControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('prevDateToControl')){
+      <p class="text-xs text-red-500 mt-1">Date To is required.</p>
+    }
+  </div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+      @if(selectedPrevExpEdit && prevExperienceChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('prevExpForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('PreviousExperienceDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('prevExpForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+                </form>
+
+     <p-table *ngIf="prevExperienceChildData.length > 0" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Previous Company</th>
+               <th class="text-sm font-medium">Designation</th>
+               <th class="text-sm font-medium">Reporting Manager</th>
+               <th class="text-sm font-medium">Reporting Manager Phone</th>
+               <th class="text-sm font-medium">Reporting Manager Email</th>
+               <th class="text-sm font-medium">Date From</th>
+               <th class="text-sm font-medium">Date To</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of prevExperienceChildData; let i=index">
+                <td class="text-sm">{{item.prevCompany_Text}}</td>
+                <td class="text-sm">{{item.designation_Text}}</td>
+                <td class="text-sm">{{item.reportingMng}}</td>
+                <td class="text-sm">{{item.reprtMngPhone}}</td>
+                <td class="text-sm">{{item.reprtMngEmail}}</td>
+                <td class="text-sm">{{item.dateFrom |date:'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.dateTo | date:'dd-MM-yyyy'}}</td>
+             <td class="actionButtons flex gap-2">
+             <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('PreviousExperienceDetails',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('prevExperienceChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <ng-container *ngIf="prevExperienceChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="5">
+            <p-accordion-header>Bank Details</p-accordion-header>
+            <p-accordion-content>
+                <form [formGroup]="bankForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+            <div>
+             <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name *</label>
+             <p-select
+             [options]="bankDataDrp"
+             optionLabel="drpOption"
+             optionValue="drpValue"
+             formControlName="bankNameIdControl"
+             placeholder="Select Bank"
+             [filter]="true"
+             [showClear]="true"
+             class="w-full"
+             [class.border-red-500]="isInvalid('bankNameIdControl')"
+             (onChange)="getIFSCDrp()"
+              ></p-select>
+              @if(isInvalid('bankNameIdControl')){
+             <p class="text-xs text-red-500 mt-1">Bank Name is required.</p>
+             }
+           </div>
+
+           <div class="relative">
+            <label class="block text-sm font-medium text-gray-700 mb-1">IFSC *</label>
+            <input
+            type="text"
+            placeholder="Enter IFSC code"
+            [value]="ifscCode"
+           (keyup)="onChangeIfsc($event)"
+           class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+           [class.border-red-500]="isInvalid('branchIdControl')"
+            />
+          <div *ngIf="ifscDataDrp.length" class="absolute z-10 bg-white border border-gray-300 w-full mt-1 rounded shadow">
+           <ul>
+           <li *ngFor="let item of ifscDataDrp" (click)="onSelectIfscCode(item)" class="p-1 hover:bg-gray-100 cursor-pointer">
+             {{ item.drpOption }}
+          </li>
+           </ul>
+          </div>
+          @if(isInvalid('branchIdControl')){
+             <p class="text-xs text-red-500 mt-1">Enter valid IFSC code.</p>
+           }
+          </div>
+
+        <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Account No *</label>
+        <input
+         type="text"
+         formControlName="accountControl"
+         appOnlyNumber
+         placeholder="Enter Account Number"
+         maxlength="18"
+         class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+         [class.border-red-500]="isInvalid('accountControl')"
+         />
+        @if(isInvalid('accountControl')){
+        <p class="text-xs text-red-500 mt-1">
+       @if(bankForm.get('accountControl')?.errors?.['required']){
+        Account is required.
+      } @else if(bankForm.get('accountControl')?.errors?.['minlength']){
+        Account number must be at least 9 characters.
+      } @else if(bankForm.get('accountControl')?.errors?.['maxlength']){
+        Account number cannot exceed 18 characters.
+      } 
+     </p>
+     }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Re Enter Account No *</label>
+    <input type="text"
+      formControlName="reAccountControl"
+      appOnlyNumber
+      placeholder="Re-enter Account Number"
+      maxlength="18"
+      class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('reAccountControl')"/>
+      @if(isInvalid('reAccountControl')){
+        <p class="text-xs text-red-500 mt-1">
+      @if(bankForm.get('reAccountControl')?.errors?.['required']){
+        Re-enter Account Number.
+      } @else if(bankForm.get('reAccountControl')?.errors?.['notMatching']){
+        Account numbers do not match.
+      }  
+     </p>
+     }
+    </div>
+
+   <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">PAN Number <em class="marked" *ngIf="this.employeeTypeId =='10000'">*</em></label>
+    <input
+      type="text"
+      formControlName="panDetailsControl"
+      maxlength="10"
+      placeholder="Enter PAN Number"
+      class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('panDetailsControl')"
+     />
+     @if(isInvalid('panDetailsControl')){
+      <p class="text-xs text-red-500 mt-1">Please enter a valid PAN number.</p>
+     }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">PF Number</label>
+    <input
+      type="text"
+      formControlName="pfControl"
+      maxlength="20"
+      placeholder="Enter PF Number"
+      class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">UAN</label>
+    <input
+      type="text"
+      formControlName="uANControl"
+      maxlength="20"
+      placeholder="Enter UAN"
+      class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">ESI Number</label>
+    <input
+      type="text"
+      formControlName="eSIControl"
+      maxlength="20"
+      placeholder="Enter ESI Number"
+      class="w-full rounded-md text-sm border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+      <div *ngIf="chequeUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-semibold text-gray-700">{{ chequeUpload.label }}</label>
+        <p-button
+          label="Upload"
+          icon="pi pi-upload"
+          styleClass="text-xs p-1"
+          variant="text"
+          [raised]="true"
+          (click)="openDialog(chequeUpload)">
+        </p-button>
+      </div>
+
+      <div *ngIf="chequeUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+        <div class="flex items-center gap-3">
+          <img *ngIf="isImageFile(chequeUpload.uploadedFileUrl)" [src]="chequeUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+          <a [href]="chequeUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+        </div>
+        <button type="button" (click)="removeFile(chequeUpload)" class="text-red-500 hover:text-red-700">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <p *ngIf="!chequeUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">
+        No {{ chequeUpload.label }} uploaded yet.
+      </p>
+    </div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedBankEdit && bankChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('bankForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('BankDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('bankForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+
+           </form>  
+
+          <p-table *ngIf="bankChildData.length > 0" [value]="[1]" showGridlines
+            [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+              <tr>
+              <th class="text-sm font-medium">Bank Name</th>
+              <th class="text-sm font-medium">IFSC</th>
+              <th class="text-sm font-medium">Account No</th>
+              <th class="text-sm font-medium">PAN Number</th>
+              <th class="text-sm font-medium">PF Number</th>
+              <th class="text-sm font-medium">UAN</th>
+              <th class="text-sm font-medium">ESI Number</th>
+              <th class="text-sm font-medium">Cancel Cheque Upload</th>
+              <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of bankChildData; let i=index">
+                <td class="text-sm">{{item.bankName_Text}}</td>
+                <td class="text-sm">{{item.branch_Text}}</td>
+                <td class="text-sm">{{item.account}}</td>
+                <td class="text-sm">{{item.panDetails}}</td>
+                <td class="text-sm"> {{item['PF']}}</td>
+                <td class="text-sm">{{item['UAN']}}</td>
+                <td class="text-sm">{{item['ESI']}}</td>
+                <td>
+                <p-button [disabled]="!item.checkUpload" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.checkUpload)" pTooltip="Cheque">
+                </p-button>
+                </td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('BankDetails',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('bankChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+          </p-table>
+
+    <ng-container *ngIf="bankChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="6">
+            <p-accordion-header>Transfer Details *</p-accordion-header>
+            <p-accordion-content>
+               
+<form [formGroup]="transferForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+    <p-select
+      [options]="districtDataDrp"
+      optionValue="drpValue"
+      optionLabel="drpOption"
+      formControlName="districtIdControl"
+      placeholder="Select City"
+      [filter]="true"
+      [showClear]="true"
+      (onChange)="getSectorDrp()"
+      class="w-full"
+      [class.border-red-500]="isInvalid('districtIdControl')"
+    ></p-select>
+
+    <p-progressSpinner *ngIf="isDistrictLoading" strokeWidth="4" styleClass="w-5 h-5"></p-progressSpinner>
+
+    @if(isInvalid('districtIdControl')){
+        <p class="text-xs text-red-500 mt-1">City is required.</p>
+      }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1"> Sector *</label>
+    <div class="flex items-center gap-2">
+      <p-select
+        [options]="sectorDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="sectorIdControl"
+        placeholder="Select Sector"
+        [filter]="true"
+        [showClear]="true"
+        (onChange)="getOfficeLocationDrp()"
+        class="w-full"
+        [class.border-red-500]="isInvalid('sectorIdControl')"
+      ></p-select>
+      
+        <p-progressSpinner *ngIf="isSectorLoading" strokeWidth="4" styleClass="w-5 h-5"></p-progressSpinner>
+
+    </div>
+
+    @if(isInvalid('sectorIdControl')){
+      <p class="text-xs text-red-500 mt-1">Sector is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Office Location
+    </label>
+    <div class="flex items-center gap-2">
+      <p-select
+        [options]="officeLocationDataDrp"
+        optionValue="drpValue"
+        optionLabel="drpOption"
+        formControlName="officeLocationIdControl"
+        placeholder="Select Office Location"
+        [filter]="true"
+        [showClear]="true"
+        class="w-full"
+      ></p-select>
+  
+    <p-progressSpinner *ngIf="isOfficeLocationLoading" strokeWidth="4" styleClass="w-5 h-5"></p-progressSpinner>
+
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Latitude
+    </label>
+    <input
+      type="text"
+      maxlength="50"
+      pInputText
+      formControlName="LatitudeControl"
+      placeholder="Enter latitude"
+      class="w-full !text-sm rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Longitude
+    </label>
+    <input
+      type="text"
+      maxlength="50"
+      pInputText
+      formControlName="LongitudeControl"
+      placeholder="Enter longitude"
+      class="w-full !text-sm rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+    />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Date <em>*</em>
+    </label>
+    <p-datepicker
+      formControlName="transferDateControl"
+      [showIcon]="true"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.border-red-500]="isInvalid('transferDateControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('transferDateControl')){
+      <p class="text-xs text-red-500 mt-1">Date is required.</p>
+    }
+  </div>
+
+  <div class="flex items-center gap-2 mt-6">
+    <p-checkbox formControlName="attendanceControl" binary="true" inputId="chk_attendance"></p-checkbox>
+    <label for="chk_attendance" class="text-sm font-medium text-gray-700">Is Attendance</label>
+  </div>
+
+   <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+      @if(selectedTransferEdit && transferChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('transferForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('TransferDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('transferForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+
+</form>
+
+   <p-table *ngIf="transferChildData.length > 0" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">City</th>
+               <th class="text-sm font-medium">Sector</th>
+               <th class="text-sm font-medium">Office Location</th>
+               <th class="text-sm font-medium">Latitude</th>
+               <th class="text-sm font-medium">Longitude</th>
+               <th class="text-sm font-medium">Date</th>
+               <th class="text-sm font-medium">Attendance</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of transferChildData; let i=index">
+                <td class="text-sm">{{item.district_Text}}</td>
+                <td class="text-sm">{{item.sector_Text}}</td>
+                <td class="text-sm">{{item.officeLocation_Text}}</td>
+                <td class="text-sm">{{item.Latitude}}</td>
+                <td class="text-sm">{{item.Longitude}}</td>
+                <td class="text-sm">{{item.date | date: 'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.attendance?'Yes':'No'}}</td>
+             <td class="actionButtons flex gap-2">
+             <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('TransferDetails',item)"></p-button>
+             <p-button [disabled]="postType == 'view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('transferChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <ng-container *ngIf="transferChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="7">
+            <p-accordion-header>Identity Proof Details</p-accordion-header>
+            <p-accordion-content>
+                 <form [formGroup]="idProofForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+
+  <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Id Proof Type *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblIdProofMaster', 'Id Proof Type', [getIdProofDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="idProofDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="idPrfTypidControl"
+      placeholder="Select Id Proof Type"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('idPrfTypidControl')"
+    ></p-select>
+     @if(isInvalid('idPrfTypidControl')){
+      <p class="text-xs text-red-500 mt-1">Id Proof Type is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Id No *</label>
+    <input
+      type="text"
+      formControlName="idNoControl"
+      maxlength="50"
+      placeholder="Enter Id No"
+      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('idNoControl')"
+    />
+    @if(isInvalid('idNoControl')){
+      <p class="text-xs text-red-500 mt-1">Id No is required.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Validity Date</label>
+    <p-datepicker
+      formControlName="validDateControl"
+      [minDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Select Validity Date"
+      [iconDisplay]="'input'"
+      class="w-full"
+    ></p-datepicker>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+    <input
+      type="text"
+      formControlName="phneControl"
+      maxlength="10"
+      appOnlyNumber
+      placeholder="Enter Phone"
+      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('phneControl')"
+    />
+    @if(isInvalid('phneControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid phone number.</p>
+    }
+  </div>
+
+  <div class="col-span-1">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Attach File *</label>
+
+    <div *ngIf="idProofUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-semibold text-gray-700">{{ idProofUpload.label }}</label>
+        <p-button
+          label="Upload"
+          icon="pi pi-upload"
+          styleClass="text-xs p-1"
+          variant="text"
+          [raised]="true"
+          (click)="openDialog(idProofUpload)"
+        ></p-button>
+      </div>
+
+      <div *ngIf="idProofUpload.uploadedFileUrl" class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200 mb-2">
+        <div class="flex items-center gap-3">
+          <img *ngIf="isImageFile(idProofUpload.uploadedFileUrl)" [src]="idProofUpload.uploadedFileUrl" class="w-12 h-12 rounded-full border" />
+          <a [href]="idProofUpload.uploadedFileUrl" target="_blank" class="text-xs text-blue-500 hover:underline">View / Download</a>
+        </div>
+        <button type="button" (click)="removeFile(idProofUpload)" class="text-red-500 hover:text-red-700">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <p *ngIf="!idProofUpload.uploadedFileUrl" class="text-xs text-gray-500 italic">No {{ idProofUpload.label }} uploaded yet.</p>
+
+     <p *ngIf="idProofUpload.form.get(idProofUpload.controlName)?.touched && !idProofUpload.uploadedFileUrl" 
+       class="text-xs text-red-500 mt-1">
+      {{ idProofUpload.label }} is required.
+    </p>
+
+    </div>
+  </div>
+
+    <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedIdProofEdit && identityProofChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('idProofForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('IdentityProofDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('idProofForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+         </form>
+
+        <p-table *ngIf="identityProofChildData.length > 0" [value]="[1]" showGridlines
+            [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+              <tr>
+              <th class="text-sm font-medium">Id Proof Type</th>
+              <th class="text-sm font-medium">Id No</th>
+              <th class="text-sm font-medium">Validity Date</th>
+              <th class="text-sm font-medium">Phone</th>
+              <th class="text-sm font-medium">Attach File</th>
+              <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of identityProofChildData; let i=index">
+                <td class="text-sm">{{item.idPrfType_Text}}</td>
+                <td class="text-sm">{{item.idNo}}</td>
+                <td class="text-sm">{{item.validDate | date: 'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.phne}}</td>
+                <td>
+                <p-button [disabled]="!item.attachFile" icon="pi pi-download" styleClass="p-button-text p-button-md"
+                (click)="filedownloadview(item.attachFile)" pTooltip="Id Proof">
+                </p-button>
+                </td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('IdentityProofDetails',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('identityProofChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+        </p-table>
+
+    <ng-container *ngIf="identityProofChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="8">
+            <p-accordion-header>Weekly Off *</p-accordion-header>
+            <p-accordion-content>
+
+            <form [formGroup]="weekOffForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="postType != 'view'">
+    <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Off *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblHrWeeklyoffMaster', 'Weekly Off', [getWeekOffDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="weekOffDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      formControlName="weekOffIdControl"
+      placeholder="Select Weekly Off"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('weekOffIdControl')"
+    ></p-select>
+     @if(isInvalid('weekOffIdControl')){
+      <p class="text-xs text-red-500 mt-1">Weekly Off is required.</p>
+    }
+  </div>
+
+    <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedWeeklyOffEdit && weeklyoffChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('weekOffForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('WeeklyOff')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('weekOffForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+    </form>  
+                
+            
+        <p-table *ngIf="weeklyoffChildData.length > 0" [value]="[1]" showGridlines
+            [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+              <tr>
+              <th class="text-sm font-medium">Weekly Off</th>
+              <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of weeklyoffChildData; let i=index">
+                <td class="text-sm">{{item.weekOff_Text}}</td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('WeeklyOff',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('weeklyoffChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+        </p-table>    
+
+      <ng-container *ngIf="weeklyoffChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="9">
+            <p-accordion-header>Nominee Details</p-accordion-header>
+            <p-accordion-content>
+            <form [formGroup]="idNomineeForm" *ngIf="postType != 'view'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+         <div>
+         <label class="block text-sm font-medium text-gray-700 mb-1">Nominee For *</label>
+         <p-select
+        formControlName="idnomineeControl"
+        [options]="nomineeDataDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        placeholder="Select Nominee"
+        [showClear]="true"
+        [class.border-red-500]="isInvalid('phneControl')"
+        class="w-full"
+         ></p-select>
+         @if(isInvalid('idnomineeControl')){
+         <p class="text-xs text-red-500 mt-1">Nominee is required.</p>
+        }
+       </div>
+
+        <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Family Name *</label>
+        <p-select
+        formControlName="familyNameControl"
+        [options]="familyChildData"
+        optionLabel="name"
+        optionValue="name"
+        placeholder="Select Family Name"
+        [disabled]="familyChildData.length === 0"
+        [showClear]="true"
+        [class.border-red-500]="isInvalid('familyNameControl')"
+        class="w-full"
+      ></p-select>
+      @if(isInvalid('familyNameControl')){
+      <p class="text-xs text-red-500 mt-1">Family Name is required.</p>
+    }
+    </div>
+
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">DOB</label>
+      <input
+        pInputText
+        readonly
+        formControlName="dobNominee"
+        dateFormat="dd-mm-yy"
+        class="w-full"
+      >
+    </div>
+
+      <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+      <input
+        readonly
+        pInputText
+        type="text"
+        formControlName="autoCalculateAge"
+        class="w-full"
+        readonly
+      />
+    </div>
+
+    <div *ngIf="showGuardianField">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
+      <input
+        pInputText
+        type="text"
+        formControlName="guardianNameControl"
+        (keypress)="allowOnlyLetters($event)"
+        class="w-full"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Share Accumulation
+      </label>
+      <input
+        pInputText
+        maxlength="3"
+        formControlName="accumulationControl"
+        class="w-full"/>
+      @if (isInvalid('accumulationControl')) {
+      @if (idNomineeForm.get('accumulationControl')?.errors?.['min']) {
+      <p class="text-xs text-red-500 mt-1">Value must be greater than 0.</p>
+     }
+    @else if (idNomineeForm.get('accumulationControl')?.errors?.['max']) {
+      <p class="text-xs text-red-500 mt-1">Value cannot be more than 100.</p>
+    }
+  }
+    </div>
+
+    <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedNomineeEdit && nomineeChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('idNomineeForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('IdNomineeDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('idNomineeForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+          </form>
+
+          <p-table *ngIf="nomineeChildData.length > 0" [value]="[1]" showGridlines
+            [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+              <tr>
+              <th class="text-sm font-medium">Nominee For</th>
+              <th class="text-sm font-medium">Family Name</th>
+              <th class="text-sm font-medium">DOB</th>
+              <th class="text-sm font-medium">Age</th>
+              <th class="text-sm font-medium">Guardian Name</th>
+              <th class="text-sm font-medium">Share Accumulation</th>
+              <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of nomineeChildData; let i=index">
+                <td class="text-sm">{{item.nomineeFor}}</td>
+                <td class="text-sm">{{item.familyId}} </td>
+                <td class="text-sm">{{item.nomineedob| date:'dd-MM-yyyy'}}</td>
+                <td class="text-sm">{{item.nomineeAge}}</td>
+                <td class="text-sm">{{item.guardianName}}</td>
+                <td class="text-sm">{{item.shareAccumulation}}</td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('nomineeDetails',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('nomineeChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+         </p-table>
+
+      <ng-container *ngIf="nomineeChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="10" *ngIf="postType === 'update'">
+        <p-accordion-header>Org/Dept Transfer Details</p-accordion-header>
+        <p-accordion-content>
+
+            <ng-container> 
+              <form [formGroup]="orgForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Organisation Name *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblOrgMaster', 'Organisation Name', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="organizationDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      placeholder="Select Organization"
+      formControlName="orgMasterIdControl"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.ng-invalid.ng-dirty]="isInvalid('orgMasterIdControl')"
+    ></p-select>
+
+    @if(isInvalid('orgMasterIdControl')){
+      <p class="text-xs text-red-500 mt-1">Organisation name is required.</p>
+    }
+    
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">  
+    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblDepartmentMaster', 'Department', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="departmentDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      placeholder="Select Department"
+      formControlName="departmentIdControl"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.ng-invalid.ng-dirty]="isInvalid('departmentIdControl')"
+    ></p-select>
+
+    @if(isInvalid('departmentIdControl')){
+      <p class="text-xs text-red-500 mt-1">Department is required.</p>
+    }
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-1">    
+    <label class="block text-sm font-medium text-gray-700 mb-1">Designation *</label>
+    <p-button icon="pi pi-pen-to-square" (click)="UpdateMasterCustom('tblDesignationMaster', 'Designation', [getHeaderTableDrp])"
+    styleClass="updateMasterBtn" tooltip="Edit"></p-button>
+    </div>
+    <p-select
+      [options]="designationDataDrp"
+      optionLabel="drpOption"
+      optionValue="drpValue"
+      placeholder="Select Designation"
+      formControlName="designationIdControl"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.ng-invalid.ng-dirty]="isInvalid('designationIdControl')"
+    ></p-select>
+
+    @if(isInvalid('designationIdControl')){
+      <p class="text-xs text-red-500 mt-1">Designation is required.</p>
+    }
+
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Office Email</label>
+    <input
+      type="email"
+      pInputText
+      formControlName="officeEmailIdControl"
+      placeholder="Enter office email"
+      class="w-full !text-sm rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('officeEmailIdControl')"
+    />
+    @if(isInvalid('officeEmailIdControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid email.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Office Mobile No</label>
+    <input
+      type="text"
+      maxlength="10"
+      pInputText
+      formControlName="officeMobileNoControl"
+      placeholder="Enter mobile number"
+      appOnlyNumber
+      class="w-full !text-sm rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+      [class.border-red-500]="isInvalid('officeMobileNoControl')"
+    />
+    @if(isInvalid('officeMobileNoControl')){
+      <p class="text-xs text-red-500 mt-1">Enter a valid office mobile number.</p>
+    }
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+      Effective Date *
+    </label>
+    <p-datepicker
+      formControlName="effectiveDateControl"
+      [showIcon]="true"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      placeholder="Choose a date"
+      [iconDisplay]="'input'"
+      class="w-full"
+      [class.ng-invalid.ng-dirty]="isInvalid('effectiveDateControl')"
+    ></p-datepicker>
+
+    @if(isInvalid('effectiveDateControl')){
+      <p class="text-xs text-red-500 mt-1">Effective date is required.</p>
+    }
+  </div>
+
+  <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(this.isOrgFormEditMode && organizationChildData.length > 0){  
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('orgForm','update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('OrganizationDetails')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('orgForm','add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+             </form>
+            </ng-container>  
+
+            <p-table *ngIf="organizationChildData.length > 0" [value]="[1]" showGridlines
+              [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Organisation</th>
+               <th class="text-sm font-medium">Department</th>
+               <th class="text-sm font-medium">Designation</th>
+               <th class="text-sm font-medium">Office Email</th>
+               <th class="text-sm font-medium">Office Mobile No</th>
+               <th class="text-sm font-medium">Effective Date</th>
+               <th [hidden]="isDisable">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of organizationChildData; let i=index">
+                <td class="text-sm">{{item.org_Text}}</td>
+                <td class="text-sm">{{item.department_Text}}</td>
+                <td class="text-sm">{{item.designation_Text}}</td>
+                <td class="text-sm">{{item.officeEmailId}}</td>
+                <td class="text-sm">{{item.officeMobileNo}}</td>
+                <td class="text-sm">{{item.effectiveDate | date: 'dd-MM-yyyy'}}</td>
+              <td class="actionButtons flex gap-2" [hidden]="isDisable">
+              <p-button severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('OrganizationDetails',item)"></p-button>
+             <p-button severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('organizationChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+           </p-table>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        <p-accordion-panel value="11">
+            <p-accordion-header>Reportings *</p-accordion-header>
+            <p-accordion-content>
+            <form [formGroup]="reportingsForm" *ngIf="postType != 'view'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+    <p-select 
+      [options]="managerTypeDataDrp" 
+      optionLabel="drpOption" 
+      optionValue="drpValue"
+      formControlName="managerTypeIdControl"
+      placeholder="Select Type"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('managerTypeIdControl')">
+    </p-select>
+    <p *ngIf="isInvalid('managerTypeIdControl')" class="text-xs text-red-500 mt-1">
+      Type is required.
+    </p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Manager *</label>
+    <p-select 
+      [options]="reportingToDataDrp" 
+      optionLabel="drpOption" 
+      optionValue="drpValue"
+      formControlName="managerIdControl"
+      placeholder="Select Manager"
+      [filter]="true"
+      [showClear]="true"
+      class="w-full"
+      [class.border-red-500]="isInvalid('managerIdControl')">
+    </p-select>
+    <p *ngIf="isInvalid('managerIdControl')" class="text-xs text-red-500 mt-1">
+      Manager is required.
+    </p>
+  </div>
+
+   <div class="col-span-2 flex flex-wrap items-center gap-3 mt-4">
+    @if(selectedReportingEdit && reportingsChildData.length > 0){
+      <p-button label="Update" icon="pi pi-pencil" (click)="AddRow('reportingsForm', 'update')" styleClass="p-button-sm p-button-info"></p-button>
+      <p-button label="Cancel" icon="pi pi-times" (click)="onClear('reportings')" styleClass="p-button-sm p-button-secondary"></p-button>
+    }
+    @else{
+      <p-button label="Add" icon="pi pi-plus" (click)="AddRow('reportingsForm', 'add')" styleClass="p-button-sm p-button-info"></p-button>
+    }
+  </div>
+
+</form>
+
+            <p-table *ngIf="reportingsChildData.length > 0" [value]="[1]" showGridlines
+              [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Type</th>
+               <th class="text-sm font-medium">Name</th>
+               <th class="text-sm font-medium">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of reportingsChildData; let i=index">
+                <td class="text-sm">{{item.type_Text}}</td>
+                <td class="text-sm">{{item.manager_Text}}</td>
+              <td class="actionButtons flex gap-2">
+              <p-button [disabled]="postType=='view'" *ngIf="item.id > 0" severity="info" icon="pi pi-pen-to-square" pTooltip="Edit" (click)="editRow('reportings',item)"></p-button>
+             <p-button [disabled]="postType=='view'" severity="danger" icon="pi pi-trash" outlined pTooltip="Delete" (click)="deleteRow('reportingsChildData',i)"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      </p-table>
+
+      <ng-container *ngIf="reportingsChildData.length === 0">
+      <div class="mt-4">
+        <p class="text-left text-sm font-medium w-full">No details found.</p>
+      </div>
+    </ng-container>
+
+            </p-accordion-content>
+        </p-accordion-panel>
+
+        </p-accordion>
+        </div>
+      </div>
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"
+        >
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="resetData()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"
+        ></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-dialog [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '40vw' }"  header="Upload {{ activeUpload?.label }}" (onHide)="closeDialog()">
+  <ng-template pTemplate="content">
+    <p-fileUpload #fileUpload name="file[]" customUpload="true" [multiple]="false"
+      [showCancelButton]="false" [showUploadButton]="false" [accept]="activeUpload?.accept"
+      (onSelect)="onFileSelect($event)">
+    </p-fileUpload>
+
+    <div *ngIf="selectedFile" class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50 mt-2">
+      <img *ngIf="filePreviewUrl" [src]="filePreviewUrl" alt="Preview" class="w-14 h-14 rounded-full object-cover border" />
+      <div class="flex-1">
+        <span class="text-sm">{{ selectedFile.name }}</span>
+        <span class="text-xs text-gray-500 ml-2">({{ getFileSize(selectedFile.size) }})</span>
+      </div>
+      <button type="button" (click)="clearSelection()" class="text-red-500 hover:text-red-700">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end space-x-3">
+      <p-button label="Upload" (click)="uploadFile()" [loading]="isUploading" [disabled]="!selectedFile || isUploading"></p-button>
+      <p-button label="Cancel" (click)="closeDialog()" severity="secondary" [disabled]="isUploading"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+
+<p-dialog [(visible)]="updateMasterModel" [modal]="true" [style]="{ width: '50vw'}" [draggable]="false" [resizable]="false" [closable]="true"
+ header="{{ modelHeading }}">
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0" (click)="onChangeUpdateMasterTab(false)">Add New Detail</p-tab>
+      <p-tab value="1" (click)="onChangeUpdateMasterTab(true)">View Detail</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- ========== ADD NEW DETAIL TAB ========== -->
+      <p-tabpanel value="0">
+        <form [formGroup]="masterUpdateForm" class="p-fluid">
+          <div class="col-12 md:col-12">
+            <label for="masterInput" class="block text-sm font-medium text-gray-700 mb-1">{{ modelHeading }}<em class="marked">*</em></label>
+            <input pInputText id="masterInput" formControlName="masterInput" [ngClass]="{'ng-invalid ng-dirty': fM['masterInput'].invalid &&
+              (fM['masterInput'].dirty || fM['masterInput'].touched)}"  class="w-full"/>
+              <div class="errorMsg" *ngIf="!fM['masterInput'].valid && (fM['masterInput'].dirty || fM['masterInput'].touched)">
+              <div *ngIf="fM['masterInput'].errors?.['required']" class="text-xs text-red-500 mt-1">
+                {{ modelHeading }} is required
+              </div>
+              <div *ngIf="!fM['masterInput'].errors?.['required'] && fM['masterInput'].errors?.['whitespace']" class="text-xs text-red-500 mt-1">
+                {{ modelHeading }} cannot be just whitespace
+              </div>
+            </div>
+          </div>
+        </form>
+        <div class="flex justify-content-end mt-3">
+          <button pButton type="button" label="Submit" class="p-button-primary" (click)="OnSubmitUpdateMasterModal()"></button>
+        </div>
+      </p-tabpanel>
+
+      <!-- ========== VIEW DETAIL TAB ========== -->
+      <p-tabpanel value="1">
+        
+        <p-table 
+        #dt 
+        [value]="dataSource" 
+        [paginator]="true" 
+        [rows]="10" 
+        [rowsPerPageOptions]="[5, 10, 20, 50]" 
+        [globalFilterFields]="['text']" 
+        [responsiveLayout]="'scroll'" 
+        [loading]="isLoading" 
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}">
+          
+        <ng-template #caption>
+        <div class="flex">
+          <input class="w-full !text-sm rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+           type="text" [(ngModel)]="searchValue" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Search" />
+        </div>
+        </ng-template>
+          
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="sno" class="text-sm font-medium">S.No</th>
+              <th pSortableColumn="text" class="text-sm font-medium">{{ modelHeading }}</th>
+              <th class="text-sm font-medium text-center">Action</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+            <tr>
+              <td class="text-sm">{{ rowIndex + 1 }}</td>
+              <td class="text-sm" [style.text-decoration]="rowData?.isActive === false ? 'line-through' : 'none'">
+              <ng-container *ngIf="selectedMasterEditItem && selectedMasterEditItem.id == rowData.id; else normalText">
+              <div class="flex items-center gap-2 w-full">
+              <input pInputText [formControl]="masterInputControl" class="w-full text-sm" placeholder="{{ modelHeading }}" />
+              <button pButton icon="pi pi-times" class="p-button-danger p-button-sm" (click)="selectedMasterEditItem = null" type="button"></button>
+              </div>
+              </ng-container>
+              <ng-template #normalText>{{ rowData['text'] }}</ng-template>
+              </td>
+              <td class="text-sm text-center">
+                <div class="flex justify-content-center gap-2">
+                  <ng-container *ngIf="selectedMasterEditItem && selectedMasterEditItem.id == rowData.id; else editButtons">
+                    <button pButton icon="pi pi-refresh" class="p-button-sm p-button-info" (click)="OnSubmitUpdateMasterModal()" title="Update"></button>
+                  </ng-container>
+                  <ng-template #editButtons>
+                    <button *ngIf="rowData?.isActive" pButton icon="pi pi-pen-to-square" class="p-button-sm p-button-info" (click)="editUpdateMasterRow(rowData)" title="Edit"></button>
+                  </ng-template>
+                  <button *ngIf="rowData?.isActive" pButton icon="pi pi-plus-circle" class="p-button-sm purple" (click)="onMasterUpdateAction(rowData, 'Delete')" title="Inactivate"></button>
+                  <button *ngIf="!rowData?.isActive" pButton icon="pi pi-minus-circle" class="p-button-sm purple" (click)="onMasterUpdateAction(rowData, 'Active')" title="Activate"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="text-center">No records found</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</p-dialog>
+
+  <p-drawer
+    [(visible)]="importDrawer"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '70%', 'max-width': '100%'}"
+    (onHide)="onImportDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">Import</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+      <div class="tabbable import-main">
+       <form [formGroup]="dailtAttendanceForm">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Excel Dropdown -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Select Excel For *
+      </label>
+
+      <p-select
+        [options]="drpOptionsE"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        placeholder="--Select Excel For--"
+        formControlName="excelDrpId"
+        styleClass="w-full"
+        [class.border-red-500]="isInvalid('excelDrpId')">
+      </p-select>
+
+       @if(isInvalid('excelDrpId')){
+       <p class="text-xs text-red-500 mt-1">Please select field.</p>
+      }
+    </div>
+
+    <!-- Attach File Section -->
+  <div *ngIf="excelUpload" class="card flex flex-col w-full border border-gray-300 rounded p-4 mb-4">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-2">
+    <label class="text-sm font-semibold text-gray-700">{{ excelUpload.label }} *</label>
+    <p-button
+      label="Upload"
+      icon="pi pi-upload"
+      styleClass="text-xs p-1"
+      variant="text"
+      [raised]="true"
+      [disabled]="!dailtAttendanceForm.get('excelDrpId')?.value"
+      (click)="openExcelDialog(excelUpload)">
+    </p-button>
+  </div>
+
+  <!-- No file uploaded -->
+  <p *ngIf="!excelUpload.uploadedFileName" class="text-xs text-gray-500 italic">
+    No file uploaded yet.
+  </p>
+
+  <!-- Validation -->
+  <p *ngIf="dailtAttendanceForm.get('documents')?.touched && !excelUpload.uploadedFileName" 
+     class="text-xs text-red-500 mt-1">
+    {{ excelUpload.label }} is required.
+  </p>
+</div>
+
+  </div>
+</form>
+
+      </div>
+
+      }
+    </ng-template>
+  </p-drawer>
+
+
+<p-dialog [(visible)]="excelDialogVisible"  [modal]="true"  [style]="{ width: '40vw' }"   header="Upload {{ activeExcelUpload?.label }}" 
+ (onHide)="closeExcelDialog()">
+
+  <ng-template pTemplate="content">
+    <p-fileUpload #excelFileUpload 
+                  name="file[]" 
+                  customUpload="true" 
+                  [multiple]="false"
+                  [showCancelButton]="false" 
+                  [showUploadButton]="false" 
+                  [accept]="activeExcelUpload?.accept"
+                  (onSelect)="onExcelSelect($event)">
+    </p-fileUpload>
+
+    <div *ngIf="selectedExcelFile" class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50 mt-2">
+      <i class="pi pi-file-excel text-green-500 text-xl"></i>
+      <div class="flex-1">
+        <span class="text-sm">{{ selectedExcelFile.name }}</span>
+        <span class="text-xs text-gray-500 ml-2">({{ getFileSize(selectedExcelFile.size) }})</span>
+      </div>
+      <button type="button" (click)="clearExcelSelection()" class="text-red-500 hover:text-red-700">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="mt-3 flex justify-end gap-2">
+      <p-button label="Upload" (onClick)="uploadExcelFile()" [disabled]="!selectedExcelFile"></p-button>
+      <p-button label="Cancel" severity="secondary" (onClick)="closeExcelDialog()"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="itemDialog" [modal]="true" [closable]="true" [style]="{ width: '70vw', 'max-width': '100%' }" header="{{ modelHeading }}"
+(onHide)="closeDataDialog()">
+  
+  <div class="overflow-x-auto">
+    <p-table [value]="recordViewData" showGridlines [responsiveLayout]="'scroll'" [tableStyle]="{'min-width':'100%'}" class="min-w-full border-gray-300 rounded-lg">
+      
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-100">
+          <ng-container *ngFor="let key of recordHeaderViewData;let i= index">
+          <th *ngIf="i==0" class="px-3 py-2 text-sm">S.No.</th>
+          <th class="px-3 py-2 text-sm" style="text-transform:capitalize"
+              [hidden]="
+                key =='id' || key =='stateId'|| key =='relationShipId'|| key =='empQualifnId'|| key =='qualfBrnchId'|| key =='prevCompanyId'||
+                key =='designationId'|| key =='districtId'|| key =='sectorId'|| key =='officeLocationId'|| key =='weekOffId'||
+                key =='taskId'|| key =='bankNameId'|| key =='branchId'|| key =='idPrfTypid' || key =='localAddress' || key == 'typeId' || key =='managerId'">
+            {{ key | titlecase }}
+          </th>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 text-sm">{{ i + 1 }}</td>
+
+          <td *ngFor="let key of recordHeaderViewData" class="px-3 py-2 text-sm"
+              [hidden]="
+                key =='id' || key =='stateId'|| key =='relationShipId'|| key =='empQualifnId'|| key =='qualfBrnchId'|| key =='prevCompanyId'|| 
+                key =='designationId'|| key =='districtId'|| key =='sectorId'|| key =='officeLocationId'|| key =='weekOffId'|| key =='taskId'|| 
+                key =='bankNameId'|| key =='branchId'|| key =='idPrfTypid' || key =='localAddress' || key == 'typeId' || key =='managerId'">
+
+            <ng-container *ngIf="key === 'nomineeDetails'">
+              <button *ngIf="item[key]?.length" type="button" class="text-blue-600 hover:text-blue-800" (click)="openNomineeDialog(item[key])">
+                <i class="pi pi-folder-open text-lg"></i>
+              </button>
+              <span *ngIf="!item[key]?.length">-</span>
+            </ng-container>
+
+                 <ng-container *ngIf="key !== 'nomineeDetails'">
+                 <td [hidden]="
+                  key == 'id' || key == 'stateId' || key == 'relationShipId' || 
+                  key == 'empQualifnId' || key == 'qualfBrnchId' || key == 'prevCompanyId' ||
+                  key == 'designationId' || key == 'districtId' || key == 'sectorId' || 
+                  key == 'officeLocationId' || key == 'weekOffId' || key == 'taskId' || 
+                  key == 'bankNameId' || key == 'branchId' || key == 'idPrfTypid' 
+                  || key == 'typeId' || key == 'managerId' || key == 'localAddress' || key == 'typeId' || key =='managerId'">
+
+                 <ng-container *ngIf="item[key]?.type === 'file'; else textContent">
+                 <a [href]="getFileUrl(item[key].path)" target="_blank" title="View File">
+                 <i class="pi pi-file text-blue-600 text-lg cursor-pointer"></i>
+                 </a>
+                 </ng-container>
+
+              <ng-template #textContent>
+                <span>{{ item[key] }}</span>
+              </ng-template>
+            </ng-container>
+
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="recordHeaderViewData.length + 1" class="text-center text-sm no-border">
+            No data found
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+</p-dialog>
+
+<p-dialog [(visible)]="nomineeDialog" [modal]="true" [closable]="true"
+  [style]="{ width: '60vw', 'max-width': '100%' }"
+  header="Nominee Details"
+  (onHide)= "closeNomineeDialog()">
+
+  <div class="overflow-x-auto">
+    <p-table [value]="nomineeRecordViewData" [responsiveLayout]="'scroll'" [tableStyle]="{'min-width': '100%'}" showGridlines
+      class="min-w-full border-gray-300 rounded-lg">
+
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-100 text-gray-700">
+          <th class="text-sm font-medium">S.No.</th>
+          <th class="text-sm font-medium">Nominee For</th>
+          <th class="text-sm font-medium">Family Name</th>
+          <th class="text-sm font-medium">Nominee DOB</th>
+          <th class="text-sm font-medium">Nominee Age</th>
+          <th class="text-sm font-medium">Guardian Name</th>
+          <th class="text-sm font-medium">Share Accumulation</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <tr class="hover:bg-gray-50">
+          <td class="text-sm">{{ i + 1 }}</td>
+          <td class="text-sm">{{ item['nomineeFor'] }}</td>
+          <td class="text-sm">{{ item['familyName'] }}</td>
+          <td class="text-sm">{{ item['nomineeDob'] | date:'dd-MMM-yyyy' }}</td>
+          <td class="text-sm">{{ item['nomineeAge'] }}</td>
+          <td class="text-sm">{{ item['guardianName'] }}</td>
+          <td class="text-sm">{{ item['shareAccumulation'] }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-4 text-gray-500">
+            No nominee details found
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+
+</p-dialog>
+
+
+<p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>
+
+  </div>

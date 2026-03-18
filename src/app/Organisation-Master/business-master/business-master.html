@@ -1,0 +1,253 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- <div class="p-4 sm:p-6">
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1'">
+    </p-breadcrumb>
+  </div> -->
+  
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1'">
+    </p-breadcrumb></h2>
+      <div class="flex items-center space-x-2">
+        <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+          styleClass="orange-button" />
+      </div>
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)" [jsonTemplate]="jsonTemplateRef"
+      (pageSizeChange)="onPageSizeChange($event)">
+    <ng-template #jsonTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+            (click)="showKpiList(item)">
+            <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+    </ng-template>
+
+    <ng-template #actionTemplateRef let-item>
+      <div class="flex items-center space-x-2">
+
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-eye"></i> View
+            </button>
+            <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-pencil"></i> Update
+            </button>
+          </div>
+        </p-popover>
+      </div>
+    </ng-template>
+    </app-table-template>
+    
+
+  </div>
+
+
+
+
+<p-dialog 
+  [(visible)]="kpiDialogVisible" 
+  [modal]="true" 
+  [style]="{ width: '80vw', maxWidth: '1000px' }"
+  [maximizable]="true" 
+  [closable]="true"
+  header="KPI Details">
+ 
+  <ng-template pTemplate="content">
+    <div class="w-full">
+      @if(kpiListArray.length > 0) {
+        <div class="overflow-x-auto mt-4 border border-gray-200 rounded-lg shadow-sm">
+          <table class="min-w-full text-sm text-left text-gray-600">
+            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+              <tr>
+                <th class="px-4 py-3 border-b">S.No</th>
+                <th class="px-4 py-3 border-b">KPI Name</th>
+                <th class="px-4 py-3 border-b">Mapping ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for(item of kpiListArray; track $index) {
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="px-4 py-3">{{ $index + 1 }}</td>
+                  <td class="px-4 py-3">{{ item.kpiName }}</td>
+                  <td class="px-4 py-3">{{ item.mappingId }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="text-center py-8 text-gray-500">
+          <i class="pi pi-inbox text-4xl mb-3"></i>
+          <p class="text-lg">No KPIs mapped</p>
+        </div>
+      }
+    </div>
+  </ng-template>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between items-center w-full">
+      <div class="text-sm text-gray-600">
+        Total KPIs: {{kpiListArray.length}}
+      </div>
+      <button pButton type="button" label="Close" (click)="kpiDialogVisible = false" class="p-button-text"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+
+
+  <p-drawer [(visible)]="visible" position="right" [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{header}}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content" [style]="{padding: '2rem', 'overflow-y': 'auto', 'max-height': 'calc(100vh - 150px)'}">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }" />
+      </div>
+      }@else {
+      <form [formGroup]="sbuForm" (ngSubmit)="onSubmit($event)" class="grid grid-cols-1 gap-4">
+
+        <div class="card flex flex-col w-full">
+          <div class="flex items-center gap-4">
+            <label class="w-1/2 text-xl font-medium text-gray-700">SBU Name*</label>
+            <input type="text" pInputText formControlName="sbuName" 
+              [class.p-invalid]="isInvalid('sbuName')" 
+              class="w-2/3" 
+              placeholder="Enter SBU name" />
+          </div>
+          @if(isInvalid('sbuName')){
+          <small class="text-red-500 text-xs mt-1 ml-[50%]">SBU Name is required.</small>
+          }
+        </div>
+
+
+        <div class="card flex flex-col w-full">
+          <div class="flex items-center gap-4">
+            <label class="w-1/2 text-xl font-medium text-gray-700">SBU Type*</label>
+            <p-select 
+              formControlName="sbuTypeId" 
+              [options]="sbuTypes" 
+              optionLabel="name" 
+              optionValue="id"
+              [filter]="true" 
+              [showClear]="true" 
+              placeholder="Select SBU type"
+              [class.p-invalid]="isInvalid('sbuTypeId')" 
+              class="w-2/3">
+            </p-select>
+          </div>
+          @if(isInvalid('sbuTypeId')){
+          <small class="text-red-500 text-xs mt-1 ml-[50%]">SBU Type is required.</small>
+          }
+        </div>
+
+
+        <div class="card flex flex-col w-full">
+          <div class="flex items-center gap-4">
+            <label class="w-1/2 text-xl font-medium text-gray-700">Is Revenue Generating*</label>
+            <div class="w-2/3">
+              <p-select 
+                formControlName="isRevenueGenerating" 
+                [options]="revenueOptions" 
+                optionLabel="name" 
+                optionValue="value"
+                placeholder="Select revenue status"
+                [class.p-invalid]="isInvalid('isRevenueGenerating')" 
+                class="w-full">
+              </p-select>
+            </div>
+          </div>
+          @if(isInvalid('isRevenueGenerating')){
+          <small class="text-red-500 text-xs mt-1 ml-[50%]">Revenue generating status is required.</small>
+          }
+        </div>
+
+        <div class="card flex flex-col w-full">
+          <div class="flex items-center gap-4">
+            <label class="w-1/2 text-xl font-medium text-gray-700">SBU Owner*</label>
+            <p-select 
+              formControlName="sbuOwnerId" 
+              [options]="sbuOwners" 
+              optionLabel="name" 
+              optionValue="id"
+              [filter]="true" 
+              [showClear]="true" 
+              placeholder="Select SBU owner"
+              [class.p-invalid]="isInvalid('sbuOwnerId')" 
+              class="w-2/3">
+            </p-select>
+          </div>
+          @if(isInvalid('sbuOwnerId')){
+          <small class="text-red-500 text-xs mt-1 ml-[50%]">SBU Owner is required.</small>
+          }
+        </div>
+
+
+        <div class="card flex flex-col w-full">
+          <div class="flex items-start gap-4">
+            <label class="w-1/2 text-xl font-medium text-gray-700 pt-2">KPIs*</label>
+                <p-multiSelect 
+                  formControlName="kpiIds" 
+                  [options]="kpis" 
+                  optionLabel="name" 
+                  optionValue="id"
+                  [filter]="true" 
+                  [showClear]="true" 
+                  placeholder="Select KPI(s)"
+                  display="chip"
+                  [class.p-invalid]="isInvalid('kpiIds')" 
+                   class="w-2/3">
+                </p-multiSelect>
+            </div>
+            @if(isInvalid('kpiIds')){
+                <small class="text-red-500 text-xs mt-1 ml-[50%]">At least one KPI is required.</small>
+                }
+          </div>
+        
+      </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button pButton type="submit" (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+          postType === 'add' ? 'Submit' : 'Update' }}</button>
+        @if(postType === 'add'){
+        <button pButton label="Reset" (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

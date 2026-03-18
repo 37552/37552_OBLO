@@ -1,0 +1,299 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center space-x-2">
+                <div *ngIf="isCreator && timeAlert"
+                    class="px-4 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 rounded text-[11px] font-bold flex items-center gap-2">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>{{errMsg}}</span>
+                </div>
+                <p-button *ngIf="isCreator" label="Submit" icon="pi pi-check" styleClass="p-button-sm p-button-info"
+                    [raised]="true" (click)="submitAttendance()" [disabled]="!enableSubmitBtn">
+                </p-button>
+            </div>
+        </div>
+
+        <ng-container *ngIf="!isCreator; else creatorPart">
+            <!-- Reviewer View with Tabs -->
+            <p-tabs value="pending" styleClass="modern-tabview">
+                <p-tablist class="bg-gray-50 px-4 pt-2 border-b border-gray-200">
+                    <p-tab value="pending" class="gap-2">
+                        <i class="pi pi-receipt"></i>
+                        <span>Pending Requests</span>
+                        <span *ngIf="regAttendanceDataModify2.length > 0"
+                            class="ml-1 px-2 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded-full">{{regAttendanceDataModify2.length}}</span>
+                    </p-tab>
+                    <p-tab value="processed" (click)="getProcessedData()" class="gap-2">
+                        <i class="pi pi-history"></i>
+                        <span>Processed Archive</span>
+                    </p-tab>
+                </p-tablist>
+
+                <p-tabpanels>
+                    <!-- Pending Requests Tab -->
+                    <p-tabpanel value="pending" class="p-0">
+                        <div class="p-0">
+                            <div *ngIf="notFoundAlert" class="p-6 text-center text-gray-500 border-b border-gray-200">
+                                No pending regularization requests found.
+                            </div>
+
+                            <div *ngIf="!notFoundAlert">
+                                <app-table-template [data]="pendingPaginated" [columns]="pendingHeaders"
+                                    [pageSize]="pendingPageSize" [totalCount]="pendingTotal" [isLoading]="loading"
+                                    [currentPage]="pendingPageNo" (pageChange)="onPendingPageChange($event)"
+                                    (refresh)="getAttendanceData()" (searchChange)="onPendingSearchChange($event)"
+                                    (pageSizeChange)="onPendingPageSizeChange($event)"
+                                    [actionTemplate]="pendingActionTpl" [jsonTemplate]="pendingDateTpl"
+                                    [jsonTemplate1]="pendingTimeTpl" [jsonTemplate2]="pendingStatusTpl">
+                                </app-table-template>
+
+                                <ng-template #pendingActionTpl let-item>
+                                    <div class="flex justify-center gap-1">
+                                        <button *ngIf="item?.approvalDetail?.length" pButton icon="pi pi-history"
+                                            (click)="openApprovalHistoryModal(item)"
+                                            class="p-button-rounded p-button-text p-button-info p-button-sm"
+                                            pTooltip="View History"></button>
+                                        <button *ngIf="!isSave" pButton icon="pi pi-check-circle"
+                                            (click)="openApprovalModal(item)"
+                                            class="p-button-rounded p-button-text p-button-success p-button-sm"
+                                            pTooltip="Decision"></button>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #pendingDateTpl let-item>
+                                    <div class="flex flex-col items-center">
+                                        <div class="text-sm text-gray-900">{{item.dateLabel |
+                                            date:'dd-MM-yyyy'}}</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold uppercase">
+                                            {{item.dayName}}</div>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #pendingTimeTpl let-item>
+                                    <div class="flex justify-center items-center gap-1 font-bold text-sm">
+                                        <span class="text-green-600">{{item.in}}</span> - <span
+                                            class="text-red-500">{{item.out}}</span>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #pendingStatusTpl let-item>
+                                    <div class="flex justify-center">
+                                        <p-tag [value]="item.status" [severity]="getSeverity(item.statusCode)"></p-tag>
+                                    </div>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </p-tabpanel>
+
+                    <!-- Processed Tab -->
+                    <p-tabpanel value="processed" class="p-0">
+                        <div class="p-0">
+                            <div *ngIf="noDatafoundCard" class="p-6 text-center text-gray-500 border-b border-gray-200">
+                                No processed requests found.
+                            </div>
+
+                            <div *ngIf="!noDatafoundCard">
+                                <app-table-template [data]="processedPaginated" [columns]="processedHeaders"
+                                    [pageSize]="processedPageSize" [totalCount]="processedTotal" [isLoading]="loading"
+                                    [currentPage]="processedPageNo" (pageChange)="onProcessedPageChange($event)"
+                                    (refresh)="getProcessedData()" (searchChange)="onProcessedSearchChange($event)"
+                                    (pageSizeChange)="onProcessedPageSizeChange($event)"
+                                    [actionTemplate]="processedActionTpl" [jsonTemplate]="processedDateTpl"
+                                    [jsonTemplate1]="processedTimeTpl" [jsonTemplate2]="processedReasonTpl"
+                                    [jsonTemplate3]="processedStatusTpl">
+                                </app-table-template>
+
+                                <ng-template #processedActionTpl let-item>
+                                    <div class="flex justify-center">
+                                        <button *ngIf="item?.approvalDetail?.length" pButton icon="pi pi-history"
+                                            (click)="openApprovalHistoryModal(item)"
+                                            class="p-button-rounded p-button-text p-button-secondary p-button-sm"></button>
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #processedDateTpl let-item>
+                                    <div class="text-center text-sm font-medium">{{item.dateLabel |
+                                        date:'dd-MM-yyyy'}}</div>
+                                </ng-template>
+
+                                <ng-template #processedTimeTpl let-item>
+                                    <div class="flex justify-center text-sm font-semibold text-gray-700">
+                                        {{item.in}} - {{item.out}}
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #processedReasonTpl let-item>
+                                    <div class="text-sm text-gray-500 italic text-justify leading-relaxed truncate max-w-[200px]"
+                                        [pTooltip]="item.reason">
+                                        "{{item.reason}}"
+                                    </div>
+                                </ng-template>
+
+                                <ng-template #processedStatusTpl let-item>
+                                    <div class="flex justify-center">
+                                        <p-tag [value]="item.status" [severity]="getSeverity(item.statusCode)"></p-tag>
+                                    </div>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </p-tabpanel>
+                </p-tabpanels>
+            </p-tabs>
+        </ng-container>
+
+        <ng-template #creatorPart>
+            <!-- Employee View -->
+            <div *ngIf="notFoundAlert" class="p-6 text-center text-gray-500">
+                No active attendance records found for regularization.
+            </div>
+
+            <div *ngIf="!notFoundAlert">
+                <app-table-template [data]="creatorPaginated" [columns]="creatorHeaders" [pageSize]="creatorPageSize"
+                    [totalCount]="creatorTotal" [isLoading]="loading" [currentPage]="creatorPageNo"
+                    (pageChange)="onCreatorPageChange($event)" (refresh)="getAttendanceData()"
+                    (searchChange)="onCreatorSearchChange($event)" (pageSizeChange)="onCreatorPageSizeChange($event)"
+                    [jsonTemplate]="creatorDateTpl" [jsonTemplate1]="creatorInTimeTpl"
+                    [jsonTemplate2]="creatorOutTimeTpl" [jsonTemplate3]="creatorReasonTpl"
+                    [jsonTemplate4]="creatorStatusTpl" [actionTemplate]="creatorActionTpl">
+                </app-table-template>
+
+                <ng-template #creatorDateTpl let-item>
+                    <div class="flex flex-col"
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <div class="text-sm font-bold text-gray-800">{{item.dateLabel | date:'dd-MM-yyyy'}}
+                        </div>
+                        <div class="text-[10px] text-gray-400 capitalize tracking-tight">{{item.dayName}}
+                        </div>
+                    </div>
+                </ng-template>
+
+                <ng-template #creatorInTimeTpl let-item let-i="index">
+                    <div
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <input type="time" [value]="item.in"
+                            class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                            [readonly]="(item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)"
+                            (change)="handelData($event, i, item, 'IN')">
+                    </div>
+                </ng-template>
+
+                <ng-template #creatorOutTimeTpl let-item let-i="index">
+                    <div
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <input type="time" [value]="item.out"
+                            class="w-full border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                            [readonly]="(item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)"
+                            (change)="handelData($event, i, item, 'OUT')">
+                    </div>
+                </ng-template>
+
+                <ng-template #creatorReasonTpl let-item let-i="index">
+                    <div
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <input type="text" [value]="item.reason" placeholder="Enter reason..."
+                            class="w-full border border-gray-300 rounded px-3 py-1 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                            [readonly]="(item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)"
+                            (change)="handelData($event, i, item, 'REASON')">
+                    </div>
+                </ng-template>
+
+                <ng-template #creatorStatusTpl let-item>
+                    <div class="flex justify-center"
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <p-tag [value]="item.status" [severity]="getSeverity(item.statusCode)"></p-tag>
+                    </div>
+                </ng-template>
+
+                <ng-template #creatorActionTpl let-item>
+                    <div class="flex justify-center"
+                        [ngClass]="{'opacity-60 pointer-events-none': (item.statusCode === 1 || item.statusCode === 3 || item.dateLabel === currDate)}">
+                        <button pButton icon="pi pi-history" *ngIf="item?.approvalDetail?.length"
+                            (click)="openApprovalHistoryModal(item)"
+                            class="p-button-rounded p-button-text p-button-secondary p-button-sm"></button>
+                    </div>
+                </ng-template>
+
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- History Dialog -->
+    <p-dialog [(visible)]="approalHistoryData" [modal]="true" [style]="{width: '100%', maxWidth: '600px'}"
+        [header]="'Approval History: ' + (approalHistoryData?.serialNo || '')" [draggable]="false" [resizable]="false">
+        <div class="p-4 space-y-6">
+            <div *ngFor="let step of approalHistoryData?.approvalDetail" class="relative flex gap-4">
+                <div
+                    class="z-10 bg-white p-2 rounded-full border border-gray-200 flex items-center justify-center h-10 w-10">
+                    <i class="pi"
+                        [ngClass]="step.wfStatus === 'Approved' ? 'pi-check text-green-500' : 'pi-clock text-gray-400'"></i>
+                </div>
+                <div class="flex-1 border-b border-gray-100 pb-4">
+                    <div class="flex justify-between items-start mb-1">
+                        <h4 class="font-bold text-gray-800 text-sm">{{step.wflevel}}</h4>
+                        <span class="text-xs text-gray-400">{{step.createdOn | date:'dd MMM, HH:mm'}}</span>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700">{{step.employee || 'System'}}</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-semibold mb-2">{{step.role}}</p>
+                    <p *ngIf="step.approvalRemarks"
+                        class="bg-gray-50 p-2 rounded text-xs italic text-gray-600 border border-gray-100">
+                        "{{step.approvalRemarks}} - {{step.wfStatus}}"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </p-dialog>
+
+    <!-- Decision Dialog -->
+    <p-dialog [(visible)]="displayApprovalDialog" [modal]="true" [style]="{width: '100%', maxWidth: '500px'}"
+        header="Decision Action Tool" [draggable]="false" [resizable]="false">
+        <div class="p-4 space-y-4" *ngIf="selectedItem">
+            <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded border border-gray-200">
+                <div class="col-span-1">
+                    <label class="text-[10px] uppercase font-bold text-gray-400">Date</label>
+                    <p class="font-semibold text-gray-800">{{selectedItem?.dateLabel | date:'dd-MM-yyyy'}}</p>
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[10px] uppercase font-bold text-gray-400">Employee</label>
+                    <p class="font-semibold text-gray-800 text-sm truncate">{{selectedItem?.empName}}</p>
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[10px] uppercase font-bold text-gray-400">In Time</label>
+                    <input type="time"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm mt-1 focus:ring-1 focus:ring-blue-500"
+                        [(ngModel)]="selectedItem.in">
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[10px] uppercase font-bold text-gray-400">Out Time</label>
+                    <input type="time"
+                        class="w-full border border-gray-300 rounded px-2 py-1 text-sm mt-1 focus:ring-1 focus:ring-blue-500"
+                        [(ngModel)]="selectedItem.out">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1 leading-none pb-1">Reviewer Validation
+                    Notes</label>
+                <textarea [(ngModel)]="approvalRemarks" rows="3"
+                    class="w-full rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all p-3 text-sm"
+                    placeholder="Enter validation remarks here..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button *ngIf="isApprove" pButton label="Approve" icon="pi pi-check" class="p-button-success h-10"
+                    (click)="OnSubmitAction('Approve')"></button>
+                <button *ngIf="isForward" pButton label="Forward" icon="pi pi-send" class="p-button-info h-10"
+                    (click)="OnSubmitAction('Forward')"></button>
+                <button *ngIf="isReject" pButton label="Reject" icon="pi pi-times" class="p-button-danger h-10"
+                    (click)="OnSubmitAction('Reject')"></button>
+                <button *ngIf="isReturn" pButton label="Return" icon="pi pi-undo" class="p-button-warning h-10"
+                    (click)="OnSubmitAction('Return')"></button>
+            </div>
+        </div>
+    </p-dialog>
+</div>

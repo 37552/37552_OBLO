@@ -1,0 +1,307 @@
+<div class="erp-container">
+
+    <div class="tabs">
+
+        <div class="tab" [class.active]="activeTab === 'dashboard'"
+            (click)="activeTab = 'dashboard'; showWarehousePage = false;">
+            Dashboard
+        </div>
+
+        <div class="tab" [class.active]="activeTab === 'pending'"
+            (click)="activeTab = 'pending'; showWarehousePage = false;">
+            <!-- <i class="pi pi-bell"></i> Pending (241) -->
+            <i class="pi pi-bell"></i> Pending
+        </div>
+
+    </div>
+
+
+    <div *ngIf="activeTab === 'dashboard' && !showWarehousePage">
+
+        <!-- TOP CARDS -->
+        <div class="top-cards">
+
+            <div class="erp-card purple" (click)="openDialog('sales')">
+                <p>Sales</p>
+                <h2 class="big-number">{{ purchase?.salesCnt || 0 }}</h2>
+                <span>This Month</span>
+            </div>
+
+            <div class="erp-card green"  (click)="getCardsListData('purchase')">
+                <p>Purchase</p>
+                <h2 class="big-number">{{ purchase?.purchaseCnt || 0 }}</h2>
+                <span>Orders</span>
+            </div>
+
+            <div class="erp-card blue"  (click)="cardsData?.warehouse > 0 && showWareHouseData()" >
+                <p>Warehouse</p>
+                <h2 class="big-number">{{ cardsData?.warehouse || 0 }}</h2>
+                <span>Locations</span>
+            </div>
+
+            <div class="erp-card red" (click)="getCardsListData('inward')">
+                <p>Inward</p>
+                <h2 class="big-number">{{ inward?.inward || 0 }}</h2>
+                <span>Quantity</span>
+            </div>
+
+            <div class="erp-card orange"  (click)="getCardsListData('outward')">
+                <p>Outward</p>
+                <h2 class="big-number">{{outward?.amount || 0 }}</h2>
+                <span>Quantity</span>
+            </div>
+
+        </div>
+
+        <!-- ================= CHARTS ================= -->
+        <div class="chart-grid mt-4">
+
+            <div class="custom-card">
+              <h3>Bar Chart</h3>
+              <div style="height:300px">
+                <canvas baseChart 
+                  [data]="barChartData" 
+                  [type]="'bar'">
+                </canvas>
+              </div>
+            </div>
+          
+            <div class="custom-card">
+              <h3>Pie Chart</h3>
+              <div style="height:300px">
+                <canvas baseChart 
+                  [data]="pieChartData1" 
+                  [type]="'pie'"
+                  [options]="pieChartOptions">
+                </canvas>
+              </div>
+            </div>
+          
+          </div>
+          
+
+        <!-- ================= ERP Pendency  ================= -->
+        <div class="erp-pendency" style="margin-top: 3%;">
+
+            <h2 class="title" style="text-align: center">ERP Pendency</h2>
+    
+            <div class="grid">
+    
+                <div class="flip-card" *ngFor="let card of cards" (click)="toggleFlip(card)">
+    
+                    <div class="flip-inner" [class.flipped]="card.flipped">
+    
+                        <div class="flip-front">
+    
+                            <h3>{{ card.title }}</h3>
+    
+                            <div class="donut">
+                                <div class="donut-inner">
+                                    {{ card.total }}
+                                </div>
+                            </div>
+    
+                        </div>
+    
+                        <div class="flip-back">
+                            <div class="metric" *ngFor="let item of card.data"
+                                (click)="item.value > 0 && openDetail(item.label, item.value, $event)">
+    
+                                <span>{{ item.label }}</span>
+                                <b>{{ item.value }}</b>
+    
+                            </div>
+                        </div>
+    
+                    </div>
+    
+                </div>
+    
+            </div>
+    
+        </div>
+    
+    </div>
+
+    
+
+    <div *ngIf="activeTab === 'dashboard' && showWarehousePage">
+
+        <div class="back-btn" (click)="showWarehousePage = false">
+            ← Back to Dashboard
+        </div>
+
+        <!-- GRID -->
+        <div class="warehouse-grid">
+
+            <div class="warehouse-card" *ngFor="let w of warehouseList">
+
+                <h3>{{ w.name }}</h3>
+
+                <div class="warehouse-data">
+                    <div>
+                        <p>Asset</p>
+                        <b>{{ w.asset }}</b>
+                    </div>
+
+                    <div>
+                        <p>Quantity</p>
+                        <b>{{ w.qty }}</b>
+                    </div>
+
+                    <div>
+                        <p>Value</p>
+                        <b>{{ w.value }}</b>
+                    </div>
+                </div>
+
+                <button (click)="openWarehouseDetail(w)">
+                    View Data
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div *ngIf="activeTab === 'pending'" class="pending-container">
+
+        <div class="pending-card" *ngFor="let item of pendingList">
+
+            <div class="pending-header">
+                <span class="title">{{ item.title }}</span>
+                <span class="date">{{ item.date }}</span>
+            </div>
+
+            <div class="pending-body">
+                {{ item.description }}
+            </div>
+
+            <div class="pending-footer">
+                <button class="btn approve">Approve</button>
+                <button class="btn reject">Reject</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<div class="modal-overlay" *ngIf="displayDialog" (click)="closeDialog()">
+
+    <div class="modal-box large" (click)="$event.stopPropagation()">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+            <h3>{{ selectedWarehouse?.name }}</h3>
+            <button (click)="closeDialog()">✖</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="search-box">
+            <input type="text" [(ngModel)]="searchText" placeholder="Search..." />
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-container">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>WAREHOUSE</th>
+                        <th>ITEM</th>
+                        <th>QUANTITY</th>
+                        <th>RATE</th>
+                        <th>VALUE</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let row of filteredWarehouseData">
+                        <td>{{ row.warehouse }}</td>
+                        <td>{{ row.item }}</td>
+                        <td>{{ row.qty }}</td>
+                        <td>{{ row.rate }}</td>
+                        <td>{{ row.value }}</td>
+                    </tr>
+                    <tr *ngIf="filteredWarehouseData.length === 0">
+                        <td colspan="5" class="text-center">No Data Found</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+
+        <!-- FOOTER -->
+        <div class="table-footer">
+            <span>Items per page: 5</span>
+            <span>1 - {{ warehouseDetails.length }} of {{ warehouseDetails.length }}</span>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" *ngIf="displayDetailModal" (click)="closeDetailModal()">
+
+    <div class="modal-box large" (click)="$event.stopPropagation()">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+            <h3>{{ selectedLabel }} ({{ selectedValue }})</h3>
+            <button (click)="closeDetailModal()">✖</button>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-container">
+            <div class="search-box">
+                <input type="text" [(ngModel)]="searchDetailText" placeholder="Search item..." />
+            </div>
+
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>QUANTITY</th>
+                        <th>RATE</th>
+                        <th>VALUE</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr *ngFor="let row of filteredDetailList">
+                        <td>{{ row.item }}</td>
+                        <td>{{ row.qty }}</td>
+                        <td>{{ row.rate }}</td>
+                        <td>{{ row.value }}</td>
+                    </tr>
+
+                    <tr *ngIf="filteredDetailList.length === 0">
+                        <td colspan="4" class="no-data">No Data Found</td>
+                    </tr>
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+

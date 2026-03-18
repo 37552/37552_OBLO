@@ -1,0 +1,115 @@
+<div class="fixed inset-y-0 left-0 z-40 bg-[#1976D2] shadow-lg flex flex-col transition-all duration-300"
+  [class.w-64]="isSidebarOpen()" [class.w-16]="!isSidebarOpen()">
+  <!-- Logo -->
+  <div class="flex h-16 items-center justify-center bg-[#FFFFFF] p-2 shadow-lg border-b border-[#1976D2]">
+    <a href="/home" class="cursor-pointer">
+      <ng-container *ngIf="!(loading$ | async); else logoSkeleton">
+        <img [src]="isSidebarOpen() ? '../../assets/OBLO_mainlogo_0.png' : '../../assets/oblo_icon_fevicon.png'"
+          [class.h-10]="isSidebarOpen()" [class.h-8]="!isSidebarOpen()" alt="Logo" class="mt-2">
+      </ng-container>
+      <ng-template #logoSkeleton>
+        <p-skeleton [width]="isSidebarOpen() ? '120px' : '32px'"
+          [height]="isSidebarOpen() ? '40px' : '32px'"></p-skeleton>
+      </ng-template>
+    </a>
+  </div>
+
+  <!-- Search -->
+  <!-- (temporarily removed search input as requested) -->
+
+  <!-- Menu -->
+  <nav class="flex-1 overflow-y-auto custom-scroll mt-2 space-y-1">
+    <ng-container *ngIf="!(loading$ | async); else menuSkeleton">
+      <ng-container *ngFor="let menu of currentusermenu(); let i = index">
+        <div class="relative group">
+          <!-- Main Menu Button -->
+          <button *ngIf="hasSubmenu(menu.menu)" (mouseenter)="onHoverMenu(menu.menu, $event)"
+            (mouseleave)="onLeaveMenu()" (click)="toggleSubmenu(menu.menu, true)"
+            class="flex items-center w-full p-3 font-medium text-white rounded-lg hover:bg-[#3581cc]"
+            [ngClass]="{'justify-center': !isSidebarOpen(), 'justify-start': isSidebarOpen()}">
+            <i class="pi pi-prime"></i>
+            <span *ngIf="isSidebarOpen()" class="ml-2">{{ menu.menu }}</span>
+            <i class="pi pi-angle-down ml-auto text-xs transition-transform duration-200"
+              [ngClass]="{'rotate-180': isSubmenuOpen(menu.menu)}"></i>
+          </button>
+
+          <!-- Submenu when sidebar is open -->
+          <div *ngIf="isSidebarOpen() && hasSubmenu(menu.menu)"
+            class="ml-11 space-y-2 overflow-y-auto transition-all duration-300 ease-in-out scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+            [ngClass]="{'max-h-0 opacity-0': !isSubmenuOpen(menu.menu), 'max-h-[400px] opacity-100': isSubmenuOpen(menu.menu)}">
+            <ng-container *ngFor="let sub of getSubmenus(menu.menu)">
+              <!-- Submenu without formValue toggles sub-submenu -->
+              <button *ngIf="!sub.formValue" (click)="toggleSubmenu(sub.activity)"
+                class="flex items-center w-full p-2 text-xs text-white rounded-lg hover:bg-[#3581cc']">
+                {{ sub.activity }}
+                <i class="pi pi-angle-down ml-auto" [ngClass]="{'rotate-180': isSubmenuOpen(sub.activity)}"></i>
+              </button>
+
+              <!-- Submenu with formValue navigates -->
+              <a *ngIf="sub.formValue"
+                (click)="action(sub.menu, setSubmenuItem(sub.callingPage, sub.formValue), sub.activity, sub.formValue)"
+                class="block p-2 text-xs text-white rounded-lg hover:bg-[#3581cc] cursor-pointer">
+                {{ sub.activity }}
+              </a>
+
+              <!-- Level 2 submenu -->
+              <div *ngIf="hasSubmenuLevel2(sub.activity)"
+                class="ml-4 space-y-1 overflow-y-auto transition-all duration-300 ease-in-out"
+                [ngClass]="{'max-h-0 opacity-0': !isSubmenuOpen(sub.activity), 'max-h-[400px] opacity-100': isSubmenuOpen(sub.activity)}">
+                <a *ngFor="let lvl2 of getSubmenuLevel2(sub.activity)"
+                  (click)="action(lvl2.menu, setSubmenuItem(lvl2.callingPage, lvl2.formValue), lvl2.activity, lvl2.formValue)"
+                  class="block p-2 text-xs text-white rounded-lg hover:bg-[#3581cc] cursor-pointer">
+                  {{ lvl2.activity }}
+                </a>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #menuSkeleton>
+      <ng-container *ngFor="let menu of currentusermenu()">
+        <div class="flex">
+          <p-skeleton width="10%" height="1.5rem" class="mb-2 ml-2 mr-2 square-sm"
+            [style.backgroundColor]="'#3581cc'"></p-skeleton>
+          <p-skeleton width="70%" height="1rem" class="mb-2 rounded-sm"
+            [style.backgroundColor]="'#3581cc'"></p-skeleton>
+        </div>
+      </ng-container>
+    </ng-template>
+  </nav>
+</div>
+
+<!-- Floating Hover Submenu (for collapsed sidebar) -->
+<div *ngIf="hoveredMenuSubmenus.length && !isSidebarOpen()"
+  class="fixed z-50 bg-white rounded sideBarShadow max-h-[400px] overflow-auto"
+  [ngStyle]="{'top.px': hoverMenuPosition?.top, 'left.px': hoverMenuPosition?.left}" (mouseenter)="keepHover()"
+  (mouseleave)="clearHover()">
+  <ng-container *ngFor="let sub of hoveredMenuSubmenus">
+    <ng-container *ngIf="sub.formValue || sub.route">
+      <!-- Use generic action() for all items, including CRM -->
+      <a (click)="action(sub.menu, setSubmenuItem(sub.callingPage, sub.formValue || sub.route), sub.activity, sub.formValue || sub.route)"
+        class="block p-2 text-black text-sm hover:bg-[#F1F5F9] cursor-pointer whitespace-nowrap">
+        {{ sub.activity }}
+      </a>
+    </ng-container>
+
+    <ng-container *ngIf="!sub.formValue && !sub.route">
+      <a (click)="toggleSubmenu(sub.activity)"
+        class="block p-2 text-black text-sm hover:bg-[#F1F5F9] cursor-pointer whitespace-nowrap">
+        {{ sub.activity }}
+      </a>
+    </ng-container>
+
+
+    <!-- Optional: Level 2 submenu in hover popup -->
+    <div *ngIf="hasSubmenuLevel2(sub.activity)" class="ml-2 space-y-1">
+      <a *ngFor="let lvl2 of getSubmenuLevel2(sub.activity)"
+        (click)="action(lvl2.menu, setSubmenuItem(lvl2.callingPage, lvl2.formValue), lvl2.activity, lvl2.formValue)"
+        class="block p-2 text-black text-sm hover:bg-[#F1F5F9] cursor-pointer whitespace-nowrap">
+        {{ lvl2.activity }}
+      </a>
+    </div>
+  </ng-container>
+</div>

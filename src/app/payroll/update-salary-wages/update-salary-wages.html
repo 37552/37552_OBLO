@@ -1,0 +1,176 @@
+<!-- ================= BREADCRUMB + HEADER ================= -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-white overflow-hidden">
+
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+        <h2 class="text-base font-semibold text-gray-800">
+            <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+        </h2>
+        <div class="flex items-center space-x-2">
+            <p-button (click)="showDialog('add')" label="Add Fixed Wages Revision" icon="pi pi-plus"
+                styleClass="orange-button" [raised]="true"></p-button>
+        </div>
+    </div>
+
+    <!-- ================= TABLE SECTION ================= -->
+    <div class="p-4">
+        <app-table-template [data]="allViewTableData" [columns]="columns" [pageSize]="pageSize"
+            [totalCount]="totalRecords" [isLoading]="loading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            (refresh)="getViewData(true)" [actionTemplate]="actionTemplateRef" [showSortButtons]="false">
+
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <button (click)="showDialog('view', item); op.hide()" title="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+                            <i class="pi pi-eye"></i> View
+                        </button>
+
+                        <button (click)="showDialog('update', item); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+                            <i class="pi pi-pencil"></i> Update
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+
+        </app-table-template>
+    </div>
+
+    <!-- =================DRAWER FORM ================= -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [baseZIndex]="10000"
+        [style]="{ width: getDrawerWidth(), 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-2xl">{{ header }}</span>
+                    <i class="text-blue-500" [ngClass]="headerIcon"></i>
+                </div>
+                <!-- Maximize Button -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" (click)="toggleMaximize()"
+                        class="p-2 hover:bg-gray-100 rounded transition-colors"
+                        [title]="isMaximized ? 'Minimize' : 'Maximize'">
+                        <i [ngClass]="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                            class="text-gray-600 text-lg"></i>
+                    </button>
+                    <!-- Close Button is handled by p-drawer default -->
+                </div>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <form [formGroup]="salaryWagesForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
+
+                    <!-- Organisation -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Organisation <span
+                                class="text-red-500">*</span></label>
+                        <p-select [options]="organisationList" optionLabel="drpOption" optionValue="drpValue"
+                            showClear="true" formControlName="organisation" placeholder="Select Organisation"
+                            [filter]="true" appendTo="body" [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('organisation')?.invalid && salaryWagesForm.get('organisation')?.touched }"></p-select>
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('organisation')?.invalid && salaryWagesForm.get('organisation')?.touched">
+                            Organisation is required
+                        </small>
+                    </div>
+
+                    <!-- Project -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Project <span class="text-red-500">*</span></label>
+                        <p-select [options]="projectList" optionLabel="drpOption" optionValue="drpValue"
+                            showClear="true" formControlName="ProjectId" placeholder="Select Project" [filter]="true"
+                            appendTo="body" [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('ProjectId')?.invalid && salaryWagesForm.get('ProjectId')?.touched }"></p-select>
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('ProjectId')?.invalid && salaryWagesForm.get('ProjectId')?.touched">
+                            Project is required
+                        </small>
+                    </div>
+
+                    <!-- Employee Type -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Employee Type <span
+                                class="text-red-500">*</span></label>
+                        <p-select [options]="employeeList" optionLabel="drpOption" optionValue="drpValue"
+                            showClear="true" formControlName="empType" placeholder="Select Employee Type"
+                            [filter]="true" appendTo="body" [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('empType')?.invalid && salaryWagesForm.get('empType')?.touched }"></p-select>
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('empType')?.invalid && salaryWagesForm.get('empType')?.touched">
+                            Employee type is required
+                        </small>
+                    </div>
+
+                    <!-- Department -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Department</label>
+                        <p-select [options]="departmentDrp" optionLabel="department" optionValue="id" showClear="true"
+                            formControlName="department" placeholder="Select Department" [filter]="true" appendTo="body"
+                            [style]="{ width: '100%' }"></p-select>
+                    </div>
+
+                    <!-- New Basic -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">New Basic <span class="text-red-500">*</span></label>
+                        <input pInputText type="text" formControlName="newBasic" placeholder="Enter New Basic"
+                            class="p-inputtext w-full"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('newBasic')?.invalid && salaryWagesForm.get('newBasic')?.touched }" />
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('newBasic')?.invalid && salaryWagesForm.get('newBasic')?.touched">
+                            New basic is required
+                        </small>
+                    </div>
+
+                    <!-- Old Basic -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Old Basic <span class="text-red-500">*</span></label>
+                        <input pInputText type="text" formControlName="oldBasic" placeholder="Enter Old Basic"
+                            class="p-inputtext w-full"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('oldBasic')?.invalid && salaryWagesForm.get('oldBasic')?.touched }" />
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('oldBasic')?.invalid && salaryWagesForm.get('oldBasic')?.touched">
+                            Old basic is required
+                        </small>
+                    </div>
+
+                    <!-- Effective From Date -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Effective Date <span
+                                class="text-red-500">*</span></label>
+                        <p-date-picker formControlName="effectiveDate" dateFormat="dd-mm-yy" [showIcon]="true"
+                            [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}" appendTo="body"
+                            [ngClass]="{ 'ng-invalid ng-dirty': salaryWagesForm.get('effectiveDate')?.invalid && salaryWagesForm.get('effectiveDate')?.touched }"></p-date-picker>
+                        <small class="text-red-500"
+                            *ngIf="salaryWagesForm.get('effectiveDate')?.invalid && salaryWagesForm.get('effectiveDate')?.touched">
+                            Effective date is required
+                        </small>
+                    </div>
+
+                </div>
+            </form>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2 p-2">
+                <p-button *ngIf="postType === 'update' || postType === 'add'" label="Reset" (click)="onReset()"
+                    severity="secondary" icon="pi pi-refresh" [outlined]="true"></p-button>
+                <p-button label="Close" (click)="onDrawerHide()" severity="secondary" icon="pi pi-times"
+                    [outlined]="true"></p-button>
+                <p-button label="{{ postType === 'update' ? 'Update' : 'Submit' }}" (click)="submitcall()"
+                    styleClass="orange-button" icon="pi pi-check" [loading]="loading"></p-button>
+            </div>
+        </ng-template>
+
+    </p-drawer>
+</div>

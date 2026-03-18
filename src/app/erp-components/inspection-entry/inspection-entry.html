@@ -1,0 +1,266 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+       <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div> 
+
+        <p-button icon="pi pi-file-excel" class="mr-2 text-green-600 hover:text-green-700" styleClass="p-button-text"
+          pTooltip="Excel Download" (onClick)="exportAsXLSXCustom()"></p-button>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)" 
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="openprintModalData(item.mrnId); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                       pTooltip="Print">
+                     <i class="pi pi-print"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+</div>  
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{ header }}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+     <div class="tabbable">
+     <form [formGroup]="ChallanForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Material Receipt Note Number *</label>
+      <p-select
+        [options]="mrnNumberDrpData"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="MRNId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Material Receipt Note Number"
+        [class.border-red-500]="isInvalid('MRNId')"
+        class="custom-p-select w-full"
+        (onChange)="getDetails()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('MRNId')){
+      <p class="text-red-500 text-xs mt-1">Material Receipt Note Number is required.</p>
+      }
+    </div>  
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Order Number</label>
+      <input
+        type="text"
+        formControlName="PONumber"
+        placeholder="Enter Purchase Order Number"
+        [class.border-red-500]="isInvalid('PONumber')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Order Date</label>
+      <input
+        type="text"
+        formControlName="PODate"
+        placeholder="Enter Purchase Order Date"
+        [class.border-red-500]="isInvalid('PODate')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Request Number</label>
+      <input
+        type="text"
+        formControlName="PRNumber"
+        placeholder="Enter Purchase Request Number"
+        [class.border-red-500]="isInvalid('PRNumber')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Request Date</label>
+      <input
+        type="text"
+        formControlName="PRDate"
+        placeholder="Enter Purchase Request Date"
+        [class.border-red-500]="isInvalid('PRDate')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Material Receipt Note Date</label>
+      <input
+        type="text"
+        formControlName="MRNDate"
+        placeholder="Enter Material Receipt Note Date"
+        [class.border-red-500]="isInvalid('MRNDate')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
+      <input
+        type="text"
+        formControlName="Warehouse"
+        placeholder="Enter Warehouse"
+        [class.border-red-500]="isInvalid('Warehouse')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    </form>
+
+    <div class="col-span-full mt-6 border-t pt-4">
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Other Details</h3>
+
+    <p-table *ngIf="itemData.length > 0" [value]="itemData" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium" style="min-width:240px;">Item Description</th>
+               <th class="text-sm font-medium" style="min-width:100px;">UOM</th>
+               <th class="text-sm font-medium" style="min-width:100px;">Bin Location</th>
+               <th class="text-sm font-medium" style="min-width:100px;">Challan Qty.</th>
+               <th class="text-sm font-medium" style="min-width:100px;">Received Qty.</th>
+               <th class="text-sm font-medium" style="min-width:100px;">Accepted Qty.</th>
+               <th class="text-sm font-medium" style="min-width:100px;">Rejected Qty.</th>
+               <th class="text-sm font-medium" style="min-width:240px;">Rejected Reason</th>
+               </tr>
+              </ng-template>
+
+               <ng-template pTemplate="body" let-item let-i="rowIndex">
+               <tr>
+                <td class="text-sm">
+                  {{item.itemDescription}}
+                </td>
+                <td class="text-sm">
+                  <input type="text" readonly class="form-control"  [value]="item.uom">
+                </td>
+                <td class="text-sm">
+                  <p-select
+                  [options]="parsedBinLocation"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  filterBy="drpOption"
+                  [showClear]="true"
+                  placeholder="Select Bin Location"
+                  (onChange)="onBinLocationChange($event, item)"
+                  class="custom-p-select w-full"
+                  appendTo="body">
+                 </p-select>
+                </td>
+                <td class="text-sm">
+                 <input type="text" readonly class="form-control" [value]="item.challanQuantity" style="background:#e2e8f0;padding:0 5px;">
+                </td>
+                <td class="text-sm">
+                  <input type="text" readonly class="form-control" [value]="item.receivedQuantity" style="background:#e2e8f0;padding:0 5px;">
+                 </td>
+                <td class="text-sm">
+                  <input type="number" (change)="setAcceptedQty($event,item)" class="form-control" size="10" [value]="item.acceptedQty"
+                  style="border: 1px solid #e2e8f0;padding:0 5px;">
+                </td>
+                <td class="text-sm">
+                <input type="text" readonly class="form-control" [value]="item.rejectedQty" style="background:#e2e8f0;padding:0 5px;">
+                </td>
+                <td class="text-sm">
+                 <input type="text" class="form-control" (change)="setReason($event,item)" [value]="item.reason"
+                 style="width:100%;border: 1px solid #e2e8f0; padding:0 5px;">
+                </td>
+            </tr>
+      </ng-template>
+    </p-table>
+
+    </div>
+
+     </div>
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"
+        >
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"
+        ></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+<p-dialog [(visible)]="printDialog" header="Print Preview" [modal]="true"
+  [style]="{ width: '60rem', maxWidth: '100%' }" id="printWrapper">
+  <div #poPrintWrapper [innerHTML]="printContent"></div>
+  <div class="printFooter">
+    <button pButton type="button" label="Print" (click)="print()"></button>
+  </div>
+
+</p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>      
+
+
+

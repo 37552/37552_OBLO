@@ -1,0 +1,120 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+    </div>
+
+     <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [jsonTemplate]="jsonTemplateRef" [tabs]="tabs" [activeTab]="activeTabValue"
+            (tabChange)="onTabChange($event)"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+<ng-template #jsonTemplateRef let-row>
+  <button
+    type="button"
+    class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm hover:bg-blue-200"
+    (click)="openDetailModal(row)">
+    {{ row.notViewed }}
+  </button>
+</ng-template>
+
+
+  </div>
+
+
+<p-dialog  [modal]="true"  [(visible)]="itemDailog"  [style]="{ width: '70vw', 'max-width': '100%' }" [closable]="true" header="Candidate Details">
+
+   <p-table 
+    #dt
+    [value]="selectedRowDetails || []" 
+    showGridlines
+    [rows]="5"
+    [paginator]="true"
+    [rowsPerPageOptions]="[5,10]"
+    [responsiveLayout]="'scroll'"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+    [showCurrentPageReport]="true"
+    [globalFilterFields]="['candidateName', 'applyFor', 'candidateEmail']">
+
+      <ng-template #caption>
+        <div class="flex justify-end">
+          <input pInputText type="text" [(ngModel)]="searchValue" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Search" />
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="text-sm font-medium">S.No</th>
+        <th class="text-sm font-medium">Apply For</th>
+        <th class="text-sm font-medium">Candidate Name</th>
+        <th class="text-sm font-medium">Candidate Email</th>
+        <th class="text-sm font-medium">Candidate Phone</th>
+        <th class="text-sm font-medium">Experience</th>
+        <th class="text-sm font-medium">Current CTC</th>
+        <th class="text-sm font-medium">Expected CTC</th>
+        <th class="text-sm font-medium">Negotiable CTC</th>
+        <th class="text-sm font-medium">Notice Period</th>
+        <th class="text-sm font-medium">Remarks</th>
+        <th class="text-sm font-medium !text-center">Action</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+      <tr>
+        <td class="text-sm">{{ rowIndex + 1 }}</td>
+        <td class="text-sm">{{ detail.applyFor}}</td>
+        <td class="text-sm">{{ detail.candidateName }}</td>
+        <td class="text-sm">{{ detail.candidateEmail }}</td>
+        <td class="text-sm">{{ detail.candidatePhone }}</td>
+        <td class="text-sm">{{ detail.experience }}</td>
+        <td class="text-sm">{{ detail.currentCTC }}</td>
+        <td class="text-sm">{{ detail.expectedCTC }}</td>
+        <td class="text-sm">{{ detail.negotiableCTC }}</td>
+        <td class="text-sm">{{ detail.noticePeriod }}</td>
+        <td class="text-sm max-h-20 overflow-auto break-words">{{ detail.remarks }}</td>
+        <td class="action-cell text-sm">
+        <button *ngIf="activeTabValue === 0" pButton type="button" label="Screen" icon="pi pi-check-circle" 
+              class="p-button-sm p-button-success" 
+              (click)="onScreen(detail.id)"
+              [disabled]="!detail.DownloadStatus"></button>
+
+            <button pButton type="button" label="View" icon="pi pi-eye" 
+              class="p-button-sm p-button-info" 
+              (click)="onView(detail.id, detail)"></button>
+
+            <button *ngIf="activeTabValue === 0" pButton type="button" label="Reject" icon="pi pi-times-circle" 
+              class="p-button-sm p-button-danger" 
+              (click)="onReject(detail.id)"
+              [disabled]="!detail.DownloadStatus"></button>
+            
+            <span *ngIf="activeTabValue === 1" class="text-gray-500 italic">Processed</span>
+      </td>
+
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+      </tr>
+    </ng-template>
+  </p-table> 
+
+</p-dialog>
+    
+
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>
+

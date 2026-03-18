@@ -1,0 +1,17 @@
+// Minimal styling for PrimeNG dialog header (required as Tailwind can't style PrimeNG components directly)
+::ng-deep .p-dialog-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  
+  .p-dialog-title {
+    color: white;
+  }
+  
+  .p-dialog-header-icon {
+    color: #2563eb;
+    background-color: white;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+  }
+}

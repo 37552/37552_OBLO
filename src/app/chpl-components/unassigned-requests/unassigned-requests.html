@@ -1,0 +1,195 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="flex items-center justify-between p-3 border-b border-gray-200">
+    <h2 class="text-base font-semibold text-gray-800">
+      <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1 text-sm'"></p-breadcrumb>
+    </h2>
+  </div>
+
+  <app-table-template [data]="data" [columns]="columns" [pageSize]="+pageSize" [totalCount]="totalCount"
+    [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+    [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+    (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)">
+
+    <div customActions class="flex items-center gap-2">
+      <div class="relative">
+        <p-button type="button" icon="pi pi-filter" label="Columns" [badge]="getSelectedColumnsCount().toString()"
+          badgeClass="p-badge-info" styleClass="orange-button p-button-sm"
+          (click)="filtersPanel.toggle($event)"></p-button>
+
+        <p-popover #filtersPanel>
+          <div class="p-0" style="width: 150px;">
+            <div class="p-3 border-b border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <p-checkbox [(ngModel)]="selectAllChecked" [binary]="true" [ngModelOptions]="{ standalone: true }"
+                    (onChange)="toggleSelectAll()"></p-checkbox>
+                  <label class="text-xs text-gray-700 cursor-pointer" (click)="toggleSelectAll()">
+                    Select All
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2 mt-2">
+                <span *ngFor="let col of getSelectedAvailableColumns()"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded-md font-medium hover:bg-gray-200">
+                  {{ col.header }}
+                  <i class="pi pi-times text-gray-500 hover:text-gray-700 cursor-pointer text-xs"
+                    (click)="toggleColumnVisibility(col); $event.stopPropagation()"></i>
+                </span>
+              </div>
+            </div>
+            <div class="p-2 max-h-80 overflow-y-auto">
+              <div class="flex flex-col">
+                <div *ngFor="let col of getUnselectedAvailableColumns()"
+                  class="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer rounded"
+                  (click)="toggleColumnVisibility(col)">
+                  {{ col.header }}
+                </div>
+                <div *ngIf="getUnselectedAvailableColumns().length === 0"
+                  class="text-center text-gray-400 text-xs py-4">
+                  All columns selected
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-popover>
+      </div>
+
+      <!-- <p-button type="button" icon="pi pi-refresh" label=" " styleClass="orange-button p-button-sm"
+        [loading]="isLoading" (click)="refreshData()" [title]="'Refresh Data'">
+      </p-button> -->
+    </div>
+  </app-table-template>
+
+  <ng-template #actionTemplateRef let-item let-i="rowIndex">
+    <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+      (click)="op.toggle($event)">
+      <i class="pi pi-ellipsis-v text-xl"></i>
+    </button>
+
+    <p-popover #op>
+      <div class="flex flex-col">
+        <button *ngIf="userRole==104" (click)="showAssignEmployeeModal(item); op.hide()" title="Assign Ticket"
+          class="px-4 py-2 hover:bg-gray-100 text-left">
+          <i class="pi pi-user-edit"></i> Assign Ticket
+        </button>
+
+        <button *ngIf="userRole==100" (click)="selfAssignToEngineer(item); op.hide()" title="Self Assign"
+          class="px-4 py-2 hover:bg-gray-100 text-left">
+          <i class="pi pi-user-plus"></i> Self Assign
+        </button>
+
+        <button (click)="viewMachineDetails(item.assetDetails); op.hide()" title="View Machine Details"
+          class="px-4 py-2 hover:bg-gray-100 text-left">
+          <i class="pi pi-eye"></i> View Machine Details
+        </button>
+      </div>
+    </p-popover>
+  </ng-template>
+
+
+  <p-dialog [(visible)]="showMachineModal" [modal]="true" [style]="{ width: '80vw', 'max-width': '100%' }"
+    header="Machine Details" [draggable]="false" [resizable]="false" (onHide)="closeMachineModal()">
+    <ng-template pTemplate="content">
+      <div class="overflow-x-auto">
+        <p-table [value]="selectedMachineData" styleClass="p-datatable-sm p-datatable-striped">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>S.No</th>
+              <th *ngFor="let key of getModalKeys(selectedMachineData[0])" class="capitalize">
+                {{ formatKey(key) }}
+              </th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-j="rowIndex">
+            <tr>
+              <td>{{ j + 1 }}</td>
+              <td *ngFor="let key of getModalKeys(selectedMachineData[0])">
+                {{ item[key] }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <p-button label="Close" icon="pi pi-times" (click)="closeMachineModal()"
+        styleClass="p-button-secondary"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog [(visible)]="assignDialogVisible" [modal]="true" [style]="{ width: '50vw', 'max-width': '100%' }"
+    header="Assign Ticket" [draggable]="false" [resizable]="false" (onHide)="closeAssignEmployeeModal()">
+    <ng-template pTemplate="content">
+      <form [formGroup]="assignForm" class="flex flex-col gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Request No:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['ticket Number'] || selectedAsset?.ticketNumber || 'N/A' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Assign To: <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="assignToDrp" formControlName="employee" optionLabel="drpOption" optionValue="drpValue" [virtualScroll]="true" [virtualScrollItemSize]="38"
+              [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select assign to" styleClass="w-full" appendTo="body"
+              [class.border-red-500]="assignForm.get('employee')?.invalid && assignForm.get('employee')?.touched"></p-select>
+            <small *ngIf="assignForm.get('employee')?.invalid && assignForm.get('employee')?.touched"
+              class="text-red-500 text-xs">
+              Assign To is required.
+            </small>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['customer Name'] || 'N/A' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Address:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['address'] || selectedAsset?.address || 'N/A' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Contact:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['customer contact'] || 'N/A' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Priority:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['priority'] || selectedAsset?.priority || 'N/A' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Required Date:</label>
+            <div class="p-2 bg-gray-50 border border-gray-200 rounded">
+              {{ selectedAsset?.['required Date'] || selectedAsset?.requiredDate || 'N/A' }}
+            </div>
+          </div>
+        </div>
+      </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-2">
+        <p-button label="Cancel" icon="pi pi-times" (click)="closeAssignEmployeeModal()"
+          styleClass="p-button-secondary"></p-button>
+        <p-button label="Submit" icon="pi pi-check" (click)="OnSubmitModal()" [loading]="isLoading"
+          [disabled]="assignForm.invalid"></p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,63 @@
+/* Use Tailwind in template; only extra styles here */
+
+/* card base */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.03);
+}
+
+/* stats */
+.card-stats {
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.04);
+  border: 1px solid rgba(15,23,42,0.03);
+}
+.stat-title { color: #6b7280; font-size: 13px; }
+.stat-value { font-size: 20px; font-weight: 700; margin-top: 6px; }
+.stat-meta { font-size: 12px; margin-top: 8px; }
+
+/* header inside card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* leaderboard card */
+.leader-card {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+/* driver updates */
+.update-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background .12s;
+}
+.update-row:hover { background: #fbfdff; }
+.update-left .avatar {
+  width: 44px; height: 44px; border-radius: 999px;
+  display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(180deg,#e6f6ff,#dbeafe);
+  color:#0369a1; font-weight:700;
+}
+
+/* leaflet marker styling (divIcon) */
+.custom-leaflet-marker { display:flex; align-items:center; justify-content:center; }
+.marker-dot { width:14px; height:14px; border-radius:999px; background: linear-gradient(180deg,#06b6d4,#0ea5e9); border:2px solid white; box-shadow:0 6px 18px rgba(14,165,233,0.28); }
+
+/* responsive tweaks */
+@media (max-width: 1024px) {
+  .leader-card { padding: 10px; }
+  .card { padding: 12px; }
+}

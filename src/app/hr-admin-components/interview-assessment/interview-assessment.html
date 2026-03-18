@@ -1,0 +1,211 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]">
+  <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+  </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+
+    <!-- Main Table with Tabs -->
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [tabs]="tabs" [activeTab]="activeTabValue" [jsonTemplate]="mainViewBtnRef"
+      (refresh)="getTableData(true)" (tabChange)="onTabChange($event)" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-table-template>
+
+    <!-- Main table: "Candidate Details" View button -->
+    <ng-template #mainViewBtnRef let-item>
+      <p-button label="View" icon="pi pi-eye" size="small" (click)="openCandidateDetail(item)"
+        styleClass="p-button-text p-button-sm">
+      </p-button>
+    </ng-template>
+
+  </div>
+
+
+  <!-- Drawer for Candidate Details -->
+  <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl">Candidate Details</span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }" />
+      </div>
+      } @else {
+
+      <!-- Detail Table inside Drawer -->
+      <app-table-template [data]="detailData" [columns]="detailColumns" [pageSize]="detailPageSize"
+        [totalCount]="detailTotalCount" [isLoading]="false" [currentPage]="detailPageNo"
+        [actionTemplate]="detailActionRef" [jsonTemplate]="detailResumeRef" (pageChange)="onDetailPageChange($event)"
+        (pageSizeChange)="onDetailPageSizeChange($event)" (searchChange)="onDetailSearchChange($event)">
+      </app-table-template>
+
+      <ng-template #detailActionRef let-c>
+        <button pButton type="button" label="Evaluate" icon="pi pi-eye" iconPos="left" class="p-button-text p-button-sm"
+          pTooltip="Evaluate Candidate" tooltipPosition="top" (click)="openEvaluationModal(c.id)">
+        </button>
+      </ng-template>
+
+      <!-- jsonDetails column: Resume link -->
+      <ng-template #detailResumeRef let-c>
+        <a *ngIf="c.resumeUpload" [href]="c.resumeUpload" target="_blank"
+          class="flex items-center justify-center gap-1 text-blue-500 hover:text-blue-700">
+          <i class="pi pi-file text-xl"></i>
+        </a>
+        <span *ngIf="!c.resumeUpload" class="text-gray-400 text-xs">N/A</span>
+      </ng-template>
+
+      }
+    </ng-template>
+  </p-drawer>
+
+
+  <!-- Evaluation Dialog -->
+  <p-dialog [modal]="true" [(visible)]="evaluateDailog" [style]="{ width: 'auto', 'max-width': '100%' }"
+    [closable]="true" [blockScroll]="true" header="Evaluate">
+
+    <form [formGroup]="evaluationForm" class="grid grid-cols-1 gap-6">
+      <p-tabs value="hod">
+
+        <!-- Tab Headers -->
+        <p-tablist>
+          <p-tab value="hod">Technical Evaluation</p-tab>
+          <p-tab value="hr">HR Evaluation</p-tab>
+        </p-tablist>
+
+        <!-- Tab Panels -->
+        <p-tabpanels>
+
+          <!-- HOD TAB -->
+          <p-tabpanel value="hod" [ngClass]="{'tab-content-disabled': userRole !== 'HOD' || evaluationDisabled}">
+            <fieldset [disabled]="userRole !== 'HOD' || evaluationDisabled" class="p-3">
+              <div *ngFor="let q of hodQuestions; let i = index" class="question-box mb-4">
+                <div class="mb-2 text-gray-800">
+                  {{ i + 1 }}. {{ q.question }}
+                </div>
+
+                <!-- Radio -->
+                <div *ngIf="q.control === 'Radio'" class="flex flex-wrap gap-4">
+                  <ng-container *ngFor="let option of q.answerDetail">
+                    <div class="card-options d-flex flex-wrap gap-3">
+                      <p-radioButton name="hod_{{q.questionId}}" [value]="option.answer" [(ngModel)]="q.currAnswer"
+                        [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled"
+                        inputId="{{q.questionId}}_{{option.answerId}}" />
+                      <label [for]="q.questionId + '_' + option.answerId" class="ml-1 mr-3 text-gray-700">
+                        {{ option.answer }}
+                      </label>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <!-- Textarea -->
+                <textarea *ngIf="q.control === 'TextArea'" pInputTextarea
+                  class="w-full border-2 border-gray-300 rounded-md p-2" rows="3" placeholder="Enter your remarks"
+                  [(ngModel)]="q.currAnswer" [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled"
+                  maxlength="200">
+                </textarea>
+              </div>
+
+              <!-- Recommendation -->
+              <div class="question-box mb-4">
+                <div class="mb-2 text-gray-800">Recommendation</div>
+                <div class="flex flex-wrap gap-4">
+                  <div class="card-options d-flex flex-wrap gap-3">
+                    <p-radioButton name="recommendation" inputId="recYes" value="Recommended"
+                      [(ngModel)]="technicalRecommendation" [ngModelOptions]="{standalone: true}"
+                      [disabled]="evaluationDisabled" />
+                    <label for="recYes" class="ml-1 mr-3">Recommended</label>
+                  </div>
+
+                  <div class="card-options d-flex flex-wrap gap-3">
+                    <p-radioButton name="recommendation" inputId="recNo" value="Not Recommended"
+                      [(ngModel)]="technicalRecommendation" [ngModelOptions]="{standalone: true}"
+                      [disabled]="evaluationDisabled" />
+                    <label for="recNo" class="ml-1">Not Recommended</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-3 mt-4">
+                <p-button label="Submit" severity="success" (click)="onSubmit($event)"></p-button>
+                <p-button label="Reset" severity="secondary" (click)="onClear()"
+                  styleClass="p-button-outlined"></p-button>
+              </div>
+
+            </fieldset>
+          </p-tabpanel>
+
+          <!-- HR TAB -->
+          <p-tabpanel value="hr" [ngClass]="{'tab-content-disabled': userRole !== 'HR Admin' || evaluationDisabled}">
+            <fieldset [disabled]="userRole !== 'HR Admin' || evaluationDisabled" class="p-3">
+              <div *ngFor="let q of hrQuestions; let i = index" class="question-box mb-4">
+                <div class="mb-2 text-gray-800">
+                  {{ i + 1 }}. {{ q.question }}
+                </div>
+
+                <!-- Radio -->
+                <div *ngIf="q.control === 'Radio'" class="flex flex-wrap gap-4">
+                  <ng-container *ngFor="let option of q.answerDetail">
+                    <div class="card-options d-flex flex-wrap gap-3">
+                      <p-radioButton name="hr_{{q.questionId}}" [value]="option.answer" [(ngModel)]="q.currAnswer"
+                        [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled"
+                        inputId="{{q.questionId}}_{{option.answerId}}" />
+                      <label [for]="q.questionId + '_' + option.answerId" class="ml-1 mr-3 text-gray-700">
+                        {{ option.answer }}
+                      </label>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <!-- Textarea -->
+                <textarea *ngIf="q.control === 'TextArea'" pInputTextarea class="w-full border-2 border-gray-300"
+                  rows="3" placeholder="Enter your remarks" [(ngModel)]="q.currAnswer"
+                  [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled" maxlength="200"></textarea>
+              </div>
+
+              <!-- Final Decision -->
+              <div class="question-box mb-4">
+                <div class="mb-2 text-gray-800">Final Decision</div>
+                <div class="flex flex-wrap gap-4">
+                  <div class="card-options d-flex flex-wrap gap-3">
+                    <p-radioButton name="decision" inputId="selected" value="Selected" [(ngModel)]="hrDecision"
+                      [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled" />
+                    <label for="selected" class="ml-1 mr-3">Selected</label>
+                  </div>
+
+                  <div class="card-options d-flex flex-wrap gap-3">
+                    <p-radioButton name="decision" inputId="rejected" value="Rejected" [(ngModel)]="hrDecision"
+                      [ngModelOptions]="{standalone: true}" [disabled]="evaluationDisabled" />
+                    <label for="rejected" class="ml-1">Rejected</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-3 mt-4">
+                <p-button label="Submit" severity="success" (click)="onSubmit($event)"></p-button>
+                <p-button label="Reset" severity="secondary" (click)="onClear()"
+                  styleClass="p-button-outlined"></p-button>
+              </div>
+
+            </fieldset>
+          </p-tabpanel>
+
+        </p-tabpanels>
+      </p-tabs>
+    </form>
+
+  </p-dialog>
+
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,60 @@
+<p-toast></p-toast>
+
+<div class="bg-white min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <div class="bg-white overflow-hidden">
+
+        <!-- Header -->
+        <div style="display: flex;" class="flex flex-col gap-4 p-3 border-b border-gray-200">
+
+            <!-- Breadcrumb -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-base font-semibold text-gray-800">
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </h2>
+            </div>
+
+            <!-- Search Center -->
+            <div class="flex justify-center">
+
+                <div class="flex gap-3 w-full max-w-xl">
+
+                    <input type="text" pInputText placeholder="Search Employee Name or Email" [(ngModel)]="searchText"
+                        (keyup.enter)="onSearchData()" minlength="2" class="w-full" />
+
+                    <p-button type="button" icon="pi pi-search" label="Search" styleClass="p-button-sm p-button-info"
+                        (click)="onSearchData()">
+                    </p-button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Table Section -->
+        <div class="mt-4" *ngIf="allEmpTableData.length > 0 && !noDatafoundCard">
+
+            <app-table-template [data]="empTableData" [columns]="tableHeaders" [pageSize]="pageSize"
+                [totalCount]="totalCount" [currentPage]="pageNo" [isLoading]="isLoading" [sortColumn]="sortColumn"
+                [sortDirection]="sortDirection" (sortChange)="onSortChange($event)" (pageChange)="onPageChange($event)"
+                (refresh)="showAllEmployees()" (searchChange)="onSearchChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)">
+            </app-table-template>
+
+        </div>
+
+        <div *ngIf="noDatafoundCard">
+            <div class="flex justify-center mt-4">
+                <app-no-data-found></app-no-data-found>
+            </div>
+            <!-- <div class="flex justify-center mt-4">
+                <div class="flex gap-3 w-full max-w-xl">
+                    <p>No Data Found</p>
+                </div>
+            </div> -->
+        </div>
+
+    </div>
+
+</div>

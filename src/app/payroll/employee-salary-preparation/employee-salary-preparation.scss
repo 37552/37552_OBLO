@@ -1,0 +1,9 @@
+@reference "tailwindcss";
+/* Global styles for forms */
+.form-label {
+    @apply block mb-1 text-sm font-medium text-gray-700;
+}
+
+.form-control {
+    @apply w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}

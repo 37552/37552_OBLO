@@ -1,0 +1,730 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb
+          [model]="breadcrumbItems"
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+
+    </div>
+  </div>
+
+  <div class="mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+      <div class="border-b border-gray-200">
+        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+          <button
+            [class]="getTabClass(basicInfoTabs.length)"
+            (click)="setActiveTab(basicInfoTabs.length)"
+            type="button">
+            <i class="pi pi-file mr-2"></i>
+            Employee details
+          </button>
+          @for(tab of basicInfoTabs; track tab; let i = $index)
+          {
+          <button
+            [class]="getTabClass(i)"
+            (click)="setActiveTab(i)"
+            type="button">
+            <i [class]="getTabIcon(tab.drpOption)" class="mr-2"></i>
+            {{tab.drpOption}}
+          </button>
+          }
+        </nav>
+      </div>
+
+      <div class="h-[calc(100%-120px)] overflow-y-auto">
+        <form [formGroup]="appraisalForm" class="space-y-6">
+
+          @if(activeTab === 0){
+          }
+
+          @if(activeTab === 1){
+          <div class="space-y-6">
+            <!-- Existing Tab 2 Content -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div class="p-6">
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Performance Questions</h5>
+                  </div>
+
+                  @if(groupData.length === 0){
+                  <div class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+                    <p class="text-sm">No questions available</p>
+                  </div>
+                  }@else{
+                  <div class="space-y-8">
+                    @for(group of groupData; track group; let gIndex = $index){
+                    <div class="group-section">
+                      <h3 class="text-xl font-semibold text-gray-800 mb-4">{{group.drpOption}}</h3>
+                      
+                      @if(group.column1 && group.column1.length > 0){
+                        @for(subgroup of group.column1; track subgroup; let sgIndex = $index){
+                        <div class="subgroup-section mb-6">
+                          <h4 class="text-lg font-medium text-gray-700 mb-3">{{subgroup.drpOption}}</h4>
+                          
+                          <div class="overflow-x-auto">
+                            <table class="w-full">
+                              <thead class="bg-gray-50">
+                                <tr>
+                                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Question</th>
+                                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Response</th>
+                                </tr>
+                              </thead>
+                              <tbody class="divide-y divide-gray-200">
+                                @for(question of Questiondata; track question; let qIndex = $index){
+                                @if(subgroup.drpValue === question.subGroupId){
+                                <tr class="hover:bg-gray-50">
+                                  <td class="px-4 py-4 text-sm text-gray-900 font-medium">
+                                    {{question.question}}
+                                  </td>
+                                  <td class="px-4 py-4">
+                                    @if(question.controlTypeId === 10002){
+                                    <textarea
+                                      class="w-full p-2 border border-gray-300 rounded-lg"
+                                      [formControlName]="'textSection' + question.questionId"
+                                      rows="3"
+                                      placeholder="Enter your response..."
+                                      [readonly]="!isAppraisee">
+                                    </textarea>
+                                    }@else if(question.controlTypeId === 10000){
+                                    <div class="radio-group">
+                                      @for(answer of question.answerDetails; track answer; let aIndex = $index){
+                                      <div class="flex items-center mb-2">
+                                        <input
+                                          type="radio"
+                                          [id]="'radio_' + question.questionId + '_' + answer.answerId"
+                                          [formControlName]="'textSection' + question.questionId"
+                                          [value]="answer.answerId"
+                                          class="mr-2"
+                                          [disabled]="!isAppraisee">
+                                        <label [for]="'radio_' + question.questionId + '_' + answer.answerId" class="text-sm text-gray-700">
+                                          {{answer.answer}}
+                                        </label>
+                                      </div>
+                                      }
+                                    </div>
+                                    }
+                                  </td>
+                                </tr>
+                                }
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        }
+                      }@else {
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        @for(question of Questiondata; track question; let qIndex = $index){
+                        @if(question.controlTypeId === 10000){
+                        <div class="col-span-2 mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{question.question}}
+                          </label>
+                          <div class="radio-group">
+                            @for(answer of question.answerDetails; track answer; let aIndex = $index){
+                            <div class="flex items-center mb-2">
+                              <input
+                                type="radio"
+                                [id]="'radio_' + question.questionId + '_' + answer.answerId"
+                                [formControlName]="'textSection' + question.questionId"
+                                [value]="answer.answerId"
+                                class="mr-2"
+                                [disabled]="!isAppraisee">
+                              <label [for]="'radio_' + question.questionId + '_' + answer.answerId" class="text-sm text-gray-700">
+                                {{answer.answer}}
+                              </label>
+                            </div>
+                            }
+                          </div>
+                        </div>
+                        }@else {
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{question.question}}
+                          </label>
+                          <textarea
+                            class="w-full p-2 border border-gray-300 rounded-lg"
+                            [formControlName]="'textSection' + question.questionId"
+                            rows="3"
+                            placeholder="Enter your response..."
+                            [readonly]="!isAppraisee">
+                          </textarea>
+                        </div>
+                        }
+                        }
+                      </div>
+                      }
+                    </div>
+                    }
+                  </div>
+                  }
+                </div>
+
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Key Performance Indicators</h5>
+                    <button
+                      type="button"
+                      pButton
+                      icon="pi pi-plus"
+                      label="Add KPI"
+                      (click)="addIndicator()"
+                      class="p-button-sm p-button-outlined p-button-primary"
+                      [disabled]="!isAppraisee">
+                    </button>
+                  </div>
+
+                  <div [formGroup]="sectionIIForm">
+                    <div class="overflow-x-auto">
+                      <table class="w-full">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">KRA</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">KPI & Measurement</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Weightage</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Self Remarks</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Self Rating</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Appraiser Remarks</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Appraiser Rating</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody formArrayName="performanceIndicators">
+                          @for(indicator of indicators.controls; track indicator; let i = $index){
+                          <tr [formGroupName]="i" class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                              <p-select
+                                formControlName="kra"
+                                [options]="getAvailableKRAs(i)"
+                                optionLabel="drpOption"
+                                optionValue="drpValue"
+                                [filter]="true"
+                                placeholder="Select KRA"
+                                (onChange)="onKRAChange(i)"
+                                [disabled]="!isAppraisee"
+                                class="w-48">
+                              </p-select>
+                            </td>
+                            <td class="px-4 py-3">
+                              @if($any(availableKPIs[i])?.length > 0){
+                                <ul class="list-disc pl-4 space-y-1">
+                                  @for(kpi of $any(availableKPIs[i]); track kpi; let kIndex = $index){
+                                    <li class="text-sm text-gray-700">{{kpi.drpOption}}</li>
+                                  }
+                                </ul>
+                              }@else {
+                                <span class="text-sm text-gray-400">No KRA selected</span>
+                              }
+                            </td>
+                            <td class="px-4 py-3">
+                              <input
+                                type="number"
+                                pInputText
+                                formControlName="weightage"
+                                class="w-20"
+                                min="0"
+                                max="100"
+                                [readonly]="!isAppraisee">
+                            </td>
+                            <td class="px-4 py-3">
+                              <textarea
+                                formControlName="selfRemark"
+                                class="w-32 text-sm p-2 border border-gray-300 rounded"
+                                rows="2"
+                                placeholder="Self remarks"
+                                [readonly]="!isAppraisee">
+                              </textarea>
+                            </td>
+                            <td class="px-4 py-3">
+                              <div class="flex flex-col space-y-1">
+                                @for(option of Radiobuttonsection1; track option; let rIndex = $index){
+                                <div class="flex items-center">
+                                  <input
+                                    type="radio"
+                                    [id]="'selfRating-' + i + '-' + rIndex"
+                                    formControlName="selfRating"
+                                    [value]="option.drpOption"
+                                    class="mr-1"
+                                    [disabled]="!isAppraisee">
+                                  <label [for]="'selfRating-' + i + '-' + rIndex" class="text-xs">
+                                    {{option.drpOption}}
+                                  </label>
+                                </div>
+                                }
+                              </div>
+                            </td>
+                            <td class="px-4 py-3">
+                              <textarea
+                                formControlName="appraiserRemark"
+                                class="w-32 text-sm p-2 border border-gray-300 rounded"
+                                rows="2"
+                                placeholder="Appraiser remarks"
+                                [readonly]="isAppraisee">
+                              </textarea>
+                            </td>
+                            <td class="px-4 py-3">
+                              <div class="flex flex-col space-y-1">
+                                @for(option of Radiobuttonsection1; track option; let rIndex = $index){
+                                <div class="flex items-center">
+                                  <input
+                                    type="radio"
+                                    [id]="'appraiserRating-' + i + '-' + rIndex"
+                                    formControlName="appraiserRating"
+                                    [value]="option.drpOption"
+                                    class="mr-1"
+                                    [disabled]="isAppraisee">
+                                  <label [for]="'appraiserRating-' + i + '-' + rIndex" class="text-xs">
+                                    {{option.drpOption}}
+                                  </label>
+                                </div>
+                                }
+                              </div>
+                            </td>
+                            <td class="px-4 py-3">
+                              <div class="flex flex-col space-y-1">
+                                <button
+                                  type="button"
+                                  pButton
+                                  icon="pi pi-trash"
+                                  (click)="removeIndicator(i)"
+                                  class="p-button-sm p-button-danger p-button-text"
+                                  [disabled]="indicators.length === 1 || !isAppraisee">
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Weightage Summary -->
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-blue-800">Total Weightage: {{totalWeightageCompleted}}%</span>
+                        @if(totalWeightageCompleted !== 100){
+                        <span class="text-sm text-red-600 font-medium">Weightage must total 100%</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+
+          @if(activeTab === 2){
+            <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Personal Development Plan</h5>
+                  </div>
+
+                  <div [formGroup]="sectionIIForm">
+                    <div class="overflow-x-auto">
+                      <table class="w-full">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Topic</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Self Assessment</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Appraiser's Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody formArrayName="performanceIndicators">
+                          @for(indicator of indicators.controls; track indicator; let i = $index){
+                          <tr [formGroupName]="i" class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                              <div>
+                                <strong class="text-sm font-medium text-gray-800">{{appraisalTopics[i]?.label}}</strong>
+                                <p class="text-xs text-gray-500 mt-1">{{appraisalTopics[i]?.instructions}}</p>
+                                <textarea
+                                  formControlName="Topic"
+                                  class="w-full mt-2 p-2 border border-gray-300 rounded"
+                                  rows="4"
+                                  placeholder="Enter details..."
+                                  [readonly]="!isAppraisee">
+                                </textarea>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3">
+                              <textarea
+                                formControlName="SelfAssessment"
+                                class="w-full p-2 border border-gray-300 rounded"
+                                rows="4"
+                                placeholder="Enter self assessment..."
+                                [readonly]="!isAppraisee">
+                              </textarea>
+                            </td>
+                            <td class="px-4 py-3">
+                              <textarea
+                                formControlName="AppraisersRemarks"
+                                class="w-full p-2 border border-gray-300 rounded"
+                                rows="4"
+                                placeholder="Enter appraiser remarks..."
+                                [readonly]="isAppraisee">
+                              </textarea>
+                            </td>
+                          </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+          }
+
+          <!-- New Static Tab Content -->
+          @if(activeTab === basicInfoTabs.length){
+          <div class="space-y-6">
+            <!-- Employee Information Section -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <i class="pi pi-user text-blue-600"></i>
+                  Employee Information
+                </h4>
+              </div>
+              <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <!-- Employee Details -->
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Employee Name <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="employeeName"
+                        [class.p-invalid]="isInvalid('employeeName')"
+                        class="w-full"
+                        placeholder="Enter employee name" />
+                      @if(isInvalid('employeeName')){
+                      <small class="text-red-500 text-xs mt-1">Employee name is required</small>
+                      }
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Employee ID <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="employeeId"
+                        [class.p-invalid]="isInvalid('employeeId')"
+                        class="w-full"
+                        placeholder="Enter employee ID" />
+                      @if(isInvalid('employeeId')){
+                      <small class="text-red-500 text-xs mt-1">Employee ID is required</small>
+                      }
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Department <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="department"
+                        [class.p-invalid]="isInvalid('department')"
+                        class="w-full"
+                        placeholder="Enter department" />
+                      @if(isInvalid('department')){
+                      <small class="text-red-500 text-xs mt-1">Department is required</small>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Company Details -->
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Designation <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="designation"
+                        [class.p-invalid]="isInvalid('designation')"
+                        class="w-full"
+                        placeholder="Enter designation" />
+                      @if(isInvalid('designation')){
+                      <small class="text-red-500 text-xs mt-1">Designation is required</small>
+                      }
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Company <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="company"
+                        [class.p-invalid]="isInvalid('company')"
+                        class="w-full"
+                        placeholder="Enter company name" />
+                      @if(isInvalid('company')){
+                      <small class="text-red-500 text-xs mt-1">Company name is required</small>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date Information Section -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <i class="pi pi-calendar text-green-600"></i>
+                  Date Information
+                </h4>
+              </div>
+              <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div class="space-y-2">
+                    <label class="text-lg font-medium text-gray-700">
+                      DOJ in Group <span class="text-red-500">*</span>
+                    </label>
+                    <p-datePicker
+                      formControlName="dojGroup"
+                      [class.p-invalid]="isInvalid('dojGroup')"
+                      [appendTo]="'body'"
+                      [showIcon]="true"
+                      class="w-full"
+                      inputStyleClass="w-full"
+                      styleClass="w-full"
+                      placeholder="Select date">
+                    </p-datePicker>
+                    @if(isInvalid('dojGroup')){
+                    <small class="text-red-500 text-xs mt-1">DOJ in Group is required</small>
+                    }
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-lg font-medium text-gray-700">
+                      DOJ in Present Company <span class="text-red-500">*</span>
+                    </label>
+                    <p-datePicker
+                      formControlName="dojCompany"
+                      [class.p-invalid]="isInvalid('dojCompany')"
+                      [appendTo]="'body'"
+                      [showIcon]="true"
+                      inputStyleClass="w-full"
+                      class="w-full"
+                      styleClass="w-full"
+                      placeholder="Select date">
+                    </p-datePicker>
+                    @if(isInvalid('dojCompany')){
+                    <small class="text-red-500 text-xs mt-1">DOJ in Company is required</small>
+                    }
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-lg font-medium text-gray-700">
+                      DOJ in Present Department <span class="text-red-500">*</span>
+                    </label>
+                    <p-datePicker
+                      formControlName="dojDept"
+                      [class.p-invalid]="isInvalid('dojDept')"
+                      [appendTo]="'body'"
+                      inputStyleClass="w-full"
+                      [showIcon]="true"
+                      class="w-full"
+                      styleClass="w-full"
+                      placeholder="Select date">
+                    </p-datePicker>
+                    @if(isInvalid('dojDept')){
+                    <small class="text-red-500 text-xs mt-1">DOJ in Department is required</small>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Appraisal Details Section -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <i class="pi pi-chart-line text-purple-600"></i>
+                  Appraisal Details
+                </h4>
+              </div>
+              <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4">
+                      <div class="space-y-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Appraisal Period From <span class="text-red-500">*</span>
+                        </label>
+                        <p-datePicker
+                          formControlName="appraisalFrom"
+                          [class.p-invalid]="isInvalid('appraisalFrom')"
+                          [appendTo]="'body'"
+                          [showIcon]="true"
+                          inputStyleClass="w-full"
+                          class="w-full"
+                          styleClass="w-full"
+                          placeholder="Select start date">
+                        </p-datePicker>
+                        @if(isInvalid('appraisalFrom')){
+                        <small class="text-red-500 text-xs mt-1">Appraisal start date is required</small>
+                        }
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Appraisal Period To <span class="text-red-500">*</span>
+                        </label>
+                        <p-datePicker
+                          formControlName="appraisalTo"
+                          [class.p-invalid]="isInvalid('appraisalTo')"
+                          [appendTo]="'body'"
+                          [showIcon]="true"
+                          inputStyleClass="w-full"
+                          class="w-full"
+                          styleClass="w-full"
+                          placeholder="Select end date">
+                        </p-datePicker>
+                        @if(isInvalid('appraisalTo')){
+                        <small class="text-red-500 text-xs mt-1">Appraisal end date is required</small>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4">
+                      <div class="space-y-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Reporting Authority Name <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          pInputText
+                          formControlName="reportingAuthorityName"
+                          [class.p-invalid]="isInvalid('reportingAuthorityName')"
+                          class="w-full"
+                          placeholder="Enter reporting authority name" />
+                        @if(isInvalid('reportingAuthorityName')){
+                        <small class="text-red-500 text-xs mt-1">Reporting authority name is required</small>
+                        }
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Reporting Authority Designation <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          pInputText
+                          formControlName="reportingAuthorityDesignation"
+                          [class.p-invalid]="isInvalid('reportingAuthorityDesignation')"
+                          class="w-full"
+                          placeholder="Enter designation" />
+                        @if(isInvalid('reportingAuthorityDesignation')){
+                        <small class="text-red-500 text-xs mt-1">Reporting authority designation is required</small>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                  <div class="space-y-2">
+                    <label class="text-lg font-medium text-gray-700">
+                      Reviewer's Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      pInputText
+                      formControlName="reviewerName"
+                      [class.p-invalid]="isInvalid('reviewerName')"
+                      class="w-full"
+                      placeholder="Enter reviewer's name" />
+                    @if(isInvalid('reviewerName')){
+                    <small class="text-red-500 text-xs mt-1">Reviewer's name is required</small>
+                    }
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-lg font-medium text-gray-700">
+                      Reviewer's Designation <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      pInputText
+                      formControlName="reviewerDesignation"
+                      [class.p-invalid]="isInvalid('reviewerDesignation')"
+                      class="w-full"
+                      placeholder="Enter reviewer's designation" />
+                    @if(isInvalid('reviewerDesignation')){
+                    <small class="text-red-500 text-xs mt-1">Reviewer's designation is required</small>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </form>
+      </div>
+    </div>
+  </div>
+
+<div class="flex justify-between items-center pt-4 border-t border-gray-200">
+  <div>
+    @if(activeTab > 0 && postType !== 'view'){
+    <button
+      pButton
+      type="button"
+      label="Previous"
+      icon="pi pi-chevron-left"
+      (click)="previousTab()"
+      class="p-button-outlined p-button-secondary">
+    </button>
+    }
+  </div>
+
+  <div class="flex items-center gap-3">
+    @if(activeTab <= basicInfoTabs.length){
+    <button *ngIf="!isLastTab()"
+      pButton
+      type="button"
+      label="Next"
+      icon="pi pi-chevron-right"
+      iconPos="right"
+      (click)="handleNextClick()"
+      [loading]="isFormLoading"
+      class="p-button-primary">
+    </button>
+    }
+    
+
+<button *ngIf="isLastTab()"
+  pButton
+  type="submit"
+  label="Submit Appraisal"
+  icon="pi pi-check"
+  (click)="onSubmit($event)"
+  [loading]="isFormLoading"
+  class="p-button-success">
+</button>
+
+  </div>
+</div>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

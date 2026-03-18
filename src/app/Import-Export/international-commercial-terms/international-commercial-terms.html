@@ -1,0 +1,308 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">International Commercial Terms</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            [jsonTemplate1]="jsonTemplateRef1" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button (click)="showGrouplist(item)">
+              <i class="pi pi-folder-open"></i>
+            </button>
+          </ng-template>
+          
+          <ng-template #jsonTemplateRef1 let-item>
+            <button (click)="showGrouplist1(item)">
+              <i class="pi pi-folder-open"></i>
+            </button>
+          </ng-template>
+          
+
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <input type="text" maxlength="100" formControlName="name" placeholder="Enter Name"
+                        [class.border-red-500]="isInvalid('name')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('name')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('name')?.errors?.['required']){
+                        Name is required.
+                        } @else if(groupMasterForm1.get('name')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('name')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Short Code -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Short Code *</label>
+                    <input type="text" maxlength="100" formControlName="shortCode" placeholder="Enter Short Code"
+                        [class.border-red-500]="isInvalid('shortCode')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('shortCode')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('shortCode')?.errors?.['required']){
+                        Short Code is required.
+                        } @else if(groupMasterForm1.get('shortCode')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('shortCode')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Full Form -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Form *</label>
+                    <input type="text" maxlength="100" formControlName="fullFormName" placeholder="Enter Full Form"
+                        [class.border-red-500]="isInvalid('fullFormName')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('fullFormName')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('fullFormName')?.errors?.['required']){
+                        Full Form is required.
+                        } @else if(groupMasterForm1.get('fullFormName')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('fullFormName')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Who pays main transport? -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Who pays main transport *</label>
+                    <p-select [options]="buyerSellerData" formControlName="transportId" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Who pays main transport" [class.border-red-500]="isInvalid('transportId')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('transportId')){
+                    <p class="text-red-500 text-xs mt-1">Who pays main transport is required.</p>
+                    }
+                </div>
+
+                <!-- Who pays insurance? -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Who pays insurance *</label>
+                    <p-select [options]="buyerSellerData" formControlName="insuranceId" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Who pays insurance" [class.border-red-500]="isInvalid('insuranceId')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('insuranceId')){
+                    <p class="text-red-500 text-xs mt-1">Who pays insurance is required.</p>
+                    }
+                </div>
+
+                <!-- Who clears import & duties? -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Who clears import & duties *</label>
+                    <p-select [options]="buyerSellerData" formControlName="dutiesId" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Who clears import & duties" [class.border-red-500]="isInvalid('dutiesId')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('dutiesId')){
+                    <p class="text-red-500 text-xs mt-1">Who clears import & duties is required.</p>
+                    }
+                </div>
+
+                <!-- Seller Responsibilities -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Seller Responsibilities *</label>
+                    <p-multiSelect [options]="sellerMasterData1" formControlName="responsibilitiId"
+                        optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Seller Responsibilities"
+                        [class.border-red-500]="isInvalid('responsibilitiId')" class="custom-p-select w-full">
+                        <ng-template let-selectedItems pTemplate="selectedItems">
+                            <div class="flex flex-wrap gap-2">
+                                <span *ngFor="let item of selectedItems"
+                                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                                    {{ item.drpOption }}
+                                </span>
+                            </div>
+                        </ng-template>
+                    </p-multiSelect>
+                    @if(isInvalid('responsibilitiId')){
+                    <p class="text-red-500 text-xs mt-1">Seller Responsibilities is required.</p>
+                    }
+                </div>
+
+                <!-- Buyer Responsibilities -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Buyer Responsibilities *</label>
+                    <p-multiSelect [options]="buyerMasterData1" formControlName="BuyerResponsibiliti"
+                        optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Buyer Responsibilities"
+                        [class.border-red-500]="isInvalid('BuyerResponsibiliti')" class="custom-p-select w-full">
+                        <ng-template let-selectedItems pTemplate="selectedItems">
+                            <div class="flex flex-wrap gap-2">
+                                <span *ngFor="let item of selectedItems"
+                                    class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                                    {{ item.drpOption }}
+                                </span>
+                            </div>
+                        </ng-template>
+                    </p-multiSelect>
+                    @if(isInvalid('BuyerResponsibiliti')){
+                    <p class="text-red-500 text-xs mt-1">Buyer Responsibilities is required.</p>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <input type="text" maxlength="100" formControlName="description" placeholder="Enter Description"
+                        [class.border-red-500]="isInvalid('description')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('description')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('description')?.errors?.['required']){
+                        Description is required.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('description')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+            </form>
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+    <!-- Folder Data SHowing -->
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Seller Responsibilities</span>
+                <i class="text-blue-500 pi pi-list text-xl shrink-0"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="flex flex-wrap gap-2 mt-4">
+                @for(item of groupListArray; track $index) {
+                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-lg">
+                    {{ item['seller'] }}
+                </span>
+                }
+            </div>
+        </ng-template>
+    </p-dialog>
+
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog1" [style]="{ width: '60%', 'max-width': '100%' }">
+
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Buyer Responsibilities</span>
+                <i class="text-blue-500 pi pi-list text-xl shrink-0"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="flex flex-wrap gap-2 mt-4">
+                @for(item of groupListArray1; track $index) {
+                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-lg">
+                    {{ item['Buyer'] }}
+                </span>
+                }
+            </div>
+        </ng-template>
+    </p-dialog>
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

@@ -1,0 +1,229 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header Section -->
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb
+          [model]="breadcrumbItems"
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="border-b border-gray-200 bg-white px-4">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button
+          *ngFor="let tab of statusTabs"
+          [class]="selectedAction === tab.value 
+            ? 'border-' + tab.color + '-500 text-' + tab.color + '-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'"
+          type="button">
+          <i [class]="tab.icon"></i>
+          {{tab.label}}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Table Section -->
+    <app-table-template
+      [data]="data"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      [searchText]="searchText"
+      [actionTemplate]="actionTemplateRef"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button 
+          type="button" 
+          class="text-gray-400 hover:text-gray-600 cursor-pointer" 
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button 
+              (click)="openApprovalDialog(item); op.hide()" 
+              pTooltip="Approve/Reject"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-check-square"></i>
+              <span>Process</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <!-- Approval Dialog -->
+  <p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '95vw', maxWidth: '800px' }"
+    [contentStyle]="{ 'overflow': 'hidden', 'maxHeight': '90vh' }"
+    (onHide)="closeDialog()"
+    role="dialog"
+    aria-labelledby="approval-dialog-title"
+    aria-modal="true">
+
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+          <h2 id="approval-dialog-title" class="font-semibold text-xl text-gray-800">
+            Sales Return Approval - {{selectedItem?.returnNo || ''}}
+          </h2>
+          <i class="text-blue-500 text-lg pi pi-check-circle" aria-hidden="true"></i>
+        </div>
+        <button
+          type="button"
+          (click)="closeDialog()"
+          class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-full p-1"
+          aria-label="Close dialog">
+          <i class="pi pi-times text-xl" aria-hidden="true"></i>
+        </button>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(selectedItem){
+      <div class="space-y-6">
+        <!-- Order Information Card -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+          <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <i class="pi pi-info-circle text-blue-600" aria-hidden="true"></i>
+            Return Information
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-gray-600 font-medium">Return Number:</label>
+              <p class="text-sm font-semibold text-gray-800 mt-1">{{selectedItem.returnNo}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600 font-medium">Sales Order Number:</label>
+              <p class="text-sm font-semibold text-gray-800 mt-1">{{selectedItem.soNo}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600 font-medium">Customer:</label>
+              <p class="text-sm font-semibold text-gray-800 mt-1">{{selectedItem.customer}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600 font-medium">Current Status:</label>
+              <p class="text-sm mt-1">
+                <span 
+                  class="px-2 py-1 rounded-full text-xs font-medium"
+                  [attr.aria-label]="'Current status: ' + selectedItem.status"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': selectedItem.status?.toLowerCase() === 'approved',
+                    'bg-red-100 text-red-800': selectedItem.status?.toLowerCase() === 'rejected',
+                    'bg-yellow-100 text-yellow-800': selectedItem.status?.toLowerCase() === 'pending'
+                  }">
+                  {{selectedItem.status}}
+                </span>
+              </p>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="text-xs text-gray-600 font-medium">Total Amount:</label>
+              <p class="text-sm font-semibold text-green-600 mt-1">{{selectedItem.totalAmount | currency:'INR'}}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approval Form -->
+        <form [formGroup]="approvalForm" class="space-y-6">
+          <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h3 class="text-md font-semibold text-gray-800 mb-4">Approval Details</h3>
+            
+            <div class="space-y-4">
+              <!-- Status Selection -->
+              <div class="space-y-2">
+                <label for="status-select" class="text-sm font-medium text-gray-700">
+                  Status <span class="text-red-500" aria-hidden="true">*</span>
+                  <span class="sr-only">(required)</span>
+                </label>
+                <p-select
+                  id="status-select"
+                  formControlName="statusId"
+                  [options]="statusData"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  placeholder="Select status"
+                  (onChange)="onStatusChange($event)"
+                  [class.p-invalid]="isInvalid('statusId')"
+                  class="w-full"
+                  aria-required="true"
+                  aria-describedby="status-error">
+                </p-select>
+                @if(isInvalid('statusId')){
+                <small id="status-error" class="text-red-500 text-xs">Status is required</small>
+                }
+              </div>
+
+              <!-- Remarks -->
+              <div class="space-y-2">
+                <label for="remarks-textarea" class="text-sm font-medium text-gray-700">
+                  Remarks <span class="text-red-500" aria-hidden="true">*</span>
+                  <span class="sr-only">(required)</span>
+                </label>
+                <textarea
+                  id="remarks-textarea"
+                  pInputTextarea
+                  formControlName="remarks"
+                  rows="4"
+                  [class.p-invalid]="isInvalid('remarks')"
+                  class="w-full"
+                  placeholder="Enter your remarks..."
+                  aria-required="true"
+                  aria-describedby="remarks-error"></textarea>
+                @if(isInvalid('remarks')){
+                <small id="remarks-error" class="text-red-500 text-xs">Remarks are required (minimum 5 characters)</small>
+                }
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-gray-200">
+        <div class="text-xs text-gray-500">
+          <i class="pi pi-info-circle mr-1" aria-hidden="true"></i>
+          <span>Ensure all information is correct before submission</span>
+        </div>
+        <div class="flex justify-end items-center gap-3">
+          <button
+            pButton
+            type="button"
+            label="Cancel"
+            (click)="closeDialog()"
+            class="p-button-outlined p-button-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            aria-label="Cancel and close dialog">
+          </button>
+          <button
+            pButton
+            type="button"
+            label="Submit Approval"
+            icon="pi pi-check"
+            (click)="onSubmitApproval()"
+            [loading]="isLoading"
+            class="p-button-success focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            aria-label="Submit approval for sales return">
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

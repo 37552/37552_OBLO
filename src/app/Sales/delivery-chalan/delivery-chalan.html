@@ -1,0 +1,793 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header Section -->
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb
+          [model]="breadcrumbItems"
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        <p-button 
+          (click)="showDrawer('add', [])" 
+          label="Add Delivery Challan" 
+          icon="pi pi-plus" 
+          variant="text" 
+          [raised]="true"
+          styleClass="orange-button" />
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <app-table-template
+      [data]="data"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      [searchText]="searchText"
+      [actionTemplate]="actionTemplateRef"
+       [jsonTemplate]="vendordata"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="showDrawer('view', item); op.hide()" pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-eye"></i>
+            </button>
+            <!-- <button (click)="showDrawer('update', item); op.hide()" pTooltip="Update"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button (click)="onItemAction(item, 'Delete'); op.hide()" pTooltip="Delete"
+              class="px-4 py-2 hover:bg-gray-100 text-left text-red-600">
+              <i class="pi pi-trash"></i>
+            </button> -->
+            <button (click)="printChallan(item); op.hide()" pTooltip="Print"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-print"></i>
+            </button>
+
+          </div>
+        </p-popover>
+      </ng-template>
+      <ng-template #vendordata let-item>
+        <button
+          type="button"
+          pButton
+          icon="pi pi-id-card"
+          (click)="viewVendorDetails(item)"
+          class="p-button-rounded p-button-text p-button-info"
+          pTooltip="View Vendor Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <p-drawer
+    [(visible)]="visible"
+    [position]="'right'"
+    [style]="{ width: '95vw', maxWidth: '1400px' }"
+    [showCloseIcon]="true"
+    [modal]="true"
+    [blockScroll]="true"
+    [baseZIndex]="1000"
+    (onHide)="onDrawerHide()">
+    
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full py-2">
+        <div class="flex items-center gap-3">
+          <span class="font-semibold text-xl text-gray-800">{{header}}</span>
+          <i class="text-blue-500 text-lg" [ngClass]="headerIcon"></i>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <!-- Main Content Container with Single Scroll -->
+      <div class="h-full flex flex-col">
+        @if(isFormLoading){
+        <div class="flex flex-col items-center justify-center flex-1 min-h-[500px]">
+          <p-progress-spinner
+            strokeWidth="6"
+            fill="transparent"
+            animationDuration=".5s"
+            [style]="{ width: '60px', height: '60px' }" />
+          <p class="mt-4 text-gray-600 font-medium">Loading delivery challan data...</p>
+        </div>
+        }
+
+        <!-- Progress Steps -->
+
+
+        <!-- Scrollable Form Area -->
+        <div class="flex-1 overflow-y-auto pr-2">
+          <form [formGroup]="challanForm" (ngSubmit)="onSubmit($event)" class="space-y-6 pb-4">
+
+            <!-- Step 1: Basic Information -->
+            
+            <div class="space-y-6">
+              <!-- Main Form Section -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                  <!-- Source Information -->
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                      <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="pi pi-file text-blue-600"></i>
+                        Source Information
+                      </h4>
+                    </div>
+                    <div class="p-6 space-y-5">
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Source Document <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="sourceDocumentId"
+                          [options]="sourceDocumentOptions"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          [showClear]="true"
+                          appendTo="body"
+                          placeholder="Select source document"
+                          (onChange)="onSourceDocumentChange()"
+                          [class.p-invalid]="isInvalid('sourceDocumentId')"
+                          [disabled]="postType === 'view'"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('sourceDocumentId')){
+                        <small class="text-red-500 text-xs mt-1">Source document is required</small>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Source Document Number <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="prMainId"
+                          [options]="referenceNumberDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          appendTo="body"
+                          placeholder="Select document number"
+                          (onChange)="onDocumentNumberChange()"
+                          [class.p-invalid]="isInvalid('prMainId')"
+                          [disabled]="isDirect || postType === 'view'"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('prMainId')){
+                        <small class="text-red-500 text-xs mt-1">Document number is required</small>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Transport Information -->
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                      <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="pi pi-truck text-green-600"></i>
+                        Transport Information
+                      </h4>
+                    </div>
+                    <div class="p-6 space-y-5">
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Transport Mode <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="transportMode"
+                          [options]="transportDrpData"
+                          optionLabel="drpOption"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          placeholder="Select transport mode"
+                          [class.p-invalid]="isInvalid('transportMode')"
+                          [disabled]="postType === 'view'"
+                          class="w-full">
+                        </p-select>
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">Vehicle Number</label>
+                        <input
+                          type="text"
+                          pInputText
+                          formControlName="vehicleno"
+                          class="w-full"
+                          placeholder="Enter vehicle number"
+                          [readonly]="postType === 'view'"
+                          maxlength="50" />
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">Transporter</label>
+                        <input
+                          type="text"
+                          pInputText
+                          formControlName="transporter"
+                          class="w-full"
+                          placeholder="Enter transporter name"
+                          [readonly]="postType === 'view'"
+                          maxlength="500" />
+                      </div>
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">City</label>
+                        <p-select
+                        formControlName="stateid"
+                        [options]="divisionDrpData"
+                        optionLabel="drpOption"
+                        optionValue="drpValue"
+                        [filter]="true"
+                        appendTo="body"
+                        [virtualScroll]="true"
+                        [virtualScrollItemSize]="30"
+                        placeholder="Select city"
+                        [class.p-invalid]="isInvalid('stateid')"
+                        [disabled]="postType === 'view'"
+                        class="w-full">
+                      </p-select>
+                      @if(isInvalid('stateid')){
+                      <small class="text-red-500 text-xs mt-1">City is required</small>
+                      }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                  <!-- Shipping Information -->
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                      <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="pi pi-map-marker text-purple-600"></i>
+                        Shipping Information
+                      </h4>
+                    </div>
+                    <div class="p-6 space-y-5">
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Ship From <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="shipFrom"
+                          [options]="shipFromDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          placeholder="Select ship from"
+                          (onChange)="onShipFromChange()"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          [class.p-invalid]="isInvalid('shipFrom')"
+                          [disabled]="postType === 'view'"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('shipFrom')){
+                        <small class="text-red-500 text-xs mt-1">Ship from is required</small>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Ship From Address <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="shipFromAddress"
+                          [options]="shipFromAddressDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          placeholder="Select ship from address"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          [class.p-invalid]="isInvalid('shipFromAddress')"
+                          [disabled]="postType === 'view'"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('shipFromAddress')){
+                        <small class="text-red-500 text-xs mt-1">Ship from address is required</small>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Ship To <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="shipTo"
+                          [options]="shipToDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          placeholder="Select ship to"
+                          [class.p-invalid]="isInvalid('shipTo')"
+                          [disabled]="postType === 'view'"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('shipTo')){
+                        <small class="text-red-500 text-xs mt-1">Ship to is required</small>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Ship To Address <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          pInputText
+                          formControlName="shipToAddress"
+                          class="w-full"
+                          placeholder="Enter ship to address"
+                          [class.p-invalid]="isInvalid('shipToAddress')"
+                          [readonly]="postType === 'view'"
+                          maxlength="500" />
+                        @if(isInvalid('shipToAddress')){
+                        <small class="text-red-500 text-xs mt-1">Ship to address is required</small>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Billing Information -->
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-4 border-b border-gray-200">
+                      <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="pi pi-credit-card text-orange-600"></i>
+                        Billing Information
+                      </h4>
+                    </div>
+                    <div class="p-6 space-y-5">
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Bill To <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="billTo"
+                          [options]="billToDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          [showClear]="true"
+                          placeholder="Select bill to"
+                          (onChange)="onBillToChange()"
+                          [class.p-invalid]="isInvalid('billTo')"
+                          [disabled]="postType === 'view'"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          class="w-full">
+                        </p-select>
+                        @if(isInvalid('billTo')){
+                        <small class="text-red-500 text-xs mt-1">Bill to is required</small>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 gap-2">
+                        <label class="text-lg font-medium text-gray-700">
+                          Bill To Address <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                          formControlName="billToAddress"
+                          [options]="billToAddressDrpData"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          placeholder="Select bill to address"
+                          [class.p-invalid]="isInvalid('billToAddress')"
+                          [disabled]="postType === 'view'"
+                          appendTo="body"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          class="w-full">
+                        </p-select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Information -->
+              <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                  <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="pi pi-info-circle text-cyan-600"></i>
+                    Additional Information
+                  </h4>
+                </div>
+                <div class="p-6">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                      <label class="text-lg font-medium text-gray-700">
+                        Supply Date <span class="text-red-500">*</span>
+                      </label>
+                      <p-datePicker
+                        formControlName="supplyDate"
+                        [class.p-invalid]="isInvalid('supplyDate')"
+                        [appendTo]="'body'"
+                        [maxDate]="currentDate"
+                        class="w-full"
+                        styleClass="w-full"
+                        inputStyleClass="w-full"
+                        placeholder="Select supply date"
+                        [disabled]="postType === 'view'">
+                      </p-datePicker>
+                      @if(isInvalid('supplyDate')){
+                      <small class="text-red-500 text-xs mt-1">Supply date is required</small>
+                      }
+                    </div>
+
+                    <div class="space-y-2">
+                      <label class="text-lg font-medium text-gray-700">Remarks</label>
+                      <input
+                        type="text"
+                        pInputText
+                        formControlName="remarks"
+                        class="w-full"
+                        placeholder="Enter remarks"
+                        [readonly]="postType === 'view'"
+                        maxlength="500" />
+                    </div>
+                  </div>
+
+                  <!-- Reverse Charge Checkbox -->
+                  <div class="flex items-center space-x-2 mt-6">
+                    <p-checkbox
+                      formControlName="reverseCharge"
+                      [binary]="true"
+                      [disabled]="postType === 'view'"
+                      inputId="reverseCharge">
+                    </p-checkbox>
+                    <label for="reverseCharge" class="text-lg font-medium text-gray-700 cursor-pointer">
+                      Reverse Charge
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="space-y-6">
+              <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                  <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="pi pi-shopping-bag text-cyan-600"></i>
+                    Item Details
+                  </h4>
+                </div>
+                
+                <div class="p-6">
+                  <!-- Direct Entry Form -->
+                  @if(isDirect && postType !== 'view'){
+                  <form [formGroup]="itemDetailForm" class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Item <span class="text-red-500">*</span></label>
+                        <p-select
+                          formControlName="itemId"
+                          [options]="itemsDrp"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          placeholder="Select item"
+                          [virtualScroll]="true"
+                          [virtualScrollItemSize]="30"
+                          (onChange)="onItemChange()"
+                          [class.p-invalid]="f1['itemId'].invalid && (f1['itemId'].dirty || f1['itemId'].touched)"
+                          class="w-full">
+                        </p-select>
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Maker Code <span class="text-red-500">*</span></label>
+                        <p-select
+                          formControlName="itemCodeid"
+                          [options]="makerCodeDrp"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          placeholder="Select maker code"
+                          [class.p-invalid]="f1['itemCodeid'].invalid && (f1['itemCodeid'].dirty || f1['itemCodeid'].touched)"
+                          class="w-full">
+                        </p-select>
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Quantity <span class="text-red-500">*</span></label>
+                        <input
+                          type="number"
+                          pInputText
+                          formControlName="quantity"
+                          class="w-full"
+                          min="0"
+                          placeholder="Enter quantity"
+                          [class.p-invalid]="f1['quantity'].invalid && (f1['quantity'].dirty || f1['quantity'].touched)" />
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Rate <span class="text-red-500">*</span></label>
+                        <input
+                          type="number"
+                          pInputText
+                          formControlName="rate"
+                          class="w-full"
+                          min="0"
+                          step="0.01"
+                          placeholder="Enter rate"
+                          [class.p-invalid]="f1['rate'].invalid && (f1['rate'].dirty || f1['rate'].touched)" />
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Discount</label>
+                        <input
+                          type="number"
+                          pInputText
+                          formControlName="discount"
+                          class="w-full"
+                          min="0"
+                          step="0.01"
+                          placeholder="Enter discount" />
+                      </div>
+
+                      <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">Tax</label>
+                        <input
+                          type="number"
+                          pInputText
+                          formControlName="tax"
+                          class="w-full"
+                          min="0"
+                          step="0.01"
+                          placeholder="Enter tax" />
+                      </div>
+                    </div>
+
+                    <div class="mt-4">
+                      <button
+                        type="button"
+                        pButton
+                        icon="pi pi-plus"
+                        label="Add Item"
+                        (click)="addItemRow()"
+                        [disabled]="itemDetailForm.invalid"
+                        class="p-button-primary p-button-sm">
+                      </button>
+                    </div>
+                  </form>
+                  }
+
+                  <div class="mt-6">
+                    <div class="overflow-x-auto">
+                      <p-table [value]="itemDetailData" [tableStyle]="{'min-width': '50rem'}">
+                        <ng-template pTemplate="header">
+                          <tr>
+                            <th class="text-left p-2 border-b">S.No</th>
+                            <th class="text-left p-2 border-b">Item Name</th>
+                            <th class="text-left p-2 border-b">Maker Code</th>
+                            <th class="text-left p-2 border-b">Quantity</th>
+                            <th class="text-left p-2 border-b">Rate</th>
+                            <th class="text-left p-2 border-b">Discount</th>
+                            <th class="text-left p-2 border-b">Tax</th>
+                            <th class="text-left p-2 border-b">Total</th>
+                            @if(postType !== 'view'){
+                            <th class="text-left p-2 border-b">Actions</th>
+                            }
+                          </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-item let-i="rowIndex">
+                          <tr>
+                            <td class="p-2 border-b">{{i + 1}}</td>
+                            <td class="p-2 border-b">{{item.itemName}}</td>
+                            <td class="p-2 border-b">{{item.makerCodeName}}</td>
+                            <td class="p-2 border-b">{{item.quantity}}</td>
+                            <td class="p-2 border-b">{{item.rate | currency:'INR':'symbol':'1.2-2'}}</td>
+                            <td class="p-2 border-b">{{item.discount | currency:'INR':'symbol':'1.2-2'}}</td>
+                            <td class="p-2 border-b">{{item.tax | currency:'INR':'symbol':'1.2-2'}}</td>
+                            <td class="p-2 border-b">{{(item.quantity * item.rate) | currency:'INR':'symbol':'1.2-2'}}</td>
+                            @if(postType !== 'view'){
+                            <td class="p-2 border-b">
+                              <button
+                                pButton
+                                type="button"
+                                icon="pi pi-trash"
+                                class="p-button-danger p-button-sm p-button-text"
+                                (click)="deleteItemRow(i)"
+                                pTooltip="Delete Item">
+                              </button>
+                            </td>
+                            }
+                          </tr>
+                        </ng-template>
+                      </p-table>
+                    </div>
+
+                    @if(itemDetailData.length === 0){
+                    <div class="text-center py-8 text-gray-500">
+                      <i class="pi pi-inbox text-3xl mb-2"></i>
+                      <p>No items added yet.</p>
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons for Step 2 -->
+              <div class="flex justify-between pt-4">
+
+              </div>
+            </div>
+            
+          </form>
+        </div>
+
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+        <div>
+          @if(postType !== 'view'){
+          <button
+            pButton
+            type="button"
+            label="Previous"
+            icon="pi pi-chevron-left"
+            class="p-button-outlined p-button-secondary">
+          </button>
+          }
+        </div>
+      @if(postType !== 'view'){
+        <div class="flex items-center gap-3">
+          <button
+            pButton
+            type="submit"
+            [label]="postType === 'add' ? 'Create Delivery Challan' : 'Update Delivery Challan'"
+            icon="pi pi-check"
+            (click)="onSubmit($event)"
+            class="p-button-success">
+          </button>
+        
+
+
+          <button
+            pButton
+            type="button"
+            label="Cancel"
+            (click)="onDrawerHide()"
+            class="p-button-outlined p-button-secondary">
+          </button>
+        </div>
+      }
+      </div>
+    
+    </ng-template>
+  </p-drawer>
+
+  <!-- Print Dialog -->
+  <p-dialog 
+    [(visible)]="printDialogVisible" 
+    header="Print Delivery Challan" 
+    [modal]="true" 
+    [style]="{ width: '70vw' }"
+    (onHide)="closePrintDialog()">
+    
+    <ng-template pTemplate="content">
+      <div id="printContent" class="p-4 bg-white">
+        <!-- Print content will be dynamically loaded here -->
+        @if(!printData){
+        <div class="flex justify-center items-center py-8">
+          <p-progress-spinner></p-progress-spinner>
+        </div>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3">
+        <button
+          pButton
+          label="Close"
+          (click)="closePrintDialog()"
+          class="p-button-outlined p-button-secondary">
+        </button>
+        <!-- <button
+          pButton
+          label="Print"
+          icon="pi pi-print"
+          (click)="printChallan()"
+          class="p-button-primary"
+          [disabled]="!printData">
+        </button> -->
+      </div>
+    </ng-template>
+  </p-dialog>
+
+<p-dialog 
+  [(visible)]="jsonDetailsVisible" 
+  header="Item Details"
+  [modal]="true" 
+  [style]="{ width: '80vw', maxWidth: '1000px' }"
+  (onHide)="closeJsonDetails()">
+  
+  <ng-template pTemplate="content">
+    <div class="p-4">
+      <!-- Check if selectedItemDetails exists and has vendorDetails -->
+      <div *ngIf="selectedItemDetails && selectedItemDetails.vendorDetails && selectedItemDetails.vendorDetails.length > 0">
+        <h4 class="text-lg font-semibold mb-4 text-gray-700">Vendor Details</h4>
+        <div class="overflow-x-auto">
+          <p-table [value]="selectedItemDetails.vendorDetails" [tableStyle]="{'min-width': '800px'}">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="text-left p-3 border-b bg-gray-50">S.No</th>
+                <th class="text-left p-3 border-b bg-gray-50">Item</th>
+                <th class="text-left p-3 border-b bg-gray-50">Item Code</th>
+                <th class="text-left p-3 border-b bg-gray-50">Quantity</th>
+                <th class="text-left p-3 border-b bg-gray-50">Rate</th>
+                <th class="text-left p-3 border-b bg-gray-50">Discount</th>
+                <th class="text-left p-3 border-b bg-gray-50">Tax</th>
+                <th class="text-left p-3 border-b bg-gray-50">Total</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-vendor let-i="rowIndex">
+              <tr>
+                <td class="p-3 border-b">{{ i + 1 }}</td>
+                <td class="p-3 border-b">{{ vendor.item || vendor.itemName || 'N/A' }}</td>
+                <td class="p-3 border-b">{{ vendor.makerCode || 'N/A' }}</td>
+                <td class="p-3 border-b">{{ vendor.Quantity || vendor.quantity || 0 }}</td>
+                <td class="p-3 border-b">{{ (vendor.Rate || vendor.rate || 0) | currency:'INR':'symbol':'1.2-2' }}</td>
+                <td class="p-3 border-b">{{ (vendor.discount || 0) | currency:'INR':'symbol':'1.2-2' }}</td>
+                <td class="p-3 border-b">{{ (vendor.tax || 0) | currency:'INR':'symbol':'1.2-2' }}</td>
+                <td class="p-3 border-b">
+                  {{ ((vendor.Quantity || vendor.quantity || 0) * (vendor.Rate || vendor.rate || 0) - (vendor.discount || 0) + (vendor.tax || 0)) | currency:'INR':'symbol':'1.2-2' }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+      <div *ngIf="!selectedItemDetails || !selectedItemDetails.vendorDetails || selectedItemDetails.vendorDetails.length === 0" 
+           class="text-center py-8 text-gray-500">
+        <i class="pi pi-inbox text-3xl mb-2"></i>
+        <p>No vendor details available for this item.</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end">
+      <button
+        pButton
+        label="Close"
+        (click)="closeJsonDetails()"
+        class="p-button-outlined p-button-secondary">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

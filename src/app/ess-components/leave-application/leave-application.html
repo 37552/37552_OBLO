@@ -1,0 +1,220 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="exportAsXLSXCustom()" label="Export" icon="pi pi-file-excel"
+                    styleClass="p-button-sm p-button-success p-button-outlined" [raised]="true"></p-button>
+                <p-button (click)="showDialog('add', [])" label="Add Leave" icon="pi pi-plus"
+                    styleClass="p-button-sm p-button-outlined" [raised]="true"></p-button>
+            </div>
+        </div>
+
+        <app-table-template [data]="tblData" [columns]="tableHeaders" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (refresh)="getViewData(true)" (searchChange)="onSearchChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)" [actionTemplate]="actionTpl" [jsonTemplate]="reasonTpl">
+        </app-table-template>
+
+        <!-- Template for Reason column (Long Text) -->
+        <ng-template #reasonTpl let-item>
+            <div class="flex flex-col">
+                <span class="text-sm text-gray-700 leading-relaxed min-w-[200px]">
+                    {{ item.isExpanded ? item.reason : getTruncatedText(item.reason, 10) }}
+                </span>
+                <button *ngIf="getWordCount(item.reason) > 20" (click)="toggleExpand(item)"
+                    class="text-blue-600 hover:text-blue-800 text-xs font-semibold mt-1 self-start transition-all focus:outline-none">
+                    {{ item.isExpanded ? 'Show Less' : 'Show More' }}
+                </button>
+            </div>
+        </ng-template>
+
+        <!-- Template for Table Actions -->
+        <ng-template #actionTpl let-item>
+            <div class="flex items-center justify-center">
+                <p-button *ngIf="item['leave Status'] === 'Apply'" label="Withdraw" icon="pi pi-times"
+                    (click)="onWithdraw(item.id)" styleClass="p-button-danger p-button-sm p-button-text"></p-button>
+            </div>
+        </ng-template>
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '50%', 'max-width': '100%' }"
+        (onHide)="onDrawerHide()">
+
+        <!-- Header -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <i [class]="headerIcon" class="text-xl text-blue-600"></i>
+                <h3 class="text-lg font-semibold text-gray-800 m-0">{{header}}</h3>
+            </div>
+        </ng-template>
+
+        <!-- Content -->
+        <ng-template pTemplate="content">
+
+            <form [formGroup]="leaveForm" class="flex flex-col gap-6 p-4">
+
+                <!-- Date Section -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium text-gray-700">From Date*</label>
+
+                        <p-datepicker formControlName="dateFrom" [showIcon]="true" [minDate]="minDate"
+                            (onSelect)="onDateFromChange()" appendTo="body" styleClass="w-full">
+                        </p-datepicker>
+
+                    </div>
+
+
+
+                </div>
+
+                <!-- Session From -->
+                <div class="flex flex-col gap-2">
+
+                    <label class="text-sm font-medium text-gray-700">Session From*</label>
+
+                    <div class="grid grid-cols-2 gap-2">
+
+                        <button *ngFor="let opt of sessionDrp" type="button" (click)="selectSessionFrom(opt.drpValue)"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border" [ngClass]="{
+                            'bg-blue-600 text-white shadow-md border-blue-600': sessionFrom === opt.drpValue,
+                            'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100': sessionFrom !== opt.drpValue
+                        }">
+
+                            {{opt.drpOption}}
+
+                        </button>
+
+                    </div>
+
+                </div>
+                <div class="sm:grid-cols-2 flex flex-col gap-2">
+                    <label class="text-sm font-medium text-gray-700">To Date*</label>
+
+                    <p-datepicker formControlName="dateTo" [showIcon]="true"
+                        [minDate]="leaveForm.get('dateFrom')?.value" appendTo="body" styleClass="w-full">
+                    </p-datepicker>
+
+                </div>
+                <!-- Session To -->
+                <div class="flex flex-col gap-2">
+
+                    <label class="text-sm font-medium text-gray-700">Session To*</label>
+
+                    <div class="grid grid-cols-2 gap-2">
+
+                        <button *ngFor="let opt of sessionDrp" type="button" (click)="selectSessionTo(opt.drpValue)"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all border" [ngClass]="{
+                            'bg-blue-600 text-white shadow-md border-blue-600': sessionTo === opt.drpValue,
+                            'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100': sessionTo !== opt.drpValue
+                        }">
+
+                            {{opt.drpOption}}
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- Leave Type -->
+                <div class="flex flex-col gap-2">
+
+                    <label class="text-sm font-medium text-gray-700">Leave Type*</label>
+
+                    <div class="flex flex-wrap gap-2">
+
+                        <button *ngFor="let opt of leaveTypeDrp" type="button" (click)="selectLeaveType(opt.drpValue)"
+                            class="px-3 py-2 rounded-lg text-xs font-medium transition-all border" [ngClass]="{
+                            'bg-blue-600 text-white border-blue-600 shadow': leaveTypedata === opt.drpValue,
+                            'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100': leaveTypedata !== opt.drpValue
+                        }">
+
+                            {{opt.drpOption}}
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- CC -->
+                <div class="flex flex-col gap-2">
+
+                    <label class="text-sm font-medium text-gray-700">Cc To</label>
+
+                    <p-select formControlName="ccTo" [options]="ccDrp" optionLabel="drpOption" [filter]="true"
+                        filterBy="drpOption" placeholder="Search employee..." styleClass="w-full">
+
+                        <ng-template pTemplate="selectedItem" let-selected>
+                            <span *ngIf="selected" class="text-sm font-medium">
+                                {{selected.drpOption.split('/')[0]}}
+                            </span>
+                        </ng-template>
+
+                        <ng-template pTemplate="item" let-option>
+                            <div class="flex flex-col py-1">
+                                <span class="text-sm font-medium text-gray-800">
+                                    {{option.drpOption.split('/')[0]}}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{option.drpOption.split('/')[1]}}
+                                </span>
+                            </div>
+                        </ng-template>
+
+                    </p-select>
+
+                </div>
+
+                <!-- Reason -->
+                <div class="flex flex-col gap-2">
+
+                    <label class="text-sm font-medium text-gray-700">Reason*</label>
+
+                    <textarea pTextarea rows="3" formControlName="reason" class="w-full"
+                        placeholder="Enter detailed reason...">
+                </textarea>
+
+                    <div class="flex justify-between text-xs">
+
+                        <small class="text-red-500"
+                            *ngIf="leaveForm.get('reason')?.touched && leaveForm.get('reason')?.errors?.['required']">
+                            Reason is required
+                        </small>
+
+                        <small class="text-red-500"
+                            *ngIf="leaveForm.get('reason')?.touched && leaveForm.get('reason')?.errors?.['minlength']">
+                            Minimum 12 characters required
+                        </small>
+
+                        <small class="text-gray-400 ml-auto">
+                            {{leaveForm.get('reason')?.value?.length || 0}} / 200
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <!-- Submit -->
+                <div class="pt-4 border-t border-gray-100">
+
+                    <p-button label="Submit Application" class="text-right p-button-info" icon="pi pi-check"
+                        (click)="onSubmit()" [loading]="isLoading">
+                    </p-button>
+
+                </div>
+
+            </form>
+
+        </ng-template>
+
+    </p-drawer>
+</div>

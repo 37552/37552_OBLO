@@ -1,0 +1,22 @@
+input:disabled {
+    background-color: #e2e8f0 !important;
+}
+
+::ng-deep #printWrapper .p-dialog-content {
+   padding: 0 !important;
+}
+
+::ng-deep #printWrapper .p-dialog-header {
+  padding: 0 10px !important;
+}
+
+::ng-deep #printWrapper .p-dialog-content td,
+::ng-deep #printWrapper .p-dialog-content th {
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.printFooter {
+    text-align: right;
+    margin: 12px;
+}

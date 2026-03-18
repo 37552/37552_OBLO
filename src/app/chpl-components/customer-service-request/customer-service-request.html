@@ -1,0 +1,219 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header -->
+  <div class="flex items-center justify-between p-3 border-b border-gray-200">
+    <div class="flex items-center">
+      <p-breadcrumb [model]="breadcrumbItems" styleClass="custom-breadcrumb text-sm"></p-breadcrumb>
+    </div>
+    <div class="flex items-center">
+      <p-button icon="pi pi-plus" label="Create Service Request" (click)="showDialog('add')" styleClass="orange-button"
+        [raised]="true"></p-button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <app-table-template [data]="data" [columns]="columns" [pageSize]="+pageSize" [totalCount]="totalCount"
+    [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+    [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+    (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)" [showSortButtons]="false">
+
+  </app-table-template>
+
+  <!-- Action Template -->
+  <ng-template #actionTemplateRef let-item>
+    <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+      (click)="op.toggle($event)">
+      <i class="pi pi-ellipsis-v text-xl"></i>
+    </button>
+
+    <p-popover #op>
+      <div class="flex flex-col">
+        <!-- <button (click)="showDialog('view', item); op.hide()" title="View"
+          class="px-4 py-2 hover:bg-gray-100 text-left">
+          <i class="pi pi-eye"></i> View
+        </button> -->
+
+        <button (click)="viewMachineDetails(item); op.hide()" title="View"
+          class="px-4 py-2 hover:bg-gray-100 text-left">
+          <i class="pi pi-eye"></i> View Machine Details
+        </button>
+      </div>
+    </p-popover>
+  </ng-template>
+
+  <!-- Drawer -->
+  <p-drawer [(visible)]="visible" position="right" [modal]="true" class="sm:w-[60%] w-full !max-w-full"
+    [style]="{ width: '60%', 'max-width': '100%' }" (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl">{{ header }}</span>
+        <i class="pi" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <div class="p-4 text-gray-700">
+      <form [formGroup]="csrForm" class="p-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Customer Address -->
+          <div id="field-customerAddress">
+            <label class="block text-sm font-medium mb-1">Customer Address<span class="text-red-500">*</span></label>
+            <p-select formControlName="customerAddress" [options]="customerAddressDrp" optionLabel="drpOption"
+              optionValue="drpValue" placeholder="Select Customer Address" class="w-full"
+              [class.border-red-500]="isInvalid('customerAddress')" [filter]="true" filterBy="drpOption"
+              [showClear]="true" appendTo="body">
+            </p-select>
+            @if(isInvalid('customerAddress')){
+            <p class="text-red-500 text-xs mt-1">Customer Address is required.</p>
+            }
+          </div>
+
+          <!-- Contact Detail -->
+          <div id="field-contactDetail">
+            <label class="block text-sm font-medium mb-1">Contact Detail<span class="text-red-500">*</span></label>
+            <p-select formControlName="contactDetail" [options]="contactDetailDrp" optionLabel="drpOption"
+              optionValue="drpValue" placeholder="Select Contact Detail" class="w-full"
+              [class.border-red-500]="isInvalid('contactDetail')" [filter]="true" filterBy="drpOption"
+              [showClear]="true" appendTo="body">
+            </p-select>
+            @if(isInvalid('contactDetail')){
+            <p class="text-red-500 text-xs mt-1">Contact Detail is required.</p>
+            }
+          </div>
+
+          <!-- Priority -->
+          <div id="field-priority">
+            <label class="block text-sm font-medium mb-1">Priority<span class="text-red-500">*</span></label>
+            <p-select formControlName="priority" [options]="priorityList" optionLabel="drpOption" optionValue="drpValue"
+              placeholder="Select Priority" class="w-full" [class.border-red-500]="isInvalid('priority')"
+              [filter]="true" filterBy="drpOption" [showClear]="true" appendTo="body">
+            </p-select>
+            @if(isInvalid('priority')){
+            <p class="text-red-500 text-xs mt-1">Priority is required.</p>
+            }
+          </div>
+
+          <!-- Service Type -->
+          <div id="field-serviceType">
+            <label class="block text-sm font-medium mb-1">Service Type<span class="text-red-500">*</span></label>
+            <p-select formControlName="serviceType" [options]="serviceTypeList" optionLabel="drpOption"
+              optionValue="drpValue" placeholder="Select Service Type" class="w-full"
+              [class.border-red-500]="isInvalid('serviceType')" [filter]="true" filterBy="drpOption" [showClear]="true"
+              appendTo="body">
+            </p-select>
+            @if(isInvalid('serviceType')){
+            <p class="text-red-500 text-xs mt-1">Service Type is required.</p>
+            }
+          </div>
+
+          <!-- Required Date -->
+          <div id="field-requiredDate" class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700">Required Date <span class="text-red-500">*</span></label>
+            <p-datepicker formControlName="requiredDate" dateFormat="yy-mm-dd" [showIcon]="true" iconDisplay="input"
+              styleClass="w-full" inputStyleClass="w-full h-10" placeholder="YYYY-MM-DD" appendTo="body" [minDate]="minDate"
+              [class.border-red-500]="isInvalid('requiredDate')" (onSelect)="transformDate($event, 'requiredDate')">
+            </p-datepicker>
+            @if(isInvalid('requiredDate')){
+            <p class="text-red-500 text-xs mt-1">Required Date is required.</p>
+            }
+          </div>
+        </div>
+
+        <!-- CUSTOMER PRODUCT TABLE -->
+        @if(customerProductList && customerProductList.length > 0){
+        <div class="mt-4" data-product-table>
+
+          <label class="text-sm font-medium block mb-2">
+            Select Products <span class="text-red-500">*</span>
+          </label>
+
+          <p-table [value]="customerProductList" dataKey="id" styleClass="p-datatable-striped">
+
+            <!-- TABLE HEADER -->
+            <ng-template pTemplate="header">
+              <tr>
+                @if(dialogMode !== 'view'){
+                <th style="width: 3rem; text-align:center">
+                  <p-checkbox [ngModel]="selectAllChecked" [binary]="true"
+                    (ngModelChange)="selectAllChecked = $event; toggleSelectAll($event)"
+                    [ngModelOptions]="{standalone: true}">
+                  </p-checkbox>
+                </th>
+
+                }
+                <th>Machine</th>
+                <th>Serial Number</th>
+                <th>Chassis Number</th>
+              </tr>
+            </ng-template>
+
+            <!-- TABLE BODY -->
+            <ng-template pTemplate="body" let-product>
+              <tr>
+                @if(dialogMode !== 'view'){
+                <td style="text-align:center">
+                  <p-checkbox [(ngModel)]="product.selected" [binary]="true" (onChange)="onProductSelect(product)"
+                    [ngModelOptions]="{standalone: true}">
+                  </p-checkbox>
+                </td>
+                }
+                <td>{{ product.machine }}</td>
+                <td>{{ product['serial Number'] || product.serialNumber }}</td>
+                <td>{{ product['chassis Number'] || product.chassisNumber }}</td>
+              </tr>
+            </ng-template>
+
+          </p-table>
+        </div>
+        }
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex justify-end gap-2 pt-4 border-t">
+          <p-button label="Cancel" severity="secondary" (click)="onDrawerHide()">
+          </p-button>
+          @if(dialogMode !== 'view'){
+          <p-button label="Reset" icon="pi pi-refresh" (click)="onReset()" severity="secondary">
+          </p-button>
+          <p-button label="Submit" icon="pi pi-check" (click)="OnSubmitModal()" [loading]="isFormLoading">
+          </p-button>
+          }
+        </div>
+      </form>
+    </div>
+  </p-drawer>
+
+
+    <!-- Machine Details Modal -->
+    <p-dialog [(visible)]="showMachineModal" [modal]="true" [closable]="true"
+        [style]="{ width: '70vw', 'max-width': '100%' }" [draggable]="false" [resizable]="false">
+        <ng-template pTemplate="header">
+            <h3 class="text-xl font-semibold text-gray-800">Machine Details</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+            <div class="overflow-x-auto">
+                <p-table [value]="selectedMachineData" styleClass="p-datatable-striped">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>S.No</th>
+                            <th *ngFor="let key of getModalKeys(selectedMachineData[0])" class="capitalize">
+                                {{ key }}
+                            </th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item let-j="rowIndex">
+                        <tr>
+                            <td>{{ j + 1 }}</td>
+                            <td *ngFor="let key of getModalKeys(selectedMachineData[0])">
+                                {{ item[key] }}
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" icon="pi pi-times" (click)="closeMachineModal()" styleClass="p-button-secondary">
+            </p-button>
+        </ng-template>
+    </p-dialog>
+
+</div>

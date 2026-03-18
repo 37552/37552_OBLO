@@ -1,0 +1,362 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- <div class="p-4 sm:p-6">
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1'">
+    </p-breadcrumb>
+  </div> -->
+  
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800"> 
+        <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1'">
+    </p-breadcrumb></h2>
+      <div class="flex items-center space-x-2">
+        <p-button 
+          (click)="showDialog('add',[])" 
+          label="Add" 
+          icon="pi pi-plus" 
+          variant="text" 
+          [raised]="true"
+          styleClass="orange-button" />
+      </div>
+    </div>
+
+    <!-- Search and Page Size Controls -->
+    <div class="p-4 border-b border-gray-200">
+      <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <!-- Page Size Selector - Moved to LEFT -->
+        <div class="flex items-center space-x-2 order-2 sm:order-1">
+          <label class="text-sm text-gray-700">Show:</label>
+          <select 
+            [(ngModel)]="pageSize" 
+            (change)="onPageSizeChange(pageSize)"
+            class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+
+        <!-- Search - Moved to RIGHT -->
+        <div class="relative w-full sm:w-64 order-1 sm:order-2">
+          <input 
+            type="text" 
+            [(ngModel)]="searchText" 
+            (input)="onSearchChange(searchText)"
+            placeholder="Search departments..." 
+            class="w-full pl-10 pr-4 py-2 text-sm rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500" />
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" 
+               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Department Cards Section -->
+    <div class="p-6">
+      @if(isLoading){
+        <div class="flex items-center justify-center min-h-[400px]">
+          <p-progress-spinner 
+            strokeWidth="8" 
+            fill="transparent" 
+            animationDuration=".5s"
+            [style]="{ width: '50px', height: '50px' }" />
+        </div>
+      }@else {
+        @if(departmentCards.length === 0){
+          <div class="text-center py-12 text-gray-500">
+            <i class="pi pi-inbox text-4xl mb-3"></i>
+            <p>No departments found</p>
+          </div>
+        }@else {
+          <!-- Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+            @for(dept of departmentCards; track dept.id){
+              <div 
+                class="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white"
+                (click)="openDepartmentDetails(dept)">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="w-6"></div> <!-- Spacer for alignment -->
+                  @if(dept.mapStatus === 1){
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                      Mapped
+                    </span>
+                  }
+                </div>
+                <h3 class="font-semibold text-gray-800 mb-2 text-sm">{{ dept.deptName }}</h3>
+                <div class="text-xs text-gray-500">
+                  <span>ID: {{ dept.id }}</span>
+                  @if(dept.deptCode){
+                    <span class="ml-2">Code: {{ dept.deptCode }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4">
+            <!-- Page Info -->
+            <div class="text-sm text-gray-600 mb-4 sm:mb-0">
+              {{ getDisplayRange() }}
+            </div>
+
+            <!-- Pagination Buttons -->
+            <div class="flex items-center space-x-1">
+              <button 
+                class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50" 
+                (click)="goToFirstPage()" 
+                [disabled]="pageNo === 1"
+                aria-label="First page">
+                ⟪
+              </button>
+              <button 
+                class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50" 
+                (click)="goToPreviousPage()" 
+                [disabled]="pageNo === 1"
+                aria-label="Previous page">
+                ‹
+              </button>
+              
+              <span class="flex items-center space-x-1 text-sm">
+                @for(page of visiblePages; track page){
+                  <button 
+                    class="px-3 py-1 rounded-md transition-colors" 
+                    [ngClass]="{
+                      'text-blue-600 bg-blue-100 font-medium': pageNo === page,
+                      'text-gray-700 hover:bg-gray-100': pageNo !== page
+                    }" 
+                    (click)="onPageChange(page)">
+                    {{ page }}
+                  </button>
+                }
+              </span>
+
+              <button 
+                class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50" 
+                (click)="goToNextPage()" 
+                [disabled]="pageNo === totalPages"
+                aria-label="Next page">
+                ›
+              </button>
+              <button 
+                class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50" 
+                (click)="goToLastPage()" 
+                [disabled]="pageNo === totalPages"
+                aria-label="Last page">
+                ⟫
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Rest of your drawers remain the same -->
+  <!-- Add/Edit Department Drawer -->
+  <p-drawer 
+    [(visible)]="visible" 
+    position="right" 
+    [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}" 
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{header}}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content" [style]="{padding: '2rem', 'overflow-y': 'auto', 'max-height': 'calc(100vh - 150px)'}">
+      @if(isFormLoading){
+        <div class="flex items-center justify-center min-h-[400px]">
+          <p-progress-spinner 
+            strokeWidth="8" 
+            fill="transparent" 
+            animationDuration=".5s"
+            [style]="{ width: '50px', height: '50px' }" />
+        </div>
+      }@else {
+        <form [formGroup]="departmentForm" (ngSubmit)="onSubmit($event)" class="grid grid-cols-1 gap-4">
+          <!-- Department Name -->
+          <div class="card flex flex-col w-full">
+            <div class="flex items-center gap-4">
+              <label class="w-1/2 text-xl font-medium text-gray-700">Department Name*</label>
+              <input 
+                type="text" 
+                pInputText 
+                formControlName="deptName" 
+                [class.p-invalid]="isInvalid('deptName')" 
+                class="w-2/3" 
+                placeholder="Enter department name" />
+            </div>
+            @if(isInvalid('deptName')){
+              <small class="text-red-500 text-xs mt-1 ml-[50%]">Department Name is required.</small>
+            }
+          </div>
+
+          <!-- Department Code -->
+          <div class="card flex flex-col w-full">
+            <div class="flex items-center gap-4">
+              <label class="w-1/2 text-xl font-medium text-gray-700">Department Code*</label>
+              <input 
+                type="text" 
+                pInputText 
+                formControlName="deptCode" 
+                [class.p-invalid]="isInvalid('deptCode')" 
+                class="w-2/3" 
+                placeholder="Enter department code" />
+            </div>
+            @if(isInvalid('deptCode')){
+              <small class="text-red-500 text-xs mt-1 ml-[50%]">Department Code is required.</small>
+            }
+          </div>
+
+          <!-- Divisions -->
+          <div class="card flex flex-col w-full">
+            <div class="flex items-start gap-4">
+              <label class="w-1/2 text-xl font-medium text-gray-700 pt-2">Divisions*</label>
+              <div class="w-2/3 flex flex-col">
+                <p-multiselect 
+                  formControlName="divisions"
+                  [options]="divisions" 
+                  optionLabel="name" 
+                  optionValue="id"
+                  placeholder="Select divisions"
+                  [filter]="true"
+                  display="chip"
+                  [class.p-invalid]="isInvalid('divisions')"
+                  class="w-full">
+                </p-multiselect>
+                @if(isInvalid('divisions')){
+                  <small class="text-red-500 text-xs mt-1">At least one division is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button 
+          pButton 
+          type="submit" 
+          (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+          Submit
+        </button>
+        <button 
+          pButton 
+          label="Reset" 
+          (click)="departmentForm.reset()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition">
+        </button>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <!-- Department Details Drawer -->
+  <p-drawer 
+    [(visible)]="detailsDrawerVisible" 
+    position="right" 
+    [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}" 
+    (onHide)="onDetailsDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">Department Details</span>
+        <i class="text-blue-500 pi pi-info-circle"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content" [style]="{padding: '2rem', 'overflow-y': 'auto', 'max-height': 'calc(100vh - 150px)'}">
+      @if(selectedDepartment){
+        <div class="space-y-6">
+          <div class="card">
+            <h3 class="font-semibold text-lg mb-3 text-gray-800">Basic Information</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-gray-600">Department Name</label>
+                <p class="text-gray-800">{{ selectedDepartment.deptName }}</p>
+              </div>
+              <!-- <div>
+                <label class="text-sm font-medium text-gray-600">Department ID</label>
+                <p class="text-gray-800">{{ selectedDepartment.id }}</p>
+              </div> -->
+              <!-- <div>
+                <label class="text-sm font-medium text-gray-600">Department Code</label>
+                <p class="text-gray-800">{{ selectedDepartment.deptCode || 'Not specified' }}</p>
+              </div> -->
+            </div>
+          </div>
+
+          <!-- Division Mapping Section -->
+          <div class="card">
+            <h3 class="font-semibold text-lg mb-3 text-gray-800">
+              {{ selectedDepartment?.mapStatus === 1 ? 'Mapped Divisions' : 'Add Division Mapping' }}
+            </h3>
+
+            @if(selectedDepartment?.mapStatus === 1){
+              <!-- Show parsed division list -->
+              <div class="flex flex-wrap gap-2">
+                @if(parsedDivisions.length > 0){
+                  @for(div of parsedDivisions; track div.id){
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
+                      {{ div.division }}
+                    </span>
+                  }
+                } @else {
+                  <span class="text-gray-500">No divisions mapped</span>
+                }
+              </div>
+            } @else {
+              <!-- Show dropdown when unmapped -->
+              <div class="flex gap-3">
+                <p-multiselect 
+                  [(ngModel)]="availableDivisions"
+                  [options]="filteredDivisions" 
+                  optionLabel="name" 
+                  optionValue="id"
+                  placeholder="Select divisions to add"
+                  [filter]="true"
+                  display="chip"
+                  class="flex-1">
+                </p-multiselect>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        @if(selectedDepartment?.mapStatus === 0){
+          <button 
+            pButton 
+            label="Add Mapping" 
+            (click)="addDivisionMapping()"
+            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+          </button>
+        }
+        <button 
+          pButton 
+          label="Close" 
+          (click)="onDetailsDrawerHide()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition">
+        </button>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

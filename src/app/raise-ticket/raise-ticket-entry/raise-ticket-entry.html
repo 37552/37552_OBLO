@@ -1,0 +1,331 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <p-confirmDialog></p-confirmDialog>
+  <p-toast></p-toast>
+
+  <div class="bg-white rounded-md shadow-sm mb-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+      <div class="mb-3 sm:mb-0">
+        <h2 class="text-base font-semibold text-gray-800">
+          <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+        </h2>
+      </div>
+      <div class="flex items-center space-x-2">
+        <p-button label=" New Ticket for {{nameList}}" icon="pi pi-plus" styleClass="orange-button p-button-warning"
+          (click)="showDialog('add', [])"></p-button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-0">
+    <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+      (searchChange)="onsearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+      [actionTemplate]="actionTemplateRef" [customTemplate]="attachmentTemplateRef">
+      <ng-template #actionTemplateRef let-item let-i="rowIndex">
+        <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v text-xl"></i>
+        </button>
+
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="onView(item); op.hide()" title="View" class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-eye"></i>
+            </button>
+
+            <button (click)="onEdit(item); op.hide()" title="Edit" class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-pencil"></i>
+            </button>
+
+            <button (click)="onDeleteRow(item); op.hide()" title="Delete" class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+
+      <ng-template #attachmentTemplateRef let-col="col" let-item="item">
+        <ng-container *ngIf="col.key === 'attachment'">
+          <p-button *ngIf="hasAttachments(item)" icon="pi pi-paperclip"
+            styleClass="p-button-text p-button-rounded p-button-sm text-green-600" (click)="openAttachmentList(item)"
+            title="View Attachments">
+          </p-button>
+          <span *ngIf="!hasAttachments(item)" class="text-gray-400 text-sm">-</span>
+        </ng-container>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <p-drawer [(visible)]="attachmentViewerVisible" position="right" [modal]="true"
+    [style]="{ width: '30%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeAttachmentViewer()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full">
+        <span class="font-bold text-lg text-gray-800 truncate" [title]="attachmentViewerTitle">
+          Attachments - {{ attachmentViewerTitle }}
+        </span>
+      </div>
+    </ng-template>
+
+    <div class="p-4 space-y-3">
+      <div *ngFor="let att of attachmentViewerData; let i = index"
+        class="flex items-center justify-between border border-gray-200 rounded px-3 py-2 text-sm">
+        <div class="flex flex-col">
+          <span class="font-medium text-gray-800">
+            {{ att.docDetail || 'Attachment ' + (i + 1) }}
+          </span>
+          <span class="text-xs text-gray-500 break-all">
+            {{ att.image }}
+          </span>
+        </div>
+        <p-button icon="pi pi-eye" styleClass="p-button-text p-button-rounded p-button-sm text-blue-600"
+          (click)="viewAttachment(att.image)" title="Open"></p-button>
+      </div>
+
+      <p *ngIf="!attachmentViewerData.length" class="text-center text-gray-500 text-sm">
+        No attachments found.
+      </p>
+    </div>
+  </p-drawer>
+
+  <p-drawer [(visible)]="visible" position="right" [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full gap-3 min-w-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+            {{ header }}
+          </span>
+          <div class="bg-blue-50 p-2 rounded-full shrink-0">
+            <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="h-full flex flex-col justify-between bg-gray-50/50">
+      <div class="flex-grow overflow-y-auto p-4 space-y-4 transition-all duration-200" [class.hidden]="isCollapsed">
+        <form [formGroup]="ticketForm" (ngSubmit)="onSubmitTicketForm()">
+          <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+              (click)="toggleOverview()">
+              <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-ticket text-indigo-600"></i>
+                <span>Ticket Details</span>
+              </h4>
+              <i [class]="
+                  showOverview
+                    ? 'pi pi-chevron-up text-indigo-600'
+                    : 'pi pi-chevron-down text-indigo-600'
+                "></i>
+            </div>
+
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5" *ngIf="showOverview">
+              <!-- <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">Ticket No</label>
+                <input pInputText formControlName="ticketNo" class="w-full p-inputtext-sm bg-gray-50" readonly />
+              </div> -->
+
+              <ng-container *ngIf="id == '10106'">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Raised for</label>
+                  <p-select [options]="orgDrp" formControlName="orgId" optionLabel="drpOption" optionValue="drpValue"
+                    placeholder="Select Org" styleClass="w-full p-inputtext-sm" [filter]="true"
+                    (onChange)="onOrgChange($event)"></p-select>
+                </div>
+              </ng-container>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Service Category <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="serviceCatDrp" formControlName="serviceCatId" optionLabel="drpOption"
+                  optionValue="drpValue" [disabled]="true" placeholder="Select Category" appendTo="body"
+                  styleClass="w-full p-inputtext-sm" [filter]="true" (onChange)="onServiceCatChange($event)" [ngClass]="{
+                    'p-invalid':
+                      ticketForm.get('serviceCatId')?.invalid &&
+                      ticketForm.get('serviceCatId')?.touched
+                  }"></p-select>
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Sub Category <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="serviceSubCatDrp" formControlName="serviceSubCatId" appendTo="body"
+                  optionLabel="drpOption" optionValue="drpValue" placeholder="Select Sub Category"
+                  styleClass="w-full p-inputtext-sm" [filter]="true"
+                  (onChange)="onServiceSubCatChange($event)"></p-select>
+                @if (isInvalid('serviceSubCatId')) {
+                <small class="text-red-500 text-xs mt-1 block"> Sub Category is required. </small>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Sub SubCategory <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="serviceSubSubCatDrp" formControlName="serviceSubSubCatId" appendTo="body"
+                  optionLabel="drpOption" optionValue="drpValue" placeholder="Select Item"
+                  styleClass="w-full p-inputtext-sm" [filter]="true"
+                  (onChange)="onServiceSubSubCatChange($event)"></p-select>
+              </div>
+
+              <div class="md:col-span-2 flex flex-col gap-1 border-b border-gray-200 pb-4">
+                <label class="text-xs font-semibold text-gray-600">Description</label>
+
+                <textarea pInputTextarea formControlName="issueDescription" rows="3"
+                  class="w-full p-inputtext-sm resize-none border-2 border-gray-300 rounded-md focus:border-blue-500"
+                  placeholder="Enter issue details..."></textarea>
+              </div>
+
+
+              <ng-container *ngIf="showDateAndImprestFields">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    From Date <span class="text-red-500">*</span>
+                  </label>
+                  <input pInputText type="date" formControlName="fromDate" class="w-full p-inputtext-sm"
+                    (change)="onFromDateChange($event)" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    To Date <span class="text-red-500">*</span>
+                  </label>
+                  <input pInputText type="date" formControlName="toDate" class="w-full p-inputtext-sm"
+                    (change)="onToDateChange($event)" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    Imprest Amount <span class="text-red-500">*</span>
+                  </label>
+                  <p-inputNumber formControlName="imprest" mode="currency" currency="INR" locale="en-IN"
+                    styleClass="w-full p-inputtext-sm" class="w-full"
+                    (onInput)="onImprestChange($event)"></p-inputNumber>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden mt-4">
+            <div
+              class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+              (click)="toggleAttachments()">
+              <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-paperclip text-indigo-600"></i>
+                <span>Attachments</span>
+              </h4>
+              <i [class]="
+                  showAttachments
+                    ? 'pi pi-chevron-up text-indigo-600'
+                    : 'pi pi-chevron-down text-indigo-600'
+                "></i>
+            </div>
+
+            <div class="p-5" *ngIf="showAttachments">
+
+              <form *ngIf="postType !== 'view'" [formGroup]="attachmentForm"
+                class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mb-4 bg-gray-50 p-4 rounded border border-dashed border-gray-300">
+
+                <div class="md:col-span-5 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Document Detail</label>
+                  <input pInputText formControlName="docDetail" class="w-full p-inputtext-sm"
+                    placeholder="File description" />
+                </div>
+
+                <div class="md:col-span-5 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    Document <span class="text-red-500">*</span>
+                  </label>
+
+                  <div class="flex items-center gap-2">
+                    <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
+
+                    <p-button type="button" icon="pi pi-upload" label="Choose File"
+                      styleClass="p-button-sm p-button-secondary p-button-outlined w-full" (click)="fileInput.click()">
+                    </p-button>
+
+                    <button *ngIf="selectedPreview" type="button"
+                      class="p-button p-button-rounded p-button-sm p-button-text text-blue-600"
+                      (click)="openPreviewModal()">
+                      <i class="pi pi-eye"></i>
+                    </button>
+                  </div>
+
+                  <small class="text-xs text-blue-600" *ngIf="attachmentForm.get('image')?.value">
+                    File Selected
+                  </small>
+                  <small class="text-xs text-red-500"
+                    *ngIf="!attachmentForm.get('image')?.valid && attachmentForm.get('image')?.touched">
+                    Required
+                  </small>
+                </div>
+
+                <div class="md:col-span-2">
+                  <p-button type="button" [label]="isUploadingAttachment ? 'Uploading...' : 'Add'"
+                    [icon]="isUploadingAttachment ? 'pi pi-spin pi-spinner' : 'pi pi-plus'"
+                    styleClass="w-full p-button-sm" [disabled]="isUploadingAttachment" (click)="onAddAttachment()">
+                  </p-button>
+                </div>
+              </form>
+
+              <div *ngIf="attachmentArray.length; else noAttachments" class="overflow-x-auto">
+                <p-table [value]="attachmentArray" styleClass="p-datatable-sm p-datatable-gridlines">
+
+                  <ng-template pTemplate="header">
+                    <tr class="bg-gray-50">
+                      <th class="w-16 text-center">#</th>
+                      <th>Detail</th>
+                      <th class="w-24 text-center">View</th>
+                      <th class="w-24 text-center" *ngIf="postType !== 'view'">Action</th>
+                    </tr>
+                  </ng-template>
+
+                  <ng-template pTemplate="body" let-item let-i="rowIndex">
+                    <tr>
+                      <td class="text-center">{{ i + 1 }}</td>
+                      <td>{{ item.docDetail || '-' }}</td>
+
+                      <td class="text-center">
+                        <p-button icon="pi pi-eye" styleClass="p-button-text p-button-rounded p-button-sm text-blue-600"
+                          (click)="viewAttachment(item.image || item.preview)">
+                        </p-button>
+                      </td>
+
+                      <td class="text-center" *ngIf="postType !== 'view'">
+                        <p-button icon="pi pi-trash"
+                          styleClass="p-button-text p-button-rounded p-button-danger p-button-sm"
+                          (click)="onDeleteAttachment(i)">
+                        </p-button>
+                      </td>
+                    </tr>
+                  </ng-template>
+
+                </p-table>
+              </div>
+
+              <ng-template #noAttachments>
+                <div class="text-center py-8 text-gray-500">
+                  <i class="pi pi-paperclip text-4xl mb-3 block"></i>
+                  <p class="text-sm">No attachments found</p>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="flex justify-end gap-3 p-4 border-t bg-white z-10">
+        <p-button *ngIf="postType === 'add'" type="button" label="Reset" severity="secondary" icon="pi pi-refresh"
+          styleClass="p-button-outlined p-button-sm" (click)="ticketForm.reset(); attachmentArray = []"></p-button>
+
+        <p-button type="button" label="Close" severity="secondary" styleClass="p-button-outlined p-button-sm"
+          (click)="onDrawerHide()"></p-button>
+
+        <p-button *ngIf="postType !== 'view'" type="submit"
+          [label]="postType === 'update' ? 'Update Ticket' : 'Submit Ticket'" icon="pi pi-check"
+          styleClass="p-button-sm p-button-primary" (click)="onSubmitTicketForm()"></p-button>
+      </div>
+    </div>
+  </p-drawer>
+</div>

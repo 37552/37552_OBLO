@@ -1,0 +1,91 @@
+:host ::ng-deep {
+    /* PrimeNG Component Overrides to match LeaveApplication */
+    .p-breadcrumb {
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        
+        .p-breadcrumb-list li .p-menuitem-link {
+            font-size: 11px !important;
+            color: #94a3b8 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            &:hover {
+                color: #3b82f6 !important;
+            }
+        }
+    }
+
+    /* Datepicker styling matching leave-application.scss line 22 */
+    .p-datepicker {
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Select styling matching leave-application.scss line 27 */
+    .p-select {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Textarea styling matching leave-application.scss line 32 */
+    textarea.p-textarea {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        
+        &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+    }
+
+    /* Drawer Header Styling */
+    .p-drawer-header {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 1.25rem !important;
+    }
+
+    /* Table Template Customizations */
+    .app-table-container {
+        border-top: none !important;
+    }
+
+    /* Modal / Dialog Refinement */
+    .p-dialog {
+        border-radius: 16px !important;
+        overflow: hidden;
+        border: none !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+
+        .p-dialog-header {
+            background: #fff;
+            padding: 1.25rem !important;
+            border-bottom: 1px solid #f3f4f6;
+        }
+    }
+
+    /* Responsive Button Groups inside Drawers */
+    .leave-type-btn {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        &:active {
+            transform: scale(0.97);
+        }
+    }
+}
+
+/* Animations for dialogs/drawers */
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.drawer-content-animate {
+    animation: slideInFromRight 0.3s ease-out;
+}

@@ -1,0 +1,61 @@
+::ng-deep {
+    .custom-legacy-datepicker {
+        .p-datepicker {
+            padding: 0;
+            border: none;
+            display: block;
+            width: 100% !important;
+        }
+        .p-datepicker-header {
+            display: none !important; /* Hide built-in header as we use a custom one */
+        }
+        .p-datepicker-calendar-container {
+            padding: 0;
+        }
+        .p-datepicker-calendar {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            
+            thead {
+                display: none; /* Hide default weekday headers */
+            }
+            
+            tbody td {
+                padding: 0;
+                border: none;
+            }
+            
+            .p-datepicker-day {
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                justify-content: stretch !important;
+                align-items: stretch !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+                
+                &.p-datepicker-day-selected {
+                    /* PrimeNG selection style normally covers the cell, we want our internal div to handle style */
+                    background: transparent !important;
+                    color: inherit !important;
+                    outline: none !important;
+                }
+
+                &:hover {
+                    background: transparent !important;
+                }
+            }
+        }
+    }
+
+    /* Custom Prime Select styling for tighter fit */
+    .custom-prime-select {
+        .p-select {
+            padding: 0.25rem 0.5rem;
+            font-size: 13px;
+            border-color: #ccc;
+        }
+    }
+}

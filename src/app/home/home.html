@@ -1,0 +1,13 @@
+<app-erp-dashboard *ngIf="isERPUser"></app-erp-dashboard>
+<app-ess-dashboard *ngIf="isESSUser"></app-ess-dashboard>
+<app-hr-dashboard *ngIf="isHRMSUser"></app-hr-dashboard>
+
+
+<div *ngIf="!isERPUser && !isESSUser && !isHRMSUser" class="home-container">
+  <section class="hero">
+    <div class="hero-logo-container">
+      <img src="assets/OBLO_mainlogo_0.png" class="hero-logo" />
+      <h1>Welcome to <span class="highlight">OBLO</span></h1>
+    </div>
+  </section>
+</div>

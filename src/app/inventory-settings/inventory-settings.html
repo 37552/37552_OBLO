@@ -1,0 +1,594 @@
+<!-- ====================== INVENTORY SETTINGS COMPONENT ====================== -->
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Inventory Settings</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button"></p-button>
+            </div>
+        </div>
+
+        <!-- Table Template -->
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"></app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+    </div>
+
+    <!-- Drawer -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" (onHide)="onDrawerHide()"
+        class="sm:w-[60%] w-full !max-w-full" [style]="{ width: '60%', 'max-width': '100%' }">
+        <!-- Drawer Header -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{ header }}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+        <!-- Drawer Content -->
+        <ng-template pTemplate="content" [style]="{ padding: '2rem' }">
+            <div *ngIf="isFormLoading" class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }"></p-progress-spinner>
+            </div>
+            <div *ngIf="!isFormLoading">
+                <!-- ====================== CARD 1: DEFAULTS ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6 p-0" id="defaults-section">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <!-- (click)="toggleCard('defaults')" -->
+                        <span class="font-semibold text-lg">Defaults</span>
+                        <!-- <i class="pi" [ngClass]="expandedCard === 'defaults' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+                    <form [formGroup]="defaultsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Item Naming By</label>
+                            <p-select [options]="itemNaming" formControlName="itemNamingBy" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Naming Series" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('itemNamingBy',defaultsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse Name</label>
+                            <p-select [options]="wareHouseDrp" formControlName="warehouseName" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Group" class="w-full custom-p-select"></p-select>
+                            <!-- <input pInputText formControlName="warehouseName" placeholder="Enter warehouse name"
+                                class="w-full border rounded-md p-2" /> -->
+                            <p *ngIf="isInvalid('warehouseName',defaultsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Valuation Method</label>
+                            <p-select [options]="valuationDrp" formControlName="valuationMethod" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                class="w-2/3" placeholder="Select Method" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('valuationMethod',defaultsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sample Retention
+                                Warehouse</label>
+                            <p-select [options]="retentionWarehouse" formControlName="sampleRetentionWarehouse"
+                                appendTo="body" optionLabel="drpOption" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" placeholder="Select Group" class="w-full custom-p-select"></p-select>
+                            <!-- <input pInputText formControlName="sampleRetentionWarehouse"
+                                placeholder="Enter retention warehouse" class="w-full border rounded-md p-2" /> -->
+                            <p *ngIf="isInvalid('sampleRetentionWarehouse',defaultsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Item Group</label>
+                            <p-select [options]="materialType" formControlName="defaultItemGroup" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Group" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('defaultItemGroup',defaultsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Stock UOM</label>
+                            <p-select [options]="units" formControlName="defaultStockUOM" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select default stock uom" class="w-full custom-p-select"></p-select>
+                            <!-- <input pInputText formControlName="defaultStockUOM" placeholder="Enter Stock UOM"
+                                class="w-full border rounded-md p-2" /> -->
+                            <p *ngIf="isInvalid('defaultStockUOM',defaultsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+
+                            </p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowEditStockUOMSales"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow to edit stock UOM Qty for
+                                sales documents</label>
+
+                            <!-- <p *ngIf="isInvalid('allowEditStockUOMSales',defaultsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+
+                            </p> -->
+                        </div>
+
+                        <!-- <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowEditStockUOMPurchase"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow to edit stock UOM Qty for
+                                purchase documents</label>
+                         
+
+                        </div> -->
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowUOMConversationRate"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow UOM with conversation rate
+                                defined in item</label>
+
+                            <!-- <p *ngIf="isInvalid('allowUOMConversationRate',defaultsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                    </form>
+                </p-card>
+
+
+                <!-- ====================== CARD 2: INVENTORY VALIDATIONS ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="validations-section">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <span class="font-semibold text-lg">Inventory Validations</span>
+                        <!-- <i class="pi"
+                            [ngClass]="expandedCard === 'validations' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="validationsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Over Delivery/Receipt Allowance
+                                (%)</label>
+                            <input type="number" formControlName="overDeliveryAllowance"
+                                class="w-full border rounded-md p-2" />
+                            <p *ngIf="isInvalid('overDeliveryAllowance',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role Allowed to Over
+                                Deliver/Receive</label>
+                            <p-select [options]="purchaseRole" formControlName="roleOverDeliver" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Role" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('roleOverDeliver',validationsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Over Transfer Allowance</label>
+                            <input type="number" formControlName="overTransferAllowance"
+                                class="w-full border rounded-md p-2" />
+                            <p *ngIf="isInvalid('overTransferAllowance',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Over Picking Allowance</label>
+                            <input type="number" formControlName="overPickingAllowance"
+                                class="w-full border rounded-md p-2" />
+                            <p *ngIf="isInvalid('overPickingAllowance',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowNegativeStock"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow Negative Stock</label>
+                            <!-- <p *ngIf="isInvalid('allowNegativeStock',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="showBarcodeField"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Show Barcode Field in Stock
+                                Transactions</label>
+                            <!-- <p *ngIf="isInvalid('showBarcodeField',validationsForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="convertItemDescription"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Convert Item Description to
+                                Clean HTML in transactions</label>
+                            <!-- <p *ngIf="isInvalid('convertItemDescription',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowInternalTransfers"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow Internal Transfers at
+                                Arm's Length Price</label>
+                            <!-- <p *ngIf="isInvalid('allowInternalTransfers',validationsForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                    </form>
+                </p-card>
+
+                <!-- ====================== CARD 3: SERIAL AND BATCH ITEM ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="serialbatch-section">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <!-- (click)="toggleCard('serialBatch')" -->
+                        <span class="font-semibold text-lg">Serial and Batch Item</span>
+                        <!-- <i class="pi"
+                            [ngClass]="expandedCard === 'serialBatch' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="serialBatchForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowExistingSerialNo"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow existing Serial No. to be
+                                Manufactured/Received again</label>
+                            <!-- <p *ngIf="isInvalid('allowExistingSerialNo',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="disableSerialBatchSelector"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Disable Serial No. and Batch
+                                Selector</label>
+                            <!-- <p *ngIf="isInvalid('disableSerialBatchSelector',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="doNotUseBatchWiseValuation"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Do not use Batch wise
+                                valuation</label>
+                            <!-- <p *ngIf="isInvalid('doNotUseBatchWiseValuation',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="useSerialBatchFields"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Use Serial / Batch
+                                Fields</label>
+
+                            <!-- <input pInputText formControlName="useSerialBatchFields"
+                                class="w-full border rounded-md p-2" /> -->
+                            <!-- <p *ngIf="isInvalid('useSerialBatchFields',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="autoCreateSerialBatchBundle"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Auto Create Serial and Batch
+                                Bundle for Outward</label>
+                            <!-- <p *ngIf="isInvalid('autoCreateSerialBatchBundle',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pick Serial / Batch based
+                                on</label>
+                            <p-select [options]="valuationDrp" formControlName="pickSerialBatchBasedOn" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Method" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('pickSerialBatchBasedOn',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <!-- <div class="field col-12 md:col-6">
+                        <p-checkbox formControlName="setSerialBatchNaming" label="Set Serial and Batch Bundle Naming based on Naming Series"></p-checkbox>
+                        </div> -->
+
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="setSerialBatchNaming"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Set Serial and Batch Bundle
+                                Naming based on Naming Series</label>
+                            <!-- <p *ngIf="isInvalid('setSerialBatchNaming',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="defaultBatchNamingSeries"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Have Default Naming Series for
+                                Batch ID</label>
+
+                            <!-- <input pInputText formControlName="defaultBatchNamingSeries"
+                                class="w-full border rounded-md p-2" /> -->
+                            <!-- <p *ngIf="isInvalid('defaultBatchNamingSeries',serialBatchForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <!-- <div class="field col-12 md:col-6">
+                        <label for="defaultBatchNamingSeries">Have Default Naming Series for Batch ID</label>
+                        <input id="defaultBatchNamingSeries" pInputText formControlName="defaultBatchNamingSeries" placeholder="Enter Batch Naming Series" />
+                        <small *ngIf="isInvalid('defaultBatchNamingSeries', serialBatchForm)" class="p-error">Required</small>
+                        </div> -->
+
+                    </form>
+                </p-card>
+
+                <!-- ====================== CARD 4: INVENTORY RESERVATION ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="reservation-section">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <!-- (click)="toggleCard('reservation')" -->
+                        <span class="font-semibold text-lg">Inventory Reservation</span>
+                        <!-- <i class="pi"
+                            [ngClass]="expandedCard === 'reservation' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="reservationForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="enableStockReservation"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Enable Stock Reservation</label>
+                            <!-- <p *ngIf="isInvalid('enableStockReservation',reservationForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+                    </form>
+                </p-card>
+
+                <!-- ====================== CARD 5: QUALITY ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="quality-section">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <span class="font-semibold text-lg">Quality</span>
+                        <!-- <i class="pi" [ngClass]="expandedCard === 'quality' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="qualityForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Action if Quality Inspection is
+                                Not Submitted</label>
+                            <p-select [options]="supplierAction" formControlName="qualityNotSubmitted" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Action" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('qualityNotSubmitted',qualityForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Action if Quality Inspection is
+                                Rejected</label>
+                            <p-select [options]="supplierAction" formControlName="qualityRejected" appendTo="body"
+                                optionLabel="drpOption" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Action" class="w-full custom-p-select"></p-select>
+                            <p *ngIf="isInvalid('qualityRejected',qualityForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowPostQualityInspection"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow to make Quality Inspection
+                                after Purchase or Delivery</label>
+                            <!-- <p *ngIf="isInvalid('allowPostQualityInspection',qualityForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                    </form>
+                </p-card>
+
+                <!-- ====================== CARD 6: INVENTORY PLANNING ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="quality-planning">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <span class="font-semibold text-lg">Inventory Planning</span>
+                        <!-- <i class="pi" [ngClass]="expandedCard === 'planning' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="planningForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="raiseMaterialRequest"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Raise Material Request when
+                                Stock Reaches Re-Order Level</label>
+                            <!-- <p *ngIf="isInvalid('raiseMaterialRequest',planningForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="notifyByEmail"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notify by email on Creation of
+                                Automatic Material Request</label>
+                            <!-- <p *ngIf="isInvalid('notifyByEmail',planningForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowMaterialTransferDNtoSI"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow Material Transfer from
+                                Delivery Note to Sales Invoice</label>
+                            <!-- <p *ngIf="isInvalid('allowMaterialTransferDNtoSI',planningForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" formControlName="allowMaterialTransferPRtoPI"
+                                class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Allow Material Transfer from
+                                Purchase Receipt to Purchase Invoice</label>
+                            <!-- <p *ngIf="isInvalid('allowMaterialTransferPRtoPI',planningForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p> -->
+                        </div>
+
+                    </form>
+                </p-card>
+
+                <!-- ====================== CARD 7: INVENTORY CLOSING ====================== -->
+                <p-card class="rounded-lg border border-gray-200 mb-6" id="closing-planning">
+                    <div class="flex justify-between items-center cursor-pointer p-3 bg-gray-50 rounded-t-lg">
+                        <span class="font-semibold text-lg">Inventory Closing</span>
+                        <!-- <i class="pi" [ngClass]="expandedCard === 'closing' ? 'pi-chevron-up' : 'pi-chevron-down'"></i> -->
+                    </div>
+
+                    <form [formGroup]="closingForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stock Frozen Upto</label>
+                            <!-- <p-datepicker formControlName="stockFrozenUpto" placeholder="Enter Date" class="w-full"
+                                appendTo="body" /> -->
+                            <input type="number" formControlName="stockFrozenUpto" placeholder="Enter stock frozen upto"
+                                class="w-full border rounded-md p-2" />
+                            <p *ngIf="isInvalid('stockFrozenUpto',closingForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role Allowed to Create / Edit
+                                back dated Transactions</label>
+
+                            <p-select [options]="purchaseRole" formControlName="roleBackdatedTransactions"
+                                appendTo="body" optionLabel="drpOption" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" placeholder="Select Naming Series"
+                                class="w-full custom-p-select"></p-select>
+                            <!-- <p-select [options]="purchaseRole" formControlName="roleBackdatedTransactions"
+                                appendTo="body" optionLabel="drpOption" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" appendTo="dialog" placeholder="Select Role"
+                                class="w-full custom-p-select"></p-select> -->
+                            <p *ngIf="isInvalid('roleBackdatedTransactions',closingForm)"
+                                class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Freeze Stock Older Than
+                                (Days)</label>
+                            <input type="number" formControlName="freezeStockDays" placeholder="Enter number of days"
+                                class="w-full border rounded-md p-2" />
+                            <p *ngIf="isInvalid('freezeStockDays',closingForm)" class="text-red-500 text-xs mt-1">
+                                field is required.
+                            </p>
+                        </div>
+
+                    </form>
+                </p-card>
+
+            </div>
+        </ng-template>
+
+
+        <!-- Footer -->
+        <ng-template pTemplate="footer">
+            <div *ngIf="postType !== 'view'" class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+                    {{ postType === 'add' ? 'Submit' : 'Update' }}
+                </button>
+                <button *ngIf="postType === 'add'" pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+            </div>
+        </ng-template>
+    </p-drawer>
+</div>
+
+<p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>

@@ -1,0 +1,59 @@
+@use "tailwindcss";
+
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+
+.arial {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    //  font-family: "Barlow Semi Condensed", sans-serif;
+    font-family: "Roboto", sans-serif;
+}
+
+.custom-skeleton {
+    background-color: #e2e8f0 !important; // Tailwind's bg-slate-200
+}
+
+.button-styling {
+    background-color: #1976D2;
+    cursor: pointer;
+}
+
+
+.orange-button {
+    background-color: #1976D2 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    /* Use !important to override PrimeNG's default styles if needed */
+    .pi {
+        font-size: 11px !important;
+    }
+}
+
+/* Leaflet image path fixes */
+.leaflet-control-layers-toggle {
+    background-image: url('/assets/leaflet/images/layers.png') !important;
+}
+
+.leaflet-retina .leaflet-control-layers-toggle {
+    background-image: url('/assets/leaflet/images/layers-2x.png') !important;
+}
+
+.leaflet-default-icon-path {
+    background-image: url('/assets/leaflet/images/marker-icon.png') !important;
+}
+
+.leaflet-default-icon {
+    background-image: url('/assets/leaflet/images/marker-icon.png') !important;
+}
+
+.leaflet-retina .leaflet-default-icon {
+    background-image: url('/assets/leaflet/images/marker-icon-2x.png') !important;
+}
+
+.leaflet-default-icon-shadow {
+    background-image: url('/assets/leaflet/images/marker-shadow.png') !important;
+}

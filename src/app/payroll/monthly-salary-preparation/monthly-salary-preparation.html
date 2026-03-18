@@ -1,0 +1,511 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB + HEADER ================= -->
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add')" label="Add Salary Preparation" icon="pi pi-plus"
+                    styleClass="orange-button" [raised]="true"></p-button>
+            </div>
+        </div>
+
+        <!-- ================= VIEW TABLE ================= -->
+        <app-table-template [data]="tblData" [columns]="tableHeaders" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (refresh)="getViewData(true)" (searchChange)="onSearchChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)" [actionTemplate]="actionTemplateRef">
+
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <!-- <button (click)="showDialog('update', item); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <span>
+                                <i class="pi pi-pencil"></i> Edit
+                            </span>
+                        </button> -->
+
+                        <button inputId="addLoan" (click)="onOpenLoanDetail(item); op.hide()" title="Add Loan"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <span>
+                                <i class="pi pi-plus-circle"></i> Add Loan
+                            </span>
+                        </button>
+
+                        <button (click)="openSalaryDetail(item.salaryDetails); op.hide()" title="View Salary Details"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <span>
+                                <i class="pi pi-folder-open"></i> Salary Details
+                            </span>
+                        </button>
+
+                        <button (click)="openLoanDetail(item.loanDetails); op.hide()" title="View Loan Details"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <span>
+                                <i class="pi pi-wallet"></i> Loan Details
+                            </span>
+                        </button>
+
+                        <button (click)="openPrintModal(item); op.hide()" title="Print"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <span>
+                                <i class="pi pi-print"></i> Print
+                            </span>
+                        </button>
+
+                        <button (click)="deleteItem(item, $event); op.hide()" title="Delete Salary row data"
+                            class="px-4 py-2 hover:bg-gray-100 text-left text-red-600">
+                            <i class="pi pi-trash"></i> Delete
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+
+        </app-table-template>
+    </div>
+
+    <!-- ================= DRAWER (ADD / UPDATE) ================= -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [baseZIndex]="10000"
+        [style]="{ width: getDrawerWidth(), 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+
+        <!-- HEADER -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-2xl">{{ header }}</span>
+                    <i class="text-blue-500" [ngClass]="headerIcon"></i>
+                </div>
+                <!-- Maximize Button -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" (click)="toggleMaximize()"
+                        class="p-2 hover:bg-gray-100 rounded transition-colors"
+                        [title]="isMaximized ? 'Minimize' : 'Maximize'">
+                        <i [ngClass]="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                            class="text-gray-600 text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+
+        <!-- CONTENT -->
+        <ng-template pTemplate="content">
+            <form [formGroup]="salaryPrepration" (ngSubmit)="onSubmit()" class="flex flex-col gap-6 p-4">
+
+                <!-- ================= BASIC DETAILS ================= -->
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i> Basic Details
+                        </h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
+
+                        <!-- Organisation -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">Organisation <span
+                                    class="text-red-500">*</span></label>
+                            <p-select formControlName="organisationId" [options]="organisation" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select organisation" [filter]="true"
+                                [showClear]="true" class="w-full" (onChange)="getEmployeeDrp($event)"
+                                [class.p-invalid]="f['organisationId'].invalid && (f['organisationId'].dirty || f['organisationId'].touched)">
+                            </p-select>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['organisationId'].errors?.['required'] && (f['organisationId'].dirty || f['organisationId'].touched)">
+                                Organisation is required
+                            </div>
+                        </div>
+
+                        <!-- Project -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">Project <span
+                                    class="text-red-500">*</span></label>
+                            <p-select formControlName="ProjectDetails" [options]="projectDataDrp"
+                                optionLabel="drpOption" optionValue="drpValue" placeholder="Select project"
+                                [filter]="true" [showClear]="true" class="w-full" (onChange)="getEmployeeDrp($event)"
+                                [class.p-invalid]="f['ProjectDetails'].invalid && (f['ProjectDetails'].dirty || f['ProjectDetails'].touched)">
+                            </p-select>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['ProjectDetails'].errors?.['required'] && (f['ProjectDetails'].dirty || f['ProjectDetails'].touched)">
+                                Project is required
+                            </div>
+                        </div>
+
+                        <!-- Employee -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">Employee <span
+                                    class="text-red-500">*</span></label>
+                            <p-select formControlName="employeeId" [options]="employeeDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select employee" [filter]="true" [showClear]="true"
+                                class="w-full" (onChange)="getPreviousCtc($event)"
+                                [class.p-invalid]="f['employeeId'].invalid && (f['employeeId'].dirty || f['employeeId'].touched)">
+                            </p-select>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['employeeId'].errors?.['required'] && (f['employeeId'].dirty || f['employeeId'].touched)">
+                                Employee is required
+                            </div>
+                        </div>
+
+                        <!-- PF Exemption -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">PF Exemption <span
+                                    class="text-red-500">*</span></label>
+                            <p-select formControlName="pfExemptionId" [options]="pfExcmptionDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select PF exemption" [filter]="true"
+                                [showClear]="true" class="w-full" (onChange)="obchagePfOrEsic()"
+                                [class.p-invalid]="f['pfExemptionId'].invalid && (f['pfExemptionId'].dirty || f['pfExemptionId'].touched)">
+                            </p-select>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['pfExemptionId'].errors?.['required'] && (f['pfExemptionId'].dirty || f['pfExemptionId'].touched)">
+                                PF exemption is required
+                            </div>
+                        </div>
+
+                        <!-- Effective From -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">Effective From Date<span
+                                    class="text-red-500">*</span></label>
+                            <p-date-picker formControlName="effectiveFrom" dateFormat="dd-mm-yy" class="w-full"
+                                [showIcon]="true" [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}"
+                                [class.p-invalid]="f['effectiveFrom'].invalid && (f['effectiveFrom'].dirty || f['effectiveFrom'].touched)">
+                            </p-date-picker>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['effectiveFrom'].errors?.['required'] && (f['effectiveFrom'].dirty || f['effectiveFrom'].touched)">
+                                Effective from is required
+                            </div>
+                        </div>
+
+                        <!-- ESIC Exemption -->
+                        <div>
+                            <label class="block mb-2 font-medium text-gray-700">ESIC Exemption <span
+                                    class="text-red-500">*</span></label>
+                            <p-select formControlName="esicExemptionId" [options]="esicDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select ESIC exemption" [filter]="true"
+                                [showClear]="true" class="w-full" (onChange)="obchagePfOrEsic()"
+                                [class.p-invalid]="f['esicExemptionId'].invalid && (f['esicExemptionId'].dirty || f['esicExemptionId'].touched)">
+                            </p-select>
+                            <div class="text-red-500 text-sm mt-1"
+                                *ngIf="f['esicExemptionId'].errors?.['required'] && (f['esicExemptionId'].dirty || f['esicExemptionId'].touched)">
+                                ESIC exemption is required
+                            </div>
+                        </div>
+
+                        <!-- Calculation on Basic -->
+                        <div class="flex items-center gap-2 mt-4">
+                            <p-checkbox formControlName="calculationOnBasic" [binary]="true"
+                                label="Calculation on Basic"></p-checkbox>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ================= OTHER DETAILS (EARNINGS & DEDUCTIONS) ================= -->
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-list text-indigo-600"></i> Salary Components
+                        </h4>
+                    </div>
+
+                    <div class="p-4">
+                        <p-tabs [(value)]="activeTab">
+                            <p-tablist>
+                                <p-tab value="0">
+                                    <i class="pi pi-money-bill mr-2"></i> Earnings
+                                </p-tab>
+                                <p-tab value="1">
+                                    <i class="pi pi-minus-circle mr-2"></i> Deductions
+                                </p-tab>
+                            </p-tablist>
+                            <p-tabpanels>
+                                <!-- EARNINGS TAB -->
+                                <p-tabpanel value="0">
+                                    <div class="overflow-x-auto">
+                                        <p-table [value]="earningTable" class="p-datatable-sm">
+                                            <ng-template pTemplate="header">
+                                                <tr>
+                                                    <th style="width: 40%">Component</th>
+                                                    <th style="width: 30%">Amount</th>
+                                                    <th style="width: 30%">Previous Amount</th>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                                <tr>
+                                                    <td>{{ row.drpOption }}</td>
+                                                    <td>
+                                                        <input pInputText type="number" [(ngModel)]="row.amount"
+                                                            [ngModelOptions]="{standalone: true}"
+                                                            (input)="onchageEvent($event, row.drpOption)"
+                                                            placeholder="Enter amount" class="w-full" />
+                                                    </td>
+                                                    <td>{{ getPreviousEarningAmount(row.drpValue) }}</td>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template pTemplate="emptymessage">
+                                                <tr>
+                                                    <td colspan="3" class="text-center py-4 text-gray-500">
+                                                        No earning components found
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+                                        </p-table>
+                                    </div>
+                                </p-tabpanel>
+
+                                <!-- DEDUCTIONS TAB -->
+                                <p-tabpanel value="1">
+                                    <div class="overflow-x-auto">
+                                        <p-table [value]="deductionTable" class="p-datatable-sm">
+                                            <ng-template pTemplate="header">
+                                                <tr>
+                                                    <th style="width: 40%">Component</th>
+                                                    <th style="width: 30%">Amount</th>
+                                                    <th style="width: 30%">Previous Amount</th>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                                <tr>
+                                                    <td>{{ row.drpOption }}</td>
+                                                    <td>
+                                                        <input pInputText type="number" [(ngModel)]="row.amount"
+                                                            [ngModelOptions]="{standalone: true}"
+                                                            (input)="onchageEvent($event, row.drpOption)"
+                                                            placeholder="Enter amount" class="w-full" />
+                                                    </td>
+                                                    <td>{{ getPreviousDeductionAmount(row.drpValue) }}</td>
+                                                </tr>
+                                            </ng-template>
+
+                                            <ng-template pTemplate="emptymessage">
+                                                <tr>
+                                                    <td colspan="3" class="text-center py-4 text-gray-500">
+                                                        No deduction components found
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+                                        </p-table>
+                                    </div>
+                                </p-tabpanel>
+                            </p-tabpanels>
+                        </p-tabs>
+
+                        <!-- SALARY SUMMARY -->
+                        <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                            <p-button label="Proceed" icon="pi pi-arrow-right" (click)="getJsonOfPfandEsic()"
+                                severity="info">
+                            </p-button>
+
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-700">Gross Salary: <span
+                                        class="text-indigo-600 font-bold">₹ {{ grossSalary | number:'1.2-2' }}</span>
+                                </p>
+                                <p class="font-bold text-green-600 mt-2">
+                                    Net Salary: <span class="text-green-700">₹ {{ netSalary | number:'1.2-2' }}</span>
+                                </p>
+                                <p class="font-semibold text-gray-500 text-sm mt-1">CTC: <span>₹ {{ ctcSalary |
+                                        number:'1.2-2' }}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= FORM BUTTONS ================= -->
+                <div class="flex justify-end gap-3 mt-4">
+                    <p-button label="Reset" severity="secondary" icon="pi pi-refresh" type="button"
+                        (click)="salaryPrepration.reset()" *ngIf="postType === 'add'">
+                    </p-button>
+
+                    <p-button label="Close" severity="secondary" icon="pi pi-times" type="button"
+                        (click)="onDrawerHide()">
+                    </p-button>
+
+                    <p-button [label]="postType === 'update' ? 'Update' : 'Submit'" icon="pi pi-check" type="submit"
+                        styleClass="orange-button" [loading]="isLoading">
+                    </p-button>
+                </div>
+
+            </form>
+        </ng-template>
+    </p-drawer>
+
+    <!-- ================= SALARY DETAILS DIALOG ================= -->
+    <p-dialog header="Salary Details" [(visible)]="salaryDialogVisible" [modal]="true" [style]="{ width: '50vw' }"
+        [maximizable]="true" [baseZIndex]="10000">
+
+        <div *ngIf="!salarydetailArray || salarydetailArray.length === 0" class="p-4">
+            <p-message severity="info" text="No salary details found"></p-message>
+        </div>
+
+        <p-table [value]="salarydetailArray" class="p-datatable-sm"
+            *ngIf="salarydetailArray && salarydetailArray.length > 0">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 35%">Salary Structure</th>
+                    <th style="width: 35%">Component</th>
+                    <th style="width: 30%">Amount</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td>{{ row.salaryStruct }}</td>
+                    <td>{{ row.salaryComponent }}</td>
+                    <td class="font-semibold">{{ row.amount | currency }}</td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="3" class="text-center py-4">
+                        <p-message severity="info" text="No salary details available"></p-message>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Close" severity="secondary" (click)="salaryDialogVisible=false"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ================= LOAN DETAILS DIALOG ================= -->
+    <p-dialog header="Loan Details" [(visible)]="loanDialogVisible" [modal]="true" [style]="{ width: '50vw' }"
+        [maximizable]="true" [baseZIndex]="10000">
+
+        <div *ngIf="!loanDetailArray || loanDetailArray.length === 0" class="p-4">
+            <p-message severity="info" text="No loan details found"></p-message>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" *ngIf="loanDialogVisible && loanAmount">
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Loan Amount</label>
+                <p class="text-lg font-bold text-indigo-600">₹ {{ loanAmount | number:'1.2-2' }}</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Loan Duration (Months)</label>
+                <p class="text-lg font-bold text-indigo-600">{{ loanDuration }} months</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Installment</label>
+                <p class="text-lg font-bold text-green-600">₹ {{ monthlyInstallment | number:'1.2-2' }}</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Effective From</label>
+                <p class="text-lg font-bold text-gray-700">{{ effectiveLoanDate | date:'dd-MM-yyyy' }}</p>
+            </div>
+        </div>
+
+        <p-table [value]="loanDetailArray" class="p-datatable-sm" *ngIf="loanDetailArray && loanDetailArray.length > 0">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 25%">Monthly Installment</th>
+                    <th style="width: 25%">Effective From</th>
+                    <th style="width: 25%">Paid Date</th>
+                    <th style="width: 25%">Status</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td>{{ row.monthlyInstallment | currency }}</td>
+                    <td>{{ row.effectiveFrom | date:'dd-MM-yyyy' }}</td>
+                    <td>{{ row.paidDate | date:'dd-MM-yyyy' }}</td>
+                    <td>
+                        <p-tag [value]="row.repaymentStatus"
+                            [severity]="row.repaymentStatus === 'Paid' ? 'success' : row.repaymentStatus === 'Pending' ? 'warn' : 'danger'">
+                        </p-tag>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <p-message severity="info" text="No loan details available"></p-message>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Close" severity="secondary" (click)="loanDialogVisible=false"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ================= LOAN INPUT DIALOG ================= -->
+    <p-dialog header="Enter Loan Details" [(visible)]="loanInputDialogVisible" [modal]="true"
+        [style]="{ width: '40vw' }" [maximizable]="true" [baseZIndex]="10000" (onHide)="closeLoanInputDialog()">
+
+        <div class="grid grid-cols-1 gap-4">
+            <div>
+                <label class="block mb-2 font-medium text-gray-700">Loan Amount <span
+                        class="text-red-500">*</span></label>
+                <input pInputText type="number" [(ngModel)]="loanAmount" placeholder="Enter loan amount" class="w-full"
+                    (input)="calculateMonthlyInstallment()" min="0" />
+            </div>
+
+            <div>
+                <label class="block mb-2 font-medium text-gray-700">Loan Duration (In Months) <span
+                        class="text-red-500">*</span></label>
+                <input pInputText type="number" [(ngModel)]="loanDuration" placeholder="Enter loan duration"
+                    class="w-full" (input)="calculateMonthlyInstallment()" min="1" />
+            </div>
+
+            <div>
+                <label class="block mb-2 font-medium text-gray-700">Monthly Installment</label>
+                <input pInputText type="number" [(ngModel)]="monthlyInstallment" class="w-full" disabled
+                    placeholder="Calculated automatically" />
+                <small class="text-gray-500 mt-1 block">This will be calculated automatically</small>
+            </div>
+
+            <div>
+                <label class="block mb-2 font-medium text-gray-700">Effective From <span
+                        class="text-red-500">*</span></label>
+                <p-date-picker [(ngModel)]="effectiveLoanDate" dateFormat="dd-mm-yy" class="w-full" [showIcon]="true"
+                    [minDate]="minEffectiveDate">
+                </p-date-picker>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Cancel" severity="secondary" (click)="closeLoanInputDialog()">
+                <i class="pi pi-times"></i>
+            </p-button>
+            <p-button label="Submit" icon="pi pi-check" (click)="validateLoanModal()" styleClass="orange-button">
+            </p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ================= PRINT MODAL ================= -->
+    <p-dialog header="Print Salary Preparation" [(visible)]="printDialogVisible" [modal]="true"
+        [style]="{ width: '70vw' }" [maximizable]="true" [baseZIndex]="10000">
+
+        <div id="poPrintWrapper" class="table-responsive print-section" [innerHTML]="printContentSafe">
+            <!-- Print content will be populated here -->
+        </div>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Print" icon="pi pi-print" (click)="printPoData()" severity="info"></p-button>
+            <p-button label="Close" severity="secondary" (click)="printDialogVisible=false"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- ================= CONFIRMATION & TOAST ================= -->
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+</div>

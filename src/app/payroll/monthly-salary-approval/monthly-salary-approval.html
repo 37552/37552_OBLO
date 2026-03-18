@@ -1,0 +1,165 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB + HEADER ================= -->
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <!-- <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add')" label="Add Salary Preparation" icon="pi pi-plus"
+                    styleClass="orange-button" [raised]="true"></p-button>
+            </div> -->
+        </div>
+        <!-- FILTER CARD -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+            <form [formGroup]="monthlySalaryReportForm" class="p-4 space-y-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                    <!-- Organisation -->
+                    <div>
+                        <label class="form-label">
+                            Organisation <span class="text-red-500">*</span>
+                        </label>
+
+                        <p-select formControlName="organisationId" [options]="organisation" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Organisation" [filter]="true"
+                            class="form-control" aria-label="Select Organisation">
+                        </p-select>
+
+                        @if(f['organisationId'].invalid && (f['organisationId'].dirty || f['organisationId'].touched)){
+                        <p class="form-error">Organisation is required</p>
+                        }
+                    </div>
+
+                    <!-- Year -->
+                    <div>
+                        <label class="form-label">
+                            Year <span class="text-red-500">*</span>
+                        </label>
+
+                        <p-select formControlName="YearId" [options]="YearId" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Year" [filter]="true" class="form-control"
+                            aria-label="Select Year">
+                        </p-select>
+
+                        @if(f['YearId'].invalid && (f['YearId'].dirty || f['YearId'].touched)){
+                        <p class="form-error">Year is required</p>
+                        }
+                    </div>
+
+                    <!-- Month -->
+                    <div>
+                        <label class="form-label">
+                            Month <span class="text-red-500">*</span>
+                        </label>
+
+                        <p-select formControlName="monthId" [options]="monthDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Month" [filter]="true" class="form-control"
+                            aria-label="Select Month">
+                        </p-select>
+
+                        @if(f['monthId'].invalid && (f['monthId'].dirty || f['monthId'].touched)){
+                        <p class="form-error">Month is required</p>
+                        }
+                    </div>
+
+                    <!-- Project -->
+                    <div>
+                        <label class="form-label">Project Title</label>
+
+                        <p-select formControlName="projectId" [options]="projectDataDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Project" [filter]="true" class="form-control"
+                            aria-label="Select Project">
+                        </p-select>
+                    </div>
+
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="flex justify-end gap-3 pt-3 border-t border-gray-100">
+                    <p-button label="Search" icon="pi pi-search" [loading]="loading" (click)="onSearch()">
+                    </p-button>
+
+                    <p-button label="Reset" icon="pi pi-refresh" severity="secondary" (click)="onreset()">
+                    </p-button>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- TABLE CARD -->
+        <div *ngIf="showTabledata" class="bg-white rounded-lg shadow-sm border border-gray-200">
+
+            <!-- EMPTY STATE -->
+            <div *ngIf="noDatafoundCard" class="p-10 text-center text-gray-500">
+                <i class="pi pi-inbox text-5xl text-gray-300 mb-3"></i>
+                <p class="text-sm">No data found for selected filters</p>
+            </div>
+
+            <!-- TABLE -->
+            <div *ngIf="!noDatafoundCard && tblData.length">
+
+                <!-- TABLE HEADER -->
+                <div class="flex justify-between items-center p-3 border-b bg-gray-50">
+                    <h3 class="font-semibold text-gray-700">Employee Salary List</h3>
+
+                    <p-button label="Submit Approval" icon="pi pi-check" severity="success"
+                        [disabled]="!hasSelectedForApproval" (click)="onSubmitCall()">
+                    </p-button>
+                </div>
+
+                <!-- TABLE -->
+                <p-table [value]="tblData" [rows]="10" [paginator]="true" [loading]="loading"
+                    loadingIcon="pi pi-spin pi-spinner" styleClass="p-datatable-sm p-datatable-gridlines">
+
+                    <!-- HEADER -->
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th class="w-12 text-center">
+                                <p-checkbox [binary]="true" [disabled]="allApproved" [ngModel]="selectAllChecked"
+                                    (onChange)="toggleSelectAll($event)">
+                                </p-checkbox>
+                            </th>
+
+                            <th *ngFor="let col of tableHeaders"
+                                class="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                                {{ col | titlecase }}
+                            </th>
+                        </tr>
+                    </ng-template>
+
+                    <!-- BODY -->
+                    <ng-template pTemplate="body" let-row>
+                        <tr class="hover:bg-gray-50 transition">
+
+                            <td class="text-center">
+                                <p-checkbox [binary]="true" [disabled]="row.isApproved" [ngModel]="row.isChk"
+                                    (onChange)="row.isChk = $event.checked; onCheckboxChange(row)">
+                                </p-checkbox>
+                            </td>
+
+                            <td *ngFor="let col of tableHeaders" class="text-sm text-gray-600">
+                                <span *ngIf="col.toLowerCase().includes('salary'); else normal">
+                                    {{ row[col] | currency:'INR':'symbol':'1.0-0' }}
+                                </span>
+
+                                <ng-template #normal>
+                                    {{ row[col] }}
+                                </ng-template>
+                            </td>
+
+                        </tr>
+                    </ng-template>
+
+                </p-table>
+            </div>
+
+        </div>
+
+        <p-toast></p-toast>
+        <p-confirmDialog></p-confirmDialog>
+
+    </div>
+</div>

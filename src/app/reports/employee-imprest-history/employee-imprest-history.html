@@ -1,0 +1,138 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white rounded-lg shadow-sm mb-4">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="bg-white rounded-lg shadow-sm mb-4 border border-gray-200">
+        <div class="p-4">
+            <!-- Reactive Form -->
+            <form [formGroup]="filterForm" (ngSubmit)="getFilterData()" class="space-y-4 overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 min-w-0">
+                    <!-- Employee -->
+                    <div class="w-full min-w-0 overflow-hidden">
+                        <div class="overflow-hidden">
+                            <p-iftalabel class="w-full block overflow-hidden">
+                                <p-select formControlName="employeeId" [options]="materialRequestDrp"
+                                    optionLabel="drpOption" optionValue="drpValue" placeholder="Select Employee"
+                                    [filter]="true" appendTo="body" [virtualScroll]="true" [virtualScrollItemSize]="38"
+                                    styleClass="w-full custom-p-select"
+                                    [style]="{'width':'100%', 'max-width':'100%'}" />
+                                <label>Select Employee</label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+
+                    <!-- From Date -->
+                    <div class="w-full min-w-0 overflow-hidden">
+                        <div class="overflow-hidden">
+                            <p-iftalabel class="w-full block overflow-hidden">
+                                <p-datepicker formControlName="fromDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                                    appendTo="body" class="w-full block" placeholder="Select From Date"
+                                    [style]="{'width':'100%', 'max-width':'100%'}"
+                                    (onSelect)="onFromDateSelected($event)">
+                                </p-datepicker>
+                                <label>From Date *</label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+
+                    <!-- To Date -->
+                    <div class="w-full min-w-0 overflow-hidden">
+                        <div class="overflow-hidden">
+                            <p-iftalabel class="w-full block overflow-hidden">
+                                <p-datepicker formControlName="toDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                                    appendTo="body" class="w-full block" placeholder="Select To Date"
+                                    [minDate]="filterForm.get('fromDate')?.value" (onSelect)="onToDateSelected($event)">
+                                </p-datepicker>
+                                <label>To Date *</label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions / Search Button -->
+                <div class="w-full flex justify-end mt-2">
+                    <button type="submit" class="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-white hover:bg-blue-700
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+                        <i class="pi pi-search text-white"></i>
+                        <span>Search</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table / Report Card -->
+    <div *ngIf="showtableData" class="bg-white rounded-lg   border border-gray-200">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-blue-500 rounded-t-lg">
+            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="pi pi-list text-white"></i>
+                <span>Employee Expense Statement</span>
+            </h2>
+
+            <div class="flex items-center gap-3">
+                <button type="button" pButton (click)="confirmGeneratePDF()" class="flex h-9 w-9 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700
+                     focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="Download PDF">
+                    <i class="pi pi-file-pdf text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 overflow-auto">
+            <div id="DivtableDataEdit" class="w-full">
+                <div class="space-y-4">
+                    <ng-container *ngIf="!noDataFound; else noDataTemplate">
+                        <!-- Org header -->
+                        <div *ngIf="orgInfo" class="text-center mb-3">
+                            <div class="font-bold text-lg text-gray-800">{{ orgInfo.orgName }}</div>
+                            <div class="text-xs text-gray-600">{{ orgInfo.address }}</div>
+                        </div>
+
+                        <!-- Title + Date range -->
+                        <div class="text-center mb-4 text-sm text-gray-700">
+                            <strong>Imprest Group Summary</strong>
+                            <span *ngIf="filterForm.value.fromDate || filterForm.value.toDate" class="ml-2">
+                                ({{ filterForm.value.fromDate ? (filterForm.value.fromDate | date: 'dd-MMM-yyyy') : ''
+                                }}
+                                to
+                                {{ filterForm.value.toDate ? (filterForm.value.toDate | date: 'dd-MMM-yyyy') : '' }})
+                            </span>
+                        </div>
+
+                        <!-- Table using app-table-template -->
+                        <div *ngIf="imprestTableData && imprestTableData.length > 0" class="w-full max-w-full overflow-hidden">
+                            <div class="w-full max-w-full overflow-x-auto">
+                                <app-table-template [data]="imprestTableData" [columns]="imprestTableColumns"
+                                    [isLoading]="false" [pageSize]="pageSize" [totalCount]="totalCount"
+                                    [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+                                    (pageSizeChange)="onPageSizeChange($event)">
+                                </app-table-template>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <ng-template #noDataTemplate>
+                        <div
+                            class="w-full text-center py-5 text-lg font-semibold text-white bg-red-600 rounded-md shadow-sm">
+                            No Data Found
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backdrops (if still used in TS) -->
+    <div class="backdrop" [ngStyle]="{ display: display }"></div>
+    <div class="backdropCustom hidden"></div>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+</div>

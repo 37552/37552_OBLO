@@ -1,0 +1,1810 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+
+    <!-- Header -->
+    <div class="bg-white rounded-md shadow-sm mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+            <div class="mb-3 sm:mb-0">
+                <h2 class="text-base font-semibold text-gray-800">
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </h2>
+            </div>
+
+            <div *ngIf="wfLevel === 'creator'" class="flex items-center space-x-2">
+                <p-button label="Add New Request" icon="pi pi-plus" styleClass="orange-button p-button-warning"
+                    (click)="showDialog('add', [])">
+                </p-button>
+            </div>
+        </div>
+
+        <!-- Status Tabs -->
+        <div *ngIf="wfLevel === 'reviewer' || wfLevel === 'approver' " class="border-b border-gray-200 bg-white px-4">
+            <div class="flex space-x-8" aria-label="Tabs">
+                <button (click)="onChangeRequestTab('pending')"
+                    [class]="selectedRequest === 'pending' 
+                        ? 'border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'"
+                    type="button">
+                    <i class="pi pi-clock"></i>
+                    Pending Request
+                </button>
+                <button (click)="onChangeRequestTab('processed')"
+                    [class]="selectedRequest !== 'pending' 
+                        ? 'border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'"
+                    type="button">
+                    <i class="pi pi-check-circle"></i>
+                    Processed Requests
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white rounded-lg border border-gray-200 p-0">
+        <app-table-template [data]="allViewTableData" [columns]="columns" [pageSize]="pageSize"
+            [totalCount]="totalCount" [isLoading]="isLoading" [currentPage]="pageNo" [searchText]="searchText"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)" (refresh)="getViewData(true)"
+            (pageSizeChange)="onPageSizeChange($event)" [actionTemplate]="actionTemplateRef">
+
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+
+                        <!-- ================= REVIEWER ================= -->
+                        <ng-container *ngIf="wfLevel === 'reviewer' || wfLevel === 'approver' ">
+
+                            <button (click)="showDialog('view', item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-eye"></i> View
+                            </button>
+
+                            <button *ngIf="selectedRequest === 'pending'" (click)="openApprovalModal(item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-check-circle"></i> Approve
+                            </button>
+
+                            <button (click)="openApprovalHistoryModal(item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-history"></i> History
+                            </button>
+
+                            <button (click)="print(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-print"></i> Print
+                            </button>
+
+                        </ng-container>
+
+
+                        <!-- ================= CREATOR ================= -->
+                        <ng-container *ngIf="wfLevel === 'creator'">
+
+                            <button (click)="showDialog('view', item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-eye"></i> View
+                            </button>
+
+                            <button (click)="print(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-print"></i> Print
+                            </button>
+
+                            <button (click)="showDialog('edit', item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-pencil"></i> Update
+                            </button>
+
+                            <button (click)="openApprovalHistoryModal(item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-history"></i> History
+                            </button>
+
+                            <button (click)="confirmDelete(item); op.hide()"
+                                class="px-4 py-2 hover:bg-gray-100 text-left">
+                                <i class="pi pi-trash"></i> Delete
+                            </button>
+
+                            <!-- Pending-only actions -->
+                            <ng-container *ngIf="selectedRequest === 'pending'">
+                                <button *ngIf="canShowApprove(item)" (click)="openApprovalModal(item); op.hide()"
+                                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                                    <i class="pi pi-check-circle"></i> Approve
+                                </button>
+
+                                <button *ngIf="canShowForward(item)" (click)="openApprovalModal(item); op.hide()"
+                                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                                    <i class="pi pi-forward"></i> Forward
+                                </button>
+
+                                <button *ngIf="canShowReject(item)" (click)="openApprovalModal(item); op.hide()"
+                                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                                    <i class="pi pi-times-circle"></i> Reject
+                                </button>
+
+                                <button *ngIf="canShowReturn(item)" (click)="openApprovalModal(item); op.hide()"
+                                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                                    <i class="pi pi-reply"></i> Return
+                                </button>
+                            </ng-container>
+
+                        </ng-container>
+
+                    </div>
+                </p-popover>
+
+            </ng-template>
+        </app-table-template>
+    </div>
+
+    <!-- Drawer - Starts at 60% width, can be maximized -->
+    <p-drawer [(visible)]="visible" position="right"
+        [style]="{ width: getDrawerWidth(), 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+        <!-- Drawer Header -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+                        {{ header }}
+                    </span>
+                    <div class="bg-blue-50 p-2 rounded-full shrink-0">
+                        <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" (click)="toggleMaximize()"
+                        class="p-2 hover:bg-gray-100 rounded transition-colors"
+                        [title]="isMaximized ? 'Minimize' : 'Maximize'">
+                        <i [ngClass]="isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                            class="text-gray-600 text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+
+        <!-- Drawer Body -->
+        <div class="h-full flex flex-col justify-between bg-gray-50/50">
+            <div class="flex-grow overflow-y-auto p-4 space-y-6 transition-all duration-200">
+                <form [formGroup]="reimbursementForm" class="space-y-8">
+                    <!-- ================= SUBMITTER TYPE ================= -->
+                    <div class="bg-white rounded-lg border p-5 shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-3">
+                            Submitter Type <span class="text-red-500">*</span>
+                        </label>
+
+                        <div class="flex gap-10 bg-gray-50 p-4 rounded-md">
+                            <div class="flex items-center gap-2">
+                                <p-radioButton inputId="self" name="other" value="Self" formControlName="other"
+                                    (onChange)="onToggleSubmitter($event)">
+                                </p-radioButton>
+                                <label for="self" class="text-sm cursor-pointer">Self</label>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <p-radioButton inputId="other" name="other" value="Other" formControlName="other"
+                                    (onChange)="onToggleSubmitter($event)">
+                                </p-radioButton>
+                                <label for="other" class="text-sm cursor-pointer">Other</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= SELECT EMPLOYEE (ONLY OTHER) ================= -->
+                    <div *ngIf="submitterTypeValue === 'Other'" class="bg-white rounded-lg border p-5 shadow-sm">
+                        <p-iftalabel class="w-full">
+                            <p-select formControlName="EmployeeDataforother" [options]="EmployeeData"
+                                optionLabel="drpOption" optionValue="drpValue" placeholder="Select Employee"
+                                class="w-full" [filter]="true" (onChange)="onEmployeeChange($event)">
+                            </p-select>
+                            <label>Select Employee *</label>
+                        </p-iftalabel>
+                        <div *ngIf="f['EmployeeDataforother'].invalid && (f['EmployeeDataforother'].dirty || f['EmployeeDataforother'].touched)"
+                            class="text-red-500 text-sm mt-1">
+                            <div *ngIf="f['EmployeeDataforother'].errors?.['required']">Employee is required</div>
+                        </div>
+                    </div>
+
+                    <!-- ================= COMMON DETAILS (SELF + OTHER) ================= -->
+                    <div class="bg-white rounded-lg border p-5 shadow-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Request No -->
+                            <div>
+                                <p-iftalabel>
+                                    <p-select formControlName="requestnumber" [options]="allRequestNo"
+                                        optionLabel="drpOption" optionValue="drpValue" class="w-full"
+                                        placeholder="Select Request No">
+                                    </p-select>
+                                    <label>Request No *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['requestnumber'].invalid && (f['requestnumber'].dirty || f['requestnumber'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['requestnumber'].errors?.['required']">Request No is required</div>
+                                </div>
+                            </div>
+
+                            <!-- Submit For -->
+                            <div>
+                                <p-iftalabel>
+                                    <p-select formControlName="submitType" [options]="[
+                                        { label: 'Tour', value: 10001 },
+                                        { label: 'Conveyance', value: 10003 }
+                                        ]" optionLabel="label" optionValue="value" class="w-full"
+                                        placeholder="Select Submit For" (onChange)="onChangeSubmitFrom($event)">
+                                    </p-select>
+                                    <label>Submit For *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['submitType'].invalid && (f['submitType'].dirty || f['submitType'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['submitType'].errors?.['required']">Submit For is required</div>
+                                </div>
+                            </div>
+
+                            <!-- Serial No (Only in Edit/View mode) -->
+                            <div *ngIf="postType != 'add'">
+                                <p-iftalabel>
+                                    <input pInputText [value]="selectedItem?.serialNo || ''" class="w-full" readonly />
+                                    <label>Serial No</label>
+                                </p-iftalabel>
+                            </div>
+
+                            <!-- Name -->
+                            <div>
+                                <p-iftalabel>
+                                    <input pInputText formControlName="name" class="w-full" />
+                                    <label>Name</label>
+                                </p-iftalabel>
+                            </div>
+
+                            <!-- Designation -->
+                            <div>
+                                <p-iftalabel>
+                                    <input pInputText formControlName="designation" class="w-full" />
+                                    <label>Designation</label>
+                                </p-iftalabel>
+                            </div>
+
+                            <!-- Travel From (Only for Tour) -->
+                            <div *ngIf="reimbursementForm.get('submitType')?.value == 10001">
+                                <p-iftalabel>
+                                    <input pInputText formControlName="travelFrom" class="w-full" maxlength="100" />
+                                    <label>Travel From *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['travelFrom'].invalid && (f['travelFrom'].dirty || f['travelFrom'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['travelFrom'].errors?.['required']">Travel From is required</div>
+                                    <div *ngIf="f['travelFrom'].errors?.['whitespace']">Travel From cannot be just
+                                        whitespace</div>
+                                </div>
+                            </div>
+
+                            <!-- Travel To (Only for Tour) -->
+                            <div *ngIf="reimbursementForm.get('submitType')?.value == 10001">
+                                <p-iftalabel>
+                                    <input pInputText formControlName="travelTo" class="w-full" maxlength="100" />
+                                    <label>Travel To *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['travelTo'].invalid && (f['travelTo'].dirty || f['travelTo'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['travelTo'].errors?.['required']">Travel To is required</div>
+                                    <div *ngIf="f['travelTo'].errors?.['whitespace']">Travel To cannot be just
+                                        whitespace</div>
+                                </div>
+                            </div>
+
+                            <!-- Expense Type (Only for Tour) -->
+                            <div *ngIf="reimbursementForm.get('submitType')?.value == 10001">
+                                <p-iftalabel>
+                                    <p-select formControlName="expenseTypeId" [options]="expenseTypeDrp"
+                                        optionLabel="drpOption" optionValue="drpValue" class="w-full"
+                                        placeholder="Select Expense Type">
+                                    </p-select>
+                                    <label>Expense Type *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['expenseTypeId'].invalid && (f['expenseTypeId'].dirty || f['expenseTypeId'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['expenseTypeId'].errors?.['required']">Expense Type is required</div>
+                                </div>
+                            </div>
+
+                            <!-- Travel By (Only for Tour) -->
+                            <div *ngIf="reimbursementForm.get('submitType')?.value == 10001">
+                                <p-iftalabel>
+                                    <p-select formControlName="travelById" [options]="travelByDrpAll"
+                                        optionLabel="drpOption" optionValue="drpValue" class="w-full"
+                                        placeholder="Select Travel By">
+                                    </p-select>
+                                    <label>Travel By *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['travelById'].invalid && (f['travelById'].dirty || f['travelById'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['travelById'].errors?.['required']">Travel By is required</div>
+                                </div>
+                            </div>
+
+                            <!-- From Date -->
+                            <div class="w-full">
+                                <p-iftalabel class="w-full block">
+                                    <p-datepicker formControlName="fromDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                                        [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}" class="w-full block"
+                                        inputClass="w-full h-[44px]">
+                                    </p-datepicker>
+                                    <label>From Date *</label>
+                                </p-iftalabel>
+
+                                <div *ngIf="f['fromDate'].invalid && (f['fromDate'].dirty || f['fromDate'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    From Date is required
+                                </div>
+                            </div>
+
+
+
+                            <!-- To Date -->
+                            <div class="w-full">
+                                <p-iftalabel class="w-full block">
+                                    <p-datepicker formControlName="toDate" [showIcon]="true" dateFormat="dd/mm/yy"
+                                        [minDate]="reimbursementForm.value.fromDate" [style]="{'width':'100%'}"
+                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                        inputClass="w-full h-[44px]">
+                                    </p-datepicker>
+                                    <label>To Date *</label>
+                                </p-iftalabel>
+
+                                <div *ngIf="f['toDate'].invalid && (f['toDate'].dirty || f['toDate'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    To Date is required
+                                </div>
+                            </div>
+
+
+
+                            <!-- Purpose -->
+                            <div>
+                                <p-iftalabel>
+                                    <input pInputText formControlName="expensePurpose" class="w-full" maxlength="100" />
+                                    <label>Purpose *</label>
+                                </p-iftalabel>
+                                <div *ngIf="f['expensePurpose'].invalid && (f['expensePurpose'].dirty || f['expensePurpose'].touched)"
+                                    class="text-red-500 text-sm mt-1">
+                                    <div *ngIf="f['expensePurpose'].errors?.['required']">Purpose is required</div>
+                                    <div *ngIf="f['expensePurpose'].errors?.['whitespace']">Purpose cannot be just
+                                        whitespace</div>
+                                </div>
+                            </div>
+
+                            <!-- Imprest -->
+                            <div>
+                                <p-iftalabel>
+                                    <input pInputText formControlName="imprest" class="w-full" type="number" />
+                                    <label>Imprest</label>
+                                </p-iftalabel>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other details -->
+                    <div class="bg-white rounded-lg border shadow-sm mt-6">
+                        <p-tabs [value]="isConveyanceType ? 'conveyance' : 'conveyance'">
+                            <p-tablist>
+                                <!-- Show Conveyance tab only if submitFrom is "Conveyance" or in add mode -->
+                                <p-tab value="conveyance" *ngIf="postType === 'add' || isConveyanceType">
+                                    <i class="pi pi-car mr-2"></i>
+                                    {{ isConveyanceType ? 'Conveyance' : 'Fare / Conveyance' }}
+                                </p-tab>
+
+                                <!-- Show other tabs only if submitFrom is NOT "Conveyance" or in add mode -->
+                                <p-tab value="lodging" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <i class="pi pi-home mr-2"></i>
+                                    Lodging
+                                </p-tab>
+
+                                <p-tab value="food" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <i class="fa-solid fa-utensils mr-2"></i>
+                                    Food
+                                </p-tab>
+
+                                <p-tab value="laundry" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <i class="fa-solid fa-shirt mr-2"></i>
+                                    Laundry
+                                </p-tab>
+
+                                <p-tab value="other" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <i class="pi pi-ellipsis-h mr-2"></i>
+                                    Other
+                                </p-tab>
+                            </p-tablist>
+
+
+                            <p-tabpanels>
+                                <!-- Show Conveyance tabpanel only if submitFrom is "Conveyance" or in add mode -->
+                                <p-tabpanel value="conveyance" *ngIf="postType === 'add' || isConveyanceType">
+                                    <div class="p-4">
+                                        <form [formGroup]="conveyanceForm" *ngIf="postType != 'view'" class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div
+                                                    class="flex items-center gap-6 border border-gray-300 rounded-md px-4 py-3 bg-gray-50 h-[50px]">
+                                                    <div class="flex items-center gap-2" *ngIf="!isConveyanceType">
+                                                        <p-radioButton name="expanseType" value="Fare"
+                                                            formControlName="expanseType" inputId="typeFare"
+                                                            (onChange)="changeConveyanceType()"></p-radioButton>
+                                                        <label for="typeFare" class="cursor-pointer">Fare</label>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <p-radioButton name="expanseType" value="Conveyance"
+                                                            formControlName="expanseType" inputId="typeConv"
+                                                            (onChange)="changeConveyanceType()"></p-radioButton>
+                                                        <label for="typeConv" class="cursor-pointer">Conveyance</label>
+                                                    </div>
+                                                </div>
+
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="travelById" [options]="travelByDrpAll"
+                                                        optionLabel="drpOption" optionValue="drpValue" class="w-full"
+                                                        [filter]="true" placeholder="Select Travel By"
+                                                        (onChange)="onChangeTravelBy($event)">
+                                                    </p-select>
+                                                    <label>Travel By *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText formControlName="travelFrom" class="w-full" />
+                                                    <label>Travel From *</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText formControlName="travelTo" class="w-full" />
+                                                    <label>Travel To *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="fromDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" appendTo="body"
+                                                        [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                        <div class="w-full">
+                                                            <p-iftalabel class="w-full block">
+                                                                <p-datepicker formControlName="fromDate"
+                                                                    [showIcon]="true" dateFormat="dd/mm/yy"
+                                                                    [style]="{'width':'100%'}"
+                                                                    [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                                    inputClass="w-full h-[44px]">
+                                                                </p-datepicker>
+                                                                <label>From Date *</label>
+                                                            </p-iftalabel>
+
+                                                            <div *ngIf="f['fromDate'].invalid && (f['fromDate'].dirty || f['fromDate'].touched)"
+                                                                class="text-red-500 text-sm mt-1">
+                                                                From Date is required
+                                                            </div>
+                                                        </div>
+
+
+
+                                                        <!-- To Date -->
+                                                        <div class="w-full">
+                                                            <p-iftalabel class="w-full block">
+                                                                <p-datepicker formControlName="toDate" [showIcon]="true"
+                                                                    dateFormat="dd/mm/yy" appendTo="body"
+                                                                    [minDate]="reimbursementForm.value.fromDate"
+                                                                    [style]="{'width':'100%'}"
+                                                                    [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                                    inputClass="w-full h-[44px]">
+                                                                </p-datepicker>
+                                                                <label>To Date *</label>
+                                                            </p-iftalabel>
+
+                                                            <div *ngIf="f['toDate'].invalid && (f['toDate'].dirty || f['toDate'].touched)"
+                                                                class="text-red-500 text-sm mt-1">
+                                                                To Date is required
+                                                            </div>
+                                                        </div>
+
+                                                        [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate"
+                                                        class="w-full">
+                                                    </p-datepicker>
+                                                    <label>From Date *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f1['fromDate'].invalid && (f1['fromDate'].dirty || f1['fromDate'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f1['fromDate'].errors?.['required']">From Date is
+                                                        required</div>
+                                                </div>
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="toDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true"
+                                                        [minDate]="conveyanceForm.get('fromDate')?.value || mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>To Date *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f1['toDate'].invalid && (f1['toDate'].dirty || f1['toDate'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f1['toDate'].errors?.['required']">To Date is required
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div *ngIf="conveyanceForm.get('travelById')?.value == '10004'||conveyanceForm.get('travelById')?.value == '10002'"
+                                                class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-blue-50 p-4 rounded-md border border-blue-100">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="startMeterRead"
+                                                        class="w-full" />
+                                                    <label>Start Reading</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="endMeterRead"
+                                                        class="w-full" />
+                                                    <label>End Reading</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="totalKm"
+                                                        class="w-full" />
+                                                    <label>Total KM *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="amount"
+                                                        class="w-full" />
+                                                    <label>Amount (₹) *</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText formControlName="text" class="w-full" />
+                                                    <label>Remarks/Details *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div
+                                                class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t mt-2">
+                                                <div class="flex items-center gap-3">
+                                                    <label class="text-sm font-medium">Attachment
+                                                        <span *ngIf="conveyanceForm.get('travelById')?.value != '10003' && 
+                                                            conveyanceForm.get('travelById')?.value != '10004' && 
+                                                            conveyanceForm.get('travelById')?.value != '10006' && 
+                                                            conveyanceForm.get('travelById')?.value != '10007'"
+                                                            class="text-red-500">*</span>
+                                                    </label>
+                                                    <button pButton type="button" icon="pi pi-paperclip" label="Upload"
+                                                        *ngIf="!conveyanceForm.get('attachment')?.value"
+                                                        class="p-button-text p-button-secondary"
+                                                        (click)="fileupload('conveyanceForm', 'attachment', 'ConveyanceExpens')"></button>
+
+                                                    <div *ngIf="conveyanceForm.get('attachment')?.value"
+                                                        class="flex gap-2">
+                                                        <button pButton type="button" icon="pi pi-eye" label="View"
+                                                            class="p-button-outlined p-button-info p-button-sm"
+                                                            (click)="viewAttachment(conveyanceForm.get('attachment')?.value)"></button>
+                                                        <button pButton type="button" icon="pi pi-trash"
+                                                            class="p-button-outlined p-button-danger p-button-sm"
+                                                            (click)="removeAttachment('conveyanceForm', 'attachment')"></button>
+                                                    </div>
+                                                </div>
+                                                <div *ngIf="f1['attachment'].invalid && f1['attachment'].touched"
+                                                    class="text-red-500 text-sm">
+                                                    <div *ngIf="f1['attachment'].errors?.['required']">Attachment is
+                                                        required</div>
+                                                </div>
+
+                                                <p-button label="Add to List" icon="pi pi-plus"
+                                                    styleClass="orange-button"
+                                                    (click)="AddRow('conveyanceForm')"></p-button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-6" *ngIf="conveyanceChildData.length">
+                                            <p-table [value]="conveyanceChildData" [rowHover]="true"
+                                                styleClass="p-datatable-sm p-datatable-gridlines">
+                                                <ng-template pTemplate="header">
+                                                    <tr class="bg-gray-50 text-sm">
+                                                        <th>Type</th>
+                                                        <th>Travel By</th>
+                                                        <th>Travel From</th>
+                                                        <th>Travel To</th>
+                                                        <th>From Date</th>
+                                                        <th>To Date</th>
+                                                        <th *ngIf="hasAnyAttachment()">Attachment</th>
+                                                        <th>Amount</th>
+                                                        <th>Details</th>
+                                                        <th class="w-20 text-center" *ngIf="postType != 'view'">Action
+                                                        </th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                                    <tr>
+                                                        <td>{{ item.expanseType }}</td>
+                                                        <td>{{ item.travelBy }}</td>
+                                                        <td>{{ item.travelFrom }}</td>
+                                                        <td>{{ item.travelTo }}</td>
+                                                        <td>{{ item.fromDate }}</td>
+                                                        <td>{{ item.toDate }}</td>
+                                                        <td *ngIf="hasAnyAttachment()">
+                                                            <button pButton icon="pi pi-eye" *ngIf="item.attachment"
+                                                                class="p-button-rounded p-button-text p-button-sm"
+                                                                (click)="viewAttachment(item.attachment)"></button>
+                                                        </td>
+                                                        <td class="font-bold">₹{{ item.amount }}</td>
+                                                        <td>{{ item.text || '-' }}</td>
+                                                        <td class="text-center" *ngIf="postType != 'view'">
+                                                            <button pButton icon="pi pi-trash"
+                                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                                (click)="deleteChildTableRow('conveyanceChildData', i)"></button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                        <div *ngIf="conveyanceChildData.length === 0 && postType == 'view'"
+                                            class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-center text-red-600">
+                                            Data Not Found!!
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <!-- Show other tabpanels only if submitFrom is NOT "Conveyance" or in add mode -->
+                                <p-tabpanel value="lodging" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <div class="p-4">
+                                        <form [formGroup]="lodgingForm" *ngIf="postType != 'view'" class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="state" [options]="stateDrp"
+                                                        optionLabel="drpOption" optionValue="drpValue"
+                                                        placeholder="Select State" [filter]="true" appendTo="body"
+                                                        [virtualScroll]="true" [virtualScrollItemSize]="38"
+                                                        class="w-full" (onChange)="onLodgingStateChange($event)">
+                                                    </p-select>
+                                                    <label>State</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="city" [options]="cityDrp"
+                                                        optionLabel="drpOption" optionValue="drpValue"
+                                                        placeholder="Select City" [filter]="true" appendTo="body"
+                                                        [virtualScroll]="true" [virtualScrollItemSize]="38"
+                                                        class="w-full" (onChange)="onLodgingCityChange($event)">
+                                                    </p-select>
+                                                    <label>City</label>
+                                                </p-iftalabel>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText formControlName="text" class="w-full" />
+                                                    <label>Hotel Name *</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="amount"
+                                                        class="w-full" />
+                                                    <label>Amount (₹) *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="fromDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" appendTo="body"
+                                                        [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>Check-In Date *</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="toDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" appendTo="body"
+                                                        [minDate]="lodgingForm.get('fromDate')?.value || mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>Check-Out Date *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div
+                                                class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t mt-2">
+                                                <div class="flex items-center gap-3">
+                                                    <button pButton type="button" icon="pi pi-paperclip"
+                                                        label="Upload Bill"
+                                                        *ngIf="!lodgingForm.get('attachment')?.value"
+                                                        class="p-button-text p-button-secondary"
+                                                        (click)="fileupload('lodgingForm', 'attachment', 'LodgingExpens')"></button>
+
+                                                    <div *ngIf="lodgingForm.get('attachment')?.value"
+                                                        class="flex gap-2">
+                                                        <button pButton type="button" icon="pi pi-eye"
+                                                            class="p-button-outlined p-button-info p-button-sm"
+                                                            (click)="viewAttachment(lodgingForm.get('attachment')?.value)"></button>
+                                                        <button pButton type="button" icon="pi pi-trash"
+                                                            class="p-button-outlined p-button-danger p-button-sm"
+                                                            (click)="removeAttachment('lodgingForm', 'attachment')"></button>
+                                                    </div>
+                                                </div>
+                                                <p-button label="Add Lodging" icon="pi pi-plus"
+                                                    styleClass="orange-button"
+                                                    (click)="AddRow('lodgingForm')"></p-button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-6" *ngIf="lodgingChildData.length">
+                                            <p-table [value]="lodgingChildData"
+                                                styleClass="p-datatable-sm p-datatable-gridlines">
+                                                <ng-template pTemplate="header">
+                                                    <tr class="bg-gray-50 text-sm">
+                                                        <th>State</th>
+                                                        <th>City</th>
+                                                        <th>Hotel Name</th>
+                                                        <th>From Date</th>
+                                                        <th>To Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Attachment</th>
+                                                        <th class="w-20 text-center" *ngIf="postType != 'view'">Action
+                                                        </th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                                    <tr>
+                                                        <td>{{ item.stateName ?? '-' }}</td>
+                                                        <td>{{ item.cityName ?? '-' }}</td>
+                                                        <td>{{ item.text }}</td>
+                                                        <td>{{ item.fromDate }}</td>
+                                                        <td>{{ item.toDate }}</td>
+                                                        <td class="font-bold">₹{{ item.amount }}</td>
+                                                        <td>
+                                                            <button pButton icon="pi pi-eye" *ngIf="item.attachment"
+                                                                class="p-button-rounded p-button-text p-button-sm"
+                                                                (click)="viewAttachment(item.attachment)"></button>
+                                                        </td>
+                                                        <td class="text-center" *ngIf="postType != 'view'">
+                                                            <button pButton icon="pi pi-trash"
+                                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                                (click)="deleteChildTableRow('lodgingChildData', i)"></button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                        <div *ngIf="lodgingChildData.length === 0 && postType == 'view'"
+                                            class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-center text-red-600">
+                                            Data Not Found!!
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="food" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <div class="p-4">
+                                        <form [formGroup]="foodForm" *ngIf="postType != 'view'" class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="state" [options]="stateDrp"
+                                                        optionLabel="drpOption" optionValue="drpValue"
+                                                        placeholder="Select State" [filter]="true" appendTo="body"
+                                                        class="w-full" (onChange)="onFoodStateChange($event)">
+                                                    </p-select>
+                                                    <label>State</label>
+                                                </p-iftalabel>
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="city" [options]="cityDrp"
+                                                        optionLabel="drpOption" optionValue="drpValue"
+                                                        placeholder="Select City" [filter]="true" appendTo="body"
+                                                        class="w-full" (onChange)="onFoodCityChange($event)">
+                                                    </p-select>
+                                                    <label>City</label>
+                                                </p-iftalabel>
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <p-select formControlName="text" [options]="[
+                                                        { label: 'Breakfast', value: 'Breakfast' },
+                                                        { label: 'Lunch', value: 'Lunch' },
+                                                        { label: 'Dinner', value: 'Dinner' }
+                                                    ]" class="w-full" placeholder="Select Food Type"></p-select>
+                                                    <label>Food Type *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f3['text'].invalid && (f3['text'].dirty || f3['text'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f3['text'].errors?.['required']">Food Type is required
+                                                    </div>
+                                                </div>
+
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="expenseDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" appendTo="body"
+                                                        [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>Date *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f4['expenseDate'].invalid && (f4['expenseDate'].dirty || f4['expenseDate'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f4['expenseDate'].errors?.['required']">Date is required
+                                                    </div>
+                                                </div>
+
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="amount"
+                                                        class="w-full" />
+                                                    <label>Amount (₹) *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div
+                                                class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t mt-2">
+                                                <div class="flex items-center gap-3">
+                                                    <button pButton type="button" icon="pi pi-paperclip"
+                                                        label="Upload Bill" *ngIf="!foodForm.get('attachment')?.value"
+                                                        class="p-button-text p-button-secondary"
+                                                        (click)="fileupload('foodForm', 'attachment', 'FoodExpens')"></button>
+
+                                                    <div *ngIf="foodForm.get('attachment')?.value" class="flex gap-2">
+                                                        <button pButton type="button" icon="pi pi-eye"
+                                                            class="p-button-outlined p-button-info p-button-sm"
+                                                            (click)="viewAttachment(foodForm.get('attachment')?.value)"></button>
+                                                        <button pButton type="button" icon="pi pi-trash"
+                                                            class="p-button-outlined p-button-danger p-button-sm"
+                                                            (click)="removeAttachment('foodForm', 'attachment')"></button>
+                                                    </div>
+                                                </div>
+                                                <p-button label="Add Food" icon="pi pi-plus" styleClass="orange-button"
+                                                    (click)="AddRow('foodForm')"></p-button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-6" *ngIf="foodExpChildData.length">
+                                            <p-table [value]="foodExpChildData"
+                                                styleClass="p-datatable-sm p-datatable-gridlines">
+                                                <ng-template pTemplate="header">
+                                                    <tr class="bg-gray-50 text-sm">
+                                                        <th>State</th>
+                                                        <th>City</th>
+                                                        <th>Food Type</th>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Attachment</th>
+                                                        <th class="w-20 text-center" *ngIf="postType != 'view'">Action
+                                                        </th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                                    <tr>
+                                                        <td>{{ item.stateName ?? '-' }}</td>
+                                                        <td>{{ item.cityName ?? '-' }}</td>
+                                                        <td>{{ item.text }}</td>
+                                                        <td>{{ item.expenseDate }}</td>
+                                                        <td class="font-bold">₹{{ item.amount }}</td>
+                                                        <td>
+                                                            <button pButton icon="pi pi-eye" *ngIf="item.attachment"
+                                                                class="p-button-rounded p-button-text p-button-sm"
+                                                                (click)="viewAttachment(item.attachment)"></button>
+                                                        </td>
+                                                        <td class="text-center" *ngIf="postType != 'view'">
+                                                            <button pButton icon="pi pi-trash"
+                                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                                (click)="deleteChildTableRow('foodExpChildData', i)"></button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                        <div *ngIf="foodExpChildData.length === 0 && postType == 'view'"
+                                            class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-center text-red-600">
+                                            Data Not Found!!
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="laundry" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <div class="p-4">
+                                        <form [formGroup]="laundryForm" *ngIf="postType != 'view'" class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="text"
+                                                        class="w-full" />
+                                                    <label>No. of Clothes *</label>
+                                                </p-iftalabel>
+
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="expenseDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" appendTo="body"
+                                                        [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>Date *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f4['expenseDate'].invalid && (f4['expenseDate'].dirty || f4['expenseDate'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f4['expenseDate'].errors?.['required']">Date is required
+                                                    </div>
+                                                </div>
+
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="amount"
+                                                        class="w-full" />
+                                                    <label>Amount (₹) *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div
+                                                class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t mt-2">
+                                                <div class="flex items-center gap-3">
+                                                    <button pButton type="button" icon="pi pi-paperclip"
+                                                        label="Upload Bill"
+                                                        *ngIf="!laundryForm.get('attachment')?.value"
+                                                        class="p-button-text p-button-secondary"
+                                                        (click)="fileupload('laundryForm', 'attachment', 'LaundryExpens')"></button>
+
+                                                    <div *ngIf="laundryForm.get('attachment')?.value"
+                                                        class="flex gap-2">
+                                                        <button pButton type="button" icon="pi pi-eye"
+                                                            class="p-button-outlined p-button-info p-button-sm"
+                                                            (click)="viewAttachment(laundryForm.get('attachment')?.value)"></button>
+                                                        <button pButton type="button" icon="pi pi-trash"
+                                                            class="p-button-outlined p-button-danger p-button-sm"
+                                                            (click)="removeAttachment('laundryForm', 'attachment')"></button>
+                                                    </div>
+                                                </div>
+                                                <p-button label="Add Laundry" icon="pi pi-plus"
+                                                    styleClass="orange-button"
+                                                    (click)="AddRow('laundryForm')"></p-button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-6" *ngIf="laundryChildData.length">
+                                            <p-table [value]="laundryChildData"
+                                                styleClass="p-datatable-sm p-datatable-gridlines">
+                                                <ng-template pTemplate="header">
+                                                    <tr class="bg-gray-50 text-sm">
+                                                        <th>No of Clothes</th>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Attachment</th>
+                                                        <th class="w-20 text-center" *ngIf="postType != 'view'">Action
+                                                        </th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                                    <tr>
+                                                        <td>{{ item.text }}</td>
+                                                        <td>{{ item.expenseDate }}</td>
+                                                        <td class="font-bold">₹{{ item.amount }}</td>
+                                                        <td>
+                                                            <button pButton icon="pi pi-eye" *ngIf="item.attachment"
+                                                                class="p-button-rounded p-button-text p-button-sm"
+                                                                (click)="viewAttachment(item.attachment)"></button>
+                                                        </td>
+                                                        <td class="text-center" *ngIf="postType != 'view'">
+                                                            <button pButton icon="pi pi-trash"
+                                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                                (click)="deleteChildTableRow('laundryChildData', i)"></button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                        <div *ngIf="laundryChildData.length === 0 && postType == 'view'"
+                                            class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-center text-red-600">
+                                            Data Not Found!!
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <p-tabpanel value="other" *ngIf="postType === 'add' || !isConveyanceType">
+                                    <div class="p-4">
+                                        <form [formGroup]="otherExpForm" *ngIf="postType != 'view'" class="space-y-6">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText formControlName="text" class="w-full"
+                                                        maxlength="50" />
+                                                    <label>Expense Name *</label>
+                                                </p-iftalabel>
+
+                                                <p-iftalabel class="w-full">
+                                                    <p-datepicker formControlName="expenseDate" dateFormat="dd/mm/yy"
+                                                        [showIcon]="true" [minDate]="mainFormFromDate || minDateother"
+                                                        [maxDate]="mainFormToDate" [style]="{'width':'100%'}"
+                                                        [inputStyle]="{'width':'100%'}" class="w-full block"
+                                                        inputClass="w-full h-[44px]">
+                                                    </p-datepicker>
+                                                    <label>Date *</label>
+                                                </p-iftalabel>
+                                                <div *ngIf="f4['expenseDate'].invalid && (f4['expenseDate'].dirty || f4['expenseDate'].touched)"
+                                                    class="text-red-500 text-sm mt-1">
+                                                    <div *ngIf="f4['expenseDate'].errors?.['required']">Date is required
+                                                    </div>
+                                                </div>
+
+                                                <p-iftalabel class="w-full">
+                                                    <input pInputText type="number" formControlName="amount"
+                                                        class="w-full" />
+                                                    <label>Amount (₹) *</label>
+                                                </p-iftalabel>
+                                            </div>
+
+                                            <div
+                                                class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t mt-2">
+                                                <div class="flex items-center gap-3">
+                                                    <button pButton type="button" icon="pi pi-paperclip"
+                                                        label="Upload Bill"
+                                                        *ngIf="!otherExpForm.get('attachment')?.value"
+                                                        class="p-button-text p-button-secondary"
+                                                        (click)="fileupload('otherExpForm', 'attachment', 'OtherExpens')"></button>
+
+                                                    <div *ngIf="otherExpForm.get('attachment')?.value"
+                                                        class="flex gap-2">
+                                                        <button pButton type="button" icon="pi pi-eye"
+                                                            class="p-button-outlined p-button-info p-button-sm"
+                                                            (click)="viewAttachment(otherExpForm.get('attachment')?.value)"></button>
+                                                        <button pButton type="button" icon="pi pi-trash"
+                                                            class="p-button-outlined p-button-danger p-button-sm"
+                                                            (click)="removeAttachment('otherExpForm', 'attachment')"></button>
+                                                    </div>
+                                                </div>
+                                                <p-button label="Add Expense" icon="pi pi-plus"
+                                                    styleClass="orange-button"
+                                                    (click)="AddRow('otherExpForm')"></p-button>
+                                            </div>
+                                        </form>
+
+                                        <div class="mt-6" *ngIf="otherExpenseChildData.length">
+                                            <p-table [value]="otherExpenseChildData"
+                                                styleClass="p-datatable-sm p-datatable-gridlines">
+                                                <ng-template pTemplate="header">
+                                                    <tr class="bg-gray-50 text-sm">
+                                                        <th>Expense Name</th>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Attachment</th>
+                                                        <th class="w-20 text-center" *ngIf="postType != 'view'">Action
+                                                        </th>
+                                                    </tr>
+                                                </ng-template>
+                                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                                    <tr>
+                                                        <td>{{ item.text }}</td>
+                                                        <td>{{ item.expenseDate }}</td>
+                                                        <td class="font-bold">₹{{ item.amount }}</td>
+                                                        <td>
+                                                            <button pButton icon="pi pi-eye" *ngIf="item.attachment"
+                                                                class="p-button-rounded p-button-text p-button-sm"
+                                                                (click)="viewAttachment(item.attachment)"></button>
+                                                        </td>
+                                                        <td class="text-center" *ngIf="postType != 'view'">
+                                                            <button pButton icon="pi pi-trash"
+                                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                                (click)="deleteChildTableRow('otherExpenseChildData', i)"></button>
+                                                        </td>
+                                                    </tr>
+                                                </ng-template>
+                                            </p-table>
+                                        </div>
+                                        <div *ngIf="otherExpenseChildData.length === 0 && postType == 'view'"
+                                            class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-center text-red-600">
+                                            Data Not Found!!
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+                            </p-tabpanels>
+                        </p-tabs>
+                    </div>
+
+                    <p-toast></p-toast>
+                </form>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="bg-white p-4 border-t flex justify-end gap-3" *ngIf="postType != 'view'">
+                <p-button title="Close drawer" label="Close" icon="pi pi-times"
+                    styleClass="orange-button p-button-secondary" (click)="onDrawerHide()">
+                </p-button>
+                <p-button title="Reset form field values" label="Reset" icon="pi pi-refresh"
+                    styleClass="p-button-outlined p-button-secondary" (click)="clearForms()">
+                </p-button>
+
+                <p-button title="Submit form field values" [label]="postType == 'update' ? 'Update' : 'Submit'"
+                    icon="pi pi-check" styleClass="orange-button p-button-warning" (click)="onSubmit()">
+                </p-button>
+            </div>
+            <div class="bg-white p-4 border-t flex justify-end gap-3" *ngIf="postType == 'view'">
+                <p-button title="Close drawer" label="Close" icon="pi pi-times"
+                    styleClass="orange-button p-button-secondary" (click)="onDrawerHide()">
+                </p-button>
+            </div>
+        </div>
+    </p-drawer>
+
+    <!-- Confirmation Dialog (styled like office-expense-reimbursement) -->
+    <p-confirmdialog styleClass="tour-expense-confirm-dialog"></p-confirmdialog>
+
+    <!-- Approval Dialog -->
+    <p-dialog [(visible)]="approvalDrawerVisible" [modal]="true" [style]="{ width: '90vw', maxWidth: '1200px' }"
+        [closable]="true" [draggable]="false" [resizable]="true" (onHide)="closeDataDialog()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full">
+                <h2 class="text-xl font-semibold text-white m-0">Tour Reimbursement ({{selectedItem?.serialNo}})</h2>
+                <!-- <button class="text-white hover:bg-white/20 p-2 rounded transition-colors" (click)="closeDataDialog()">
+                    <span class="text-2xl leading-none">×</span>
+                </button> -->
+            </div>
+        </ng-template>
+
+        <form>
+            <div class="bg-gray-50 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Submit For
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.submitFrom}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Name
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.empName}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label
+                            class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Designation
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.designation}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">From Date
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">
+                            {{formatDateForDisplay(selectedItem?.fromDate)}}
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">To Date
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{formatDateForDisplay(selectedItem?.toDate)}}
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Travel To
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium overflow-x-auto">{{selectedItem?.travelTo}}
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Purpose
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium overflow-x-auto">
+                            {{selectedItem?.expensePurpose}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                        *ngIf="selectedItem?.submitFrom !== 'Conveyance'">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Expense
+                            Type :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.expanseType}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Travel By
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.travelBy}}</div>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Imprest
+                            :</label>
+                        <div class="text-base text-gray-900 font-medium">{{selectedItem?.imprest}}</div>
+                    </div>
+                </div>
+
+                <div class="mb-6" *ngIf="conveyanceChildData.length">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Conveyance</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Fare/ Conveyance</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Travel By</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() !== 'reviewer1' && roledata == 86">Prev Approved
+                                        Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Approved Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Remark</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Details</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Travel From</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Travel To</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        From Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        To Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Start Meter Reading</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        End Meter Reading</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Total Km</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr *ngFor="let item of conveyanceChildData;let i = index"
+                                    class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.expanseType}}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.travelBy}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.amount}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">
+                                        {{item.savedAmount}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvedAmount" appOnlyNumber
+                                            (change)="onChangeValue($event,item,'approvedAmount')">
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvalRemarks?item.approvalRemarks:''"
+                                            (change)="onChangeValue($event,item,'approvalRemarks')">
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.text}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.travelFrom}}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.travelTo}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.fromDate}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.toDate}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
+                                        {{item.startMeterRead}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.endMeterRead}}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.totalKm}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button [disabled]="!item.attachment" type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                                            (click)="viewAttachment(item.attachment)">
+                                            <i class="fa fa-eye text-xl"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mb-6" *ngIf="lodgingChildData.length">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Lodging</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                        Hotel Name</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">Prev Approved
+                                        Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Approved Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Remark</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        From Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        To Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr *ngFor="let item of lodgingChildData;let i = index"
+                                    class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.text}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.amount}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">
+                                        {{item.savedAmount}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvedAmount" appOnlyNumber
+                                            (change)="onChangeValue($event,item,'approvedAmount')">
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvalRemarks?item.approvalRemarks:''"
+                                            (change)="onChangeValue($event,item,'approvalRemarks')">
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.fromDate}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.toDate}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button [disabled]="!item.attachment" type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                                            (click)="viewAttachment(item.attachment)">
+                                            <i class="fa fa-eye text-xl"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mb-6" *ngIf="foodExpChildData.length">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Food</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Food Type</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">Prev Approved
+                                        Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Approved Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Remark</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr *ngFor="let item of foodExpChildData;let i = index"
+                                    class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.text}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.amount}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">
+                                        {{item.savedAmount}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvedAmount" appOnlyNumber
+                                            (change)="onChangeValue($event,item,'approvedAmount')">
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvalRemarks?item.approvalRemarks:''"
+                                            (change)="onChangeValue($event,item,'approvalRemarks')">
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.expenseDate |
+                                        date:'dd-MM-yyyy'}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button [disabled]="!item.attachment" type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                                            (click)="viewAttachment(item.attachment)">
+                                            <i class="fa fa-eye text-xl"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mb-6" *ngIf="laundryChildData.length">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Laundry</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        No of cloths</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">Prev Approved
+                                        Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Approved Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Remark</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr *ngFor="let item of laundryChildData;let i = index"
+                                    class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.text}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.amount}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">
+                                        {{item.savedAmount}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvedAmount" appOnlyNumber
+                                            (change)="onChangeValue($event,item,'approvedAmount')">
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvalRemarks?item.approvalRemarks:''"
+                                            (change)="onChangeValue($event,item,'approvalRemarks')">
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.expenseDate |
+                                        date:'dd-MM-yyyy'}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button [disabled]="!item.attachment" type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                                            (click)="viewAttachment(item.attachment)">
+                                            <i class="fa fa-eye text-xl"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mb-6" *ngIf="otherExpenseChildData.length">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">Other</h3>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Expense Name</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">Prev Approved
+                                        Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Approved Amount</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Remark</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap">
+                                        Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr *ngFor="let item of otherExpenseChildData;let i = index"
+                                    class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.text}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.amount}}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap"
+                                        *ngIf="wfLevel.toLowerCase() != 'reviewer1' && roledata == 86">
+                                        {{item.savedAmount}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvedAmount" appOnlyNumber
+                                            (change)="onChangeValue($event,item,'approvedAmount')">
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            [value]="item?.approvalRemarks?item.approvalRemarks:''"
+                                            (change)="onChangeValue($event,item,'approvalRemarks')">
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{item.expenseDate |
+                                        date:'dd-MM-yyyy'}}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <button [disabled]="!item.attachment" type="button"
+                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                                            (click)="viewAttachment(item.attachment)">
+                                            <i class="fa fa-eye text-xl"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Requested Amount by
+                            Employee</label>
+                        <input readonly type="text"
+                            class="w-full px-3 py-2 text-base text-gray-700 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed"
+                            [value]="totalRequestAmount | number:'1.2-2'">
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Approved Amount by Manager</label>
+                        <input readonly type="text"
+                            class="w-full px-3 py-2 text-base text-gray-700 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed"
+                            [value]="totalApprovedAmount">
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Approved Amount by {{rolDes}}
+                            <span class="text-red-600">*</span></label>
+                        <input type="text" [readonly]="wfLevel.toLowerCase() != 'approver'"
+                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': approvedAmountError, 'border-gray-300 focus:ring-blue-500 focus:border-blue-500': !approvedAmountError}"
+                            [value]="totalApprovedAmount" (change)="onChangeApprovedAmount($event)"
+                            (blur)="onChangeApprovedAmount($event)">
+                        <small class="text-xs text-red-600 mt-1 block" *ngIf="approvedAmountError">Approved Amount is
+                            required</small>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Payable by Finance</label>
+                        <input readonly type="text"
+                            class="w-full px-3 py-2 text-base text-gray-700 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed"
+                            [value]="approvedPaybleAmount.toFixed(2)">
+                        <small class="text-xs text-gray-500 italic mt-1 block">(Total Approved - Imprest)</small>
+                    </div>
+                    <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Remark</label>
+                        <input type="text" id="approvalRemarks"
+                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': !isValidremark, 'border-gray-300': isValidremark}"
+                            (input)="onRemarksChange($event)">
+                    </div>
+                </div>
+                <ng-container *ngIf="roledata == 86">
+                    <div class="mt-6 mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">Bank Details</h3>
+                    </div>
+                    <div *ngIf="approvalForm" [formGroup]="approvalForm">
+                        <div formArrayName="bankDetails">
+                            <div *ngFor="let bank of bankDetails.controls; let i = index" [formGroupName]="i"
+                                class="bg-gray-50 p-4 mb-4 border border-gray-200 rounded-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Bank Name <span
+                                                class="text-red-600">*</span></label>
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            formControlName="bankName" placeholder="Enter bank name"
+                                            [readonly]="wfLevel.toLowerCase() === 'creator'"
+                                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': bank.get('bankName')?.invalid && (bank.get('bankName')?.dirty || bank.get('bankName')?.touched), 'border-gray-300': !bank.get('bankName')?.invalid || !bank.get('bankName')?.dirty && !bank.get('bankName')?.touched}" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Account Number
+                                            <span class="text-red-600">*</span></label>
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            formControlName="account" placeholder="Enter account number"
+                                            [readonly]="wfLevel.toLowerCase() === 'creator'"
+                                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': bank.get('account')?.invalid && (bank.get('account')?.dirty || bank.get('account')?.touched), 'border-gray-300': !bank.get('account')?.invalid || !bank.get('account')?.dirty && !bank.get('account')?.touched}" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">IFSC Code <span
+                                                class="text-red-600">*</span></label>
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            formControlName="ifscCode" placeholder="Enter IFSC code"
+                                            [readonly]="wfLevel.toLowerCase() === 'creator'"
+                                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': bank.get('ifscCode')?.invalid && (bank.get('ifscCode')?.dirty || bank.get('ifscCode')?.touched), 'border-gray-300': !bank.get('ifscCode')?.invalid || !bank.get('ifscCode')?.dirty && !bank.get('ifscCode')?.touched}" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">PAN Details <span
+                                                class="text-red-600">*</span></label>
+                                        <input type="text"
+                                            class="w-full px-3 py-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            formControlName="panDetails" placeholder="Enter PAN number"
+                                            [readonly]="wfLevel.toLowerCase() === 'creator'"
+                                            [ngClass]="{'border-red-500 focus:ring-red-500 focus:border-red-500': bank.get('panDetails')?.invalid && (bank.get('panDetails')?.dirty || bank.get('panDetails')?.touched), 'border-gray-300': !bank.get('panDetails')?.invalid || !bank.get('panDetails')?.dirty && !bank.get('panDetails')?.touched}" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+            </div>
+
+            <div class="flex justify-end items-center gap-3 p-6 bg-white border-t border-gray-200 flex-wrap">
+                <button *ngIf="selectedItem?.approvalDetail && selectedItem?.approvalDetail.length" pButton
+                    type="button" label="History" icon="pi pi-history" class="p-button-primary"
+                    (click)="openApprovalHistoryModal(selectedItem)" title="View History"></button>
+                <button *ngIf="isApprove" pButton type="button" label="Approve" icon="pi pi-check"
+                    class="p-button-success" (click)="OnSubmitAction('Approve')"></button>
+                <button
+                    *ngIf="isForward && (selectedItem?.wfStatusId != 6 && selectedItem?.statusId != 6 && selectedItem?.wfStatus != 6 && selectedItem?.approvedStatus != 6)"
+                    pButton type="button" label="Forward" icon="pi pi-forward" class="p-button-primary"
+                    (click)="OnSubmitAction('Forward')"></button>
+                <button *ngIf="isReject" pButton type="button" label="Reject" icon="pi pi-times" class="p-button-danger"
+                    (click)="OnSubmitAction('Reject')"></button>
+                <button *ngIf="isReturn" pButton type="button" label="Return" icon="pi pi-reply"
+                    class="p-button-warning" (click)="OnSubmitAction('Return')"></button>
+            </div>
+        </form>
+    </p-dialog>
+
+    <!-- Approval History Drawer -->
+    <p-drawer [(visible)]="approvalHistoryVisible" [position]="'right'" [style]="{ width: '50vw', maxWidth: '600px' }"
+        [modal]="true" [closable]="true" [showCloseIcon]="true" (onHide)="closeApprovalHistoryModal()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full">
+                <h3 class="text-lg font-semibold">Approval History ({{approalHistoryData?.serialNo}})</h3>
+            </div>
+        </ng-template>
+
+        <div class="p-4" style="overflow-y: auto; max-height: calc(100vh - 120px);">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Approval Progress</span>
+                    <span class="text-sm font-semibold" [ngClass]="getProgressColor()">{{getApprovalProgress()}}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                    <div class="h-full rounded-full transition-all duration-500 ease-out"
+                        [ngClass]="getProgressBarColor()" [style.width.%]="getApprovalProgress()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Timeline -->
+            <div class="approval-history-container space-y-4">
+                <div class="relative"
+                    *ngFor="let item of approalHistoryData?.approvalDetail; let i = index; let last = last">
+                    <!-- Timeline Line -->
+                    <div *ngIf="!last" class="absolute left-6 top-12 w-0.5 h-full z-0"
+                        [ngClass]="item.WfStatus != 'Pending' ? 'bg-green-400' : 'bg-yellow-300'"
+                        style="height: calc(100% - 2rem);"></div>
+
+                    <div class="relative flex items-start gap-4">
+                        <!-- Status Icon/Dot -->
+                        <div class="flex-shrink-0 z-10">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+                                [ngClass]="getStatusCircleClass(item.WfStatus)">
+                                <i [ngClass]="getStatusIcon(item.WfStatus)" class="text-white text-lg"></i>
+                            </div>
+                        </div>
+
+                        <!-- Content Card -->
+                        <div class="flex-1 bg-white rounded-lg shadow-md p-4 border-l-4 transition-all hover:shadow-lg"
+                            [ngClass]="getCardBorderClass(item.WfStatus)">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-lg" [ngClass]="getTitleColor(item.WfStatus)">
+                                    {{item.wflevel}}
+                                </h3>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+                                    [ngClass]="getBadgeClass(item.WfStatus)">
+                                    {{item.WfStatus}}
+                                </span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <p *ngIf="item.wflevel != 'Creator'" class="text-sm">
+                                    <span class="font-semibold text-gray-600">Role:</span>
+                                    <span class="ml-2 text-gray-800">{{item.role?item.role:'-'}}</span>
+                                </p>
+
+                                <ng-container *ngIf="item.WfStatus !='Pending'">
+                                    <div class="bg-gray-50 rounded p-3 space-y-2">
+                                        <p class="text-sm">
+                                            <span class="font-semibold text-gray-600">User:</span>
+                                            <span class="ml-2 text-gray-800">{{item.employee?item.employee:'-'}}</span>
+                                        </p>
+                                        <p class="text-sm">
+                                            <span class="font-semibold text-gray-600">Timestamp:</span>
+                                            <span class="ml-2 text-gray-800">{{formatDateForDisplay(item.createdOn,
+                                                'dd-MM-yyyy h:mm a')}}</span>
+                                        </p>
+                                        <p class="text-sm">
+                                            <span class="font-semibold text-gray-600">Request Amount:</span>
+                                            <span class="ml-2 font-semibold text-blue-600">
+                                                ₹{{item?.requestedAmount?item.requestedAmount:'0'}}{{item.requestedAmount>0?'/-':''}}
+                                            </span>
+                                        </p>
+                                        <p *ngIf="item.wflevel != 'Creator' && item.WfStatus != 'Rejected'"
+                                            class="text-sm">
+                                            <span class="font-semibold text-gray-600">Approved Amount:</span>
+                                            <span class="ml-2 font-semibold text-green-600">
+                                                ₹{{item.approvedAmount?item.approvedAmount:'0'}}{{item.approvedAmount>0?'/-':''}}
+                                            </span>
+                                        </p>
+                                        <p *ngIf="item.wflevel != 'Creator'" class="text-sm">
+                                            <span class="font-semibold text-gray-600">Approver:</span>
+                                            <span
+                                                class="ml-2 text-gray-800">{{item.approvedBy?item.approvedBy:'-'}}</span>
+                                        </p>
+                                        <p *ngIf="item.wflevel != 'Creator' && item.approvalRemarks" class="text-sm">
+                                            <span class="font-semibold text-gray-600">Comments:</span>
+                                            <span class="ml-2 text-gray-800 italic">{{item.approvalRemarks}}</span>
+                                        </p>
+                                    </div>
+                                </ng-container>
+
+                                <div *ngIf="item.WfStatus == 'Pending'"
+                                    class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                                    <p class="text-sm text-yellow-800 font-medium">
+                                        <i class="pi pi-clock mr-2"></i>Awaiting approval...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </p-drawer>
+
+
+    <div *ngIf="historyFoodDetails && historyFoodDetails.length > 0" class="mt-6">
+        <h4 class="font-semibold text-base mb-3">Food Expense History</h4>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-300 text-sm">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-300 px-3 py-2 text-left">Food Type</th>
+                        <th class="border border-gray-300 px-3 py-2 text-left">Date</th>
+                        <th class="border border-gray-300 px-3 py-2 text-right">Amount</th>
+                        <th class="border border-gray-300 px-3 py-2 text-right">Approved Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let food of historyFoodDetails" class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-3 py-2">{{food.text || '-'}}</td>
+                        <td class="border border-gray-300 px-3 py-2">{{formatDateForDisplay(food.expenseDate,
+                            'dd-MM-yyyy')}}
+                        </td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">{{food.amount || '0'}}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-right">{{food.approvedAmount || '0'}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>

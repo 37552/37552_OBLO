@@ -1,0 +1,49 @@
+
+::ng-deep .p-inputtext {
+    width: 100% !important;
+}
+
+.poFromPrData input {
+    border:1px solid #e2e8f0 !important;
+    padding: 2px;
+}
+
+.availableQty input {
+    background: #e2e8f0 !important;
+}
+
+.text-danger {
+    color: #a94442 !important;
+}
+
+input:disabled {
+    background: #e2e8f0 !important;
+}
+
+.grandTotal {
+    width: 100%;
+    float: left;
+    background-color: #cce5ff;
+    padding: 10px;
+    color: #004085;
+}
+
+::ng-deep #printWrapper td {
+    padding: 5px 10px !important;
+    font-size: 14px !important;
+}
+
+::ng-deep #printWrapper th {
+    border: 1px solid #000 !important;
+    padding: 5px !important;
+}
+
+::ng-deep .printFooter {
+    margin-top: 10px;
+}
+
+.dialog-footer {
+  width: 100%;
+  padding-top:10px; 
+  text-align: right;
+}

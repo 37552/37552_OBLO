@@ -1,0 +1,160 @@
+/* custom style for p-select to match input height */
+.custom-p-select .p-dropdown,
+.custom-p-select .p-dropdown-label {
+    height: 2.5rem;
+    /* same as input py + px */
+    line-height: 2.5rem;
+    /* vertically center text */
+    padding: 0 0.75rem;
+    /* match px-3 in Tailwind */
+}
+
+.custom-p-select .p-dropdown-label {
+    display: flex;
+    align-items: center;
+}
+
+.custom-p-select .p-dropdown-trigger {
+    height: 0rem !important;
+    /* same as input */
+}
+
+.custom-p-select .p-dropdown-panel {
+    font-size: 10.5px !important;
+    /* match text-sm if needed */
+}
+::ng-deep .p-dialog-header {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  ::ng-deep .p-dialog-header-icon {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  
+::ng-deep .custom-p-select .p-select-label {
+    font-size: 13px !important;
+    padding: 6px 6px 6px 6px;
+    font-weight: 600;
+    /* match text-sm if needed */
+}
+
+// multiselect
+
+::ng-deep .custom-p-select .p-multiselect-label {
+    font-size: 13px !important;
+    padding: 6px 6px 6px 6px;
+    font-weight: 600;
+    /* match text-sm if needed */
+}
+
+
+::ng-deep .p-drawer-content {
+    padding: 2rem !important;
+}
+
+
+::ng-deep .p-card-title {
+  font-size: 17px !important;
+}
+
+::ng-deep .p-multiselect-option,
+::ng-deep .p-paginator
+::ng-deep .p-select-label,
+::ng-deep .p-paginator-page,
+::ng-deep .p-select-option {
+  font-size: 15px;
+} 
+
+::ng-deep .p-fileupload-file-thumbnail {
+  display:none;
+}
+
+.tabbable textarea {
+  resize: unset !important;
+}
+
+::ng-deep .p-inputtext {
+  font-size:14px !important;
+}
+
+::ng-deep .p-paginator {
+  font-size:14px !important;
+}
+
+::ng-deep .p-paginator-page.p-paginator-page-selected {
+    background: #dbeafe !important;
+    color: #155dfc !important;
+    border-radius: 6px;
+    padding: 12px !important;
+    height: 28px;
+}
+
+.action-cell ::ng-deep .p-button {
+    margin-bottom: 5px !important;
+    width:100%;
+}
+
+::ng-deep .p-inputtext:enabled:focus {
+  border-color:#cbd5e1 !important;
+}
+
+@media (max-width: 1024px) {
+  ::ng-deep .p-drawer {
+    width:70% !important;
+  }
+
+  ::ng-deep .p-drawer-content {
+    padding: 1rem !important;
+  }
+
+  .attachResume ::ng-deep .p-button-text {
+    font-size: 14px;
+  }
+
+}
+
+@media (max-width: 768px) {
+  ::ng-deep .p-drawer {
+    width:80% !important;
+  }
+
+  .attachResume ::ng-deep .p-button-text {
+    font-size: 13px;
+  }
+
+  }
+
+  @media (max-width: 640px) {
+    ::ng-deep .p-dialog-header {
+      flex-direction: unset;
+      align-items: flex-start !important;
+    }
+  
+    ::ng-deep .p-dialog-header-icons {
+      align-self: flex-end;
+      margin-top: 0.5rem;
+    }
+
+     ::ng-deep .p-dialog {
+      width: 90% !important;
+    }
+
+    ::ng-deep .p-drawer {
+    width:90% !important;
+   }
+
+  }
+
+  @media (max-width: 480px) {
+  ::ng-deep .p-drawer {
+    width:95% !important;
+}  
+
+}
+
+
+
+

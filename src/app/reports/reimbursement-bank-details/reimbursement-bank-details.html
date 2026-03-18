@@ -1,0 +1,110 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-sm mb-4">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <!-- Breadcrumb -->
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+
+                <!-- Tabs (PrimeNG) -->
+                <div class="flex items-center">
+                    <p-tabs [value]="currentTab === 'pending' ? '0' : '1'" (onChange)="onChangeTab($event)">
+                        <p-tablist>
+                            <p-tab value="0">
+                                <span class="inline-flex items-center gap-2">
+                                    <i class="fa fa-clock-o"></i>
+                                    <span>Pending Payments ({{ pendingData.length }})</span>
+                                </span>
+                            </p-tab>
+                            <p-tab value="1">
+                                <span class="inline-flex items-center gap-2">
+                                    <i class="fa fa-check-circle"></i>
+                                    <span>Completed Payments ({{ completedData.length }})</span>
+                                </span>
+                            </p-tab>
+                        </p-tablist>
+                    </p-tabs>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="bg-white rounded-lg shadow-sm">
+        <ng-container [ngSwitch]="currentTab">
+            <!-- Pending Tab -->
+            <div *ngSwitchCase="'pending'" class="p-4 space-y-4">
+                <!-- Bank selection row (only when rows selected) -->
+                <div *ngIf="getSelectedRows().length > 0" class="flex items-center justify-between gap-4 flex-wrap">
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">
+                        Pending Payments
+                    </h3>
+
+                    <div class="flex items-center gap-3 bg-blue-50 px-3 py-2 rounded border border-blue-200">
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            Select Bank for Payment:
+                        </label>
+
+                        <p-select [(ngModel)]="selectedBankForPayment" [options]="travelByDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Choose Bank" [filter]="true" appendTo="body"
+                            styleClass="w-56" (ngModelChange)="onBankSelectionChanged()">
+                        </p-select>
+
+                        <span class="text-sm text-blue-600 font-medium whitespace-nowrap">
+                            {{ getSelectedRows().length }} selected
+                        </span>
+                    </div>
+                </div>
+
+                <!-- No Data -->
+                <div *ngIf="pendingData.length === 0"
+                    class="mt-2 p-3 bg-red-50 border border-red-200 rounded text-center">
+                    <span class="text-red-700 font-medium">No pending payments found!!</span>
+                </div>
+
+                <!-- Pending Table -->
+                <div *ngIf="pendingData.length > 0" class="mt-2">
+                    <app-table-template [data]="pendingData" [columns]="pendingDataColumns"
+                        [customTemplate]="pendingCheckboxTemplateRef" [headerCheckbox]="pendingCheckboxHeaderRef"
+                        [isLoading]="isLoading" (refresh)="loadPendingData()">
+                    </app-table-template>
+                </div>
+            </div>
+
+            <!-- Completed Tab -->
+            <div *ngSwitchCase="'completed'" class="p-4 space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800">Completed Payments</h3>
+
+                <!-- No Data -->
+                <div *ngIf="completedData.length === 0"
+                    class="mt-2 p-3 bg-red-50 border border-red-200 rounded text-center">
+                    <span class="text-red-700 font-medium">No completed payments found!!</span>
+                </div>
+
+                <!-- Completed Table -->
+                <div *ngIf="completedData.length > 0" class="mt-2">
+                    <app-table-template [data]="completedData" [columns]="completedDataColumns" [isLoading]="isLoading"
+                        (refresh)="loadCompletedData()">
+                    </app-table-template>
+                </div>
+            </div>
+        </ng-container>
+
+        <!-- Pending Table Checkbox Header Template -->
+        <ng-template #pendingCheckboxHeaderRef let-col="col">
+            <p-checkbox [binary]="true" [(ngModel)]="selectAllRows" (ngModelChange)="onSelectAllChange($event)"
+                inputId="select-all-pending-header" styleClass="cursor-pointer">
+            </p-checkbox>
+        </ng-template>
+
+        <!-- Pending Table Checkbox Cell Template -->
+        <ng-template #pendingCheckboxTemplateRef let-col="col" let-item="item" let-index="index">
+            <ng-container *ngIf="col.key === 'checkbox'">
+                <p-checkbox [binary]="true" [ngModel]="selectedRows.has(item)"
+                    (ngModelChange)="onRowSelectChange(item, $event)" [inputId]="'pending-checkbox-' + index"
+                    styleClass="cursor-pointer">
+                </p-checkbox>
+            </ng-container>
+        </ng-template>
+    </div>
+</div>

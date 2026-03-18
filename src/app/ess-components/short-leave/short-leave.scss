@@ -1,0 +1,46 @@
+::ng-deep {
+    .p-selectbutton-full-width {
+        display: flex;
+        width: 100%;
+
+        .p-togglebutton {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 0.5rem 0.25rem;
+        }
+    }
+
+    // .orange-button {
+    //     background-color: #f97316 !important;
+    //     border-color: #ea580c !important;
+    //     color: white !important;
+
+    //     &:hover {
+    //         background-color: #ea580c !important;
+    //     }
+    // }
+}
+
+:host ::ng-deep .p-selectbutton .p-button {
+    border-radius: 8px;
+    margin-right: 8px;
+    /* gap between buttons */
+}
+
+:host ::ng-deep .p-selectbutton .p-button.p-highlight {
+    background-color: #2563eb !important;
+    /* blue bg */
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    /* white text */
+}
+
+:host ::ng-deep .p-selectbutton .p-button:not(.p-highlight) {
+    background-color: #f1f5f9;
+    color: #475569;
+}

@@ -1,0 +1,847 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header Section -->
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        <p-button (click)="showDrawer('add',[])" label="Add Sales Order" icon="pi pi-plus" variant="text"
+          [raised]="true" styleClass="orange-button" />
+      </div>
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)" (refresh)="getTableData(true)"
+      (pageSizeChange)="onPageSizeChange($event)" [jsonTemplate1]="orderdatatemplete"
+      [jsonTemplate2]="taxDetailsTemplate" [jsonTemplate3]="otherchargesDetailsTemplate">
+
+      <ng-template #orderdatatemplete let-item>
+        <button type="button" pButton icon="pi pi-id-card" (click)="orderDetails(item)"
+          class="p-button-rounded p-button-text p-button-info" pTooltip="View Vendor Details" tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #taxDetailsTemplate let-item>
+        <button type="button" pButton icon="pi pi-building" (click)="taxDetailsdata(item)"
+          class="p-button-rounded p-button-text p-button-secondary" pTooltip="View Company Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #otherchargesDetailsTemplate let-item>
+        <button type="button" pButton icon="pi pi-box" (click)="otherchargeDetails(item)"
+          class="p-button-rounded p-button-text p-button-info" pTooltip="View Make Details" tooltipPosition="top">
+        </button>
+      </ng-template>
+
+
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="showDrawer('view', item); op.hide()" pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left">
+              <i class="pi pi-eye"></i>
+            </button>
+            <button (click)="printOpportunity(item); op.hide()" pTooltip="Print"
+              class="px-4 py-2 hover:bg-gray-100 text-left text-blue-600">
+              <i class="pi pi-print"></i>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <!-- Sales Order Drawer -->
+  <p-drawer [(visible)]="visible" [position]="'right'" [style]="getDrawerStyle()" [modal]="true" [showCloseIcon]="false"
+    (onHide)="onDrawerHide()" class="sales-order-drawer">
+
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full p-4 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <span class="font-semibold text-xl text-gray-800">{{header}}</span>
+          <i class="text-blue-500 text-lg" [ngClass]="headerIcon"></i>
+        </div>
+        <div class="flex items-center gap-2">
+          <button pButton [icon]="isFullScreen ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+            (click)="toggleFullScreen()" class="p-button-rounded p-button-text p-button-plain h-8 w-8">
+          </button>
+          <button pButton icon="pi pi-times" (click)="visible = false"
+            class="p-button-rounded p-button-text p-button-plain h-8 w-8">
+          </button>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex flex-col items-center justify-center min-h-[500px]">
+        <p-progress-spinner strokeWidth="6" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '60px', height: '60px' }" />
+        <p class="mt-4 text-gray-600 font-medium">Loading sales order data...</p>
+      </div>
+      }@else {
+      <div class="h-[calc(100%-140px)]">
+        <form [formGroup]="salesOrderForm" (ngSubmit)="onSubmit($event)" class="space-y-6">
+          <div class="space-y-6">
+            <div class="space-y-6">
+              <div *ngIf="isFormLoading" class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="flex items-center justify-center gap-3">
+                  <p-progress-spinner styleClass="w-6 h-6"></p-progress-spinner>
+                  <span class="text-gray-600">Loading order data...</span>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <div class="space-y-6">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <div class="space-y-6">
+                      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                          <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-user text-blue-600"></i>
+                            Customer Information
+                          </h4>
+                        </div>
+                        <div class="p-6 space-y-5">
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Customer <span class="text-red-500">*</span>
+                            </label>
+                            <p-select formControlName="customerId" [options]="customers" optionLabel="drpOption"
+                              optionValue="drpValue" [filter]="true" [showClear]="true" appendTo="body"
+                              placeholder="Select customer" [virtualScroll]="true" [virtualScrollItemSize]="30"
+                              [class.p-invalid]="isInvalid('customerId')" class="w-full">
+                            </p-select>
+                            @if(isInvalid('customerId')){
+                            <small class="text-red-500 text-xs mt-1">Customer is required</small>
+                            }
+                          </div>
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Delivery Address <span class="text-red-500">*</span>
+                            </label>
+                            <p-select formControlName="customerAddressId" [options]="customerAddresses"
+                              optionLabel="drpOption" optionValue="drpValue" [filter]="true" [showClear]="true"
+                              appendTo="body" placeholder="Select delivery address"
+                              [class.p-invalid]="isInvalid('customerAddressId')" class="w-full">
+                            </p-select>
+                            @if(isInvalid('customerAddressId')){
+                            <small class="text-red-500 text-xs mt-1">Delivery address is required</small>
+                            }
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Contact Details -->
+                      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                          <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-phone text-green-600"></i>
+                            Contact Details
+                          </h4>
+                        </div>
+                        <div class="p-6 space-y-5">
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Contact Person <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" pInputText formControlName="contactPerson"
+                              [class.p-invalid]="isInvalid('contactPerson')" class="w-full"
+                              placeholder="Enter contact person name" />
+                            @if(isInvalid('contactPerson')){
+                            <small class="text-red-500 text-xs mt-1">Contact person is required</small>
+                            }
+                          </div>
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Contact Mobile <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" pInputText formControlName="contactMobile"
+                              [class.p-invalid]="isInvalid('contactMobile')" class="w-full"
+                              placeholder="Enter mobile number" />
+                            @if(isInvalid('contactMobile')){
+                            <small class="text-red-500 text-xs mt-1">Valid mobile number is required</small>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                      <!-- Order Details -->
+                      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                          <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-shopping-cart text-purple-600"></i>
+                            Order Details
+                          </h4>
+                        </div>
+                        <div class="p-6 space-y-5">
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Warehouse <span class="text-red-500">*</span>
+                            </label>
+                            <p-select formControlName="warehouseId" [options]="warehouses" optionLabel="drpOption"
+                              optionValue="drpValue" [filter]="true" placeholder="Select warehouse" appendTo="body"
+                              [class.p-invalid]="isInvalid('warehouseId')" class="w-full">
+                            </p-select>
+                            @if(isInvalid('warehouseId')){
+                            <small class="text-red-500 text-xs mt-1">Warehouse is required</small>
+                            }
+                          </div>
+                          <div class="grid grid-cols-1 gap-2">
+                            <label class="text-lg font-medium text-gray-700">
+                              Delivery Date <span class="text-red-500">*</span>
+                            </label>
+                            <p-datePicker formControlName="deliveryDate"
+                              [inputStyleClass]="isInvalid('deliveryDate') ? 'w-full p-invalid' : 'w-full'"
+                              [appendTo]="'body'" [showIcon]="true" class="w-full" styleClass="w-full"
+                              placeholder="Select delivery date">
+                            </p-datePicker>
+                            @if(isInvalid('deliveryDate')){
+                            <small class="text-red-500 text-xs mt-1">Delivery date is required</small>
+                            }
+                          </div>
+                          <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                              <label class="text-lg font-medium text-gray-700">Quotation <span
+                                  class="text-red-500">*</span></label>
+
+                              @if(postType === 'view') {
+                              <input type="text" pInputText [(ngModel)]="selectedQuotationText"
+                                [ngModelOptions]="{ standalone: true }" class="w-full bg-gray-100" readonly>
+                              }
+                              @else {
+                              <p-select formControlName="quotationId" [options]="quotations" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" appendTo="body" placeholder="Select quotation"
+                                [class.p-invalid]="isInvalid('quotationId')" class="w-full">
+                              </p-select>
+                              @if(isInvalid('quotationId')){
+                              <small class="text-red-500 text-xs mt-1">Quotation is required</small>
+                              }
+                              }
+                            </div>
+
+                            <div class="space-y-2">
+                              <label class="text-lg font-medium text-gray-700">Contract <span
+                                  class="text-red-500">*</span></label>
+
+                              @if(postType === 'view') {
+                              <input type="text" pInputText [(ngModel)]="selectedContractText"
+                                [ngModelOptions]="{ standalone: true }" class="w-full bg-gray-100" readonly>
+
+                              } @else {
+
+                              <p-select formControlName="contractId" [options]="contracts" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" appendTo="body" placeholder="Select contract"
+                                [class.p-invalid]="isInvalid('contractId')" class="w-full">
+                              </p-select>
+                              @if(isInvalid('contractId')){
+                              <small class="text-red-500 text-xs mt-1">Contract is required</small>
+                              }
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- File Attachment Section -->
+                      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-full">
+                        <div class="bg-gradient-to-r from-orange-50 to-amber-50 px-6 py-4 border-b border-gray-200">
+                          <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-paperclip text-orange-600"></i>
+                            File Attachment
+                          </h4>
+                        </div>
+                        <div class="p-6">
+                          <div class="flex items-center justify-between mb-4">
+                            <label class="text-lg font-medium text-gray-700">Attach File</label>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <input #attachFileInput type="file" class="hidden"
+                              (change)="onFileSelected($event,'attachFile','SalesOrderDocuments')" />
+
+                            @if(postType !== 'view'){
+                            <p-button type="button" icon="pi pi-upload" label="Upload" styleClass="p-button-sm"
+                              (click)="attachFileInput.click()"></p-button>
+                            }
+
+                            <p-button type="button" icon="pi pi-eye" label="View" styleClass="p-button-text p-button-sm"
+                              [disabled]="!salesOrderForm.get('attachFile')?.value"
+                              (click)="viewAttachment(salesOrderForm.get('attachFile')?.value)"></p-button>
+
+                            @if(postType !== 'view'){
+                            <p-button type="button" icon="pi pi-times" label="Clear" severity="danger"
+                              styleClass="p-button-text p-button-sm"
+                              [disabled]="!salesOrderForm.get('attachFile')?.value"
+                              (click)="removeUploadedFile('attachFile')"></p-button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Information - Full Width at Bottom -->
+                  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                      <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="pi pi-info-circle text-cyan-600"></i>
+                        Additional Information
+                      </h4>
+                    </div>
+                    <div class="p-6">
+                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                          <label class="text-lg font-medium text-gray-700">Sales Category</label>
+                          <p-select formControlName="salesCategoryId" [options]="salesCategories" [appendTo]="'body'"
+                            optionLabel="drpOption" optionValue="drpValue" [filter]="true" placeholder="Select category"
+                            [class.p-invalid]="isInvalid('salesCategoryId')" class="w-full">
+                          </p-select>
+                          @if(isInvalid('salesCategoryId')){
+                          <small class="text-red-500 text-xs mt-1">sales Category is required</small>
+                          }
+
+                        </div>
+                        <div class="space-y-2">
+                          <label class="text-lg font-medium text-gray-700">Currency</label>
+                          <p-select formControlName="currencyId" [options]="filteredCurrencies" optionLabel="drpOption"
+                            [appendTo]="'body'" optionValue="drpValue" [class.p-invalid]="isInvalid('currencyId')"
+                            [filter]="true" placeholder="Select currency" class="w-full">
+                          </p-select>
+                          @if(isInvalid('currencyId')){
+                          <small class="text-red-500 text-xs mt-1">currency is required</small>
+                          }
+
+                        </div>
+                        <div class="space-y-2">
+                          <label class="text-lg font-medium text-gray-700">Organization Address</label>
+                          <p-select formControlName="orgAddress" [options]="orgAddresses" optionLabel="drpOption"
+                            [appendTo]="'body'" [class.p-invalid]="isInvalid('orgAddress')" optionValue="drpValue"
+                            [filter]="true" placeholder="Select organization address" class="w-full">
+                          </p-select>
+                          @if(isInvalid('orgAddress')){
+                          <small class="text-red-500 text-xs mt-1">orgnasation Address is required</small>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                  @for(tab of basicInfoTabs; track tab; let i = $index){
+                  <button [class]="getTabClass(i)" (click)="setActiveTab(i)" type="button">
+                    <i [class]="tab.icon" class="mr-2"></i>
+                    {{tab.label}}
+                  </button>
+                  }
+                </nav>
+              </div>
+              <div class="p-6">
+                @if(activeTab === 0){
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Items</h5>
+                  </div>
+
+                  @if(orderItems.length === 0){
+                  <div class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+                    <p class="text-sm">No items added</p>
+                    <p class="text-xs text-gray-400">Click "Add Item" to start building your sales order</p>
+                  </div>
+                  }@else{
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            S.No</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Item</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Unit</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Quantity</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Rate</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Tax %</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Discount %</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Tolerance</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Tech Specification</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Total Price</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-200">
+                        <tr *ngFor="let item of orderItems; let i = index" class="hover:bg-gray-50"
+                          [class.bg-blue-50]="item.isFromQuote">
+                          <td class="px-4 py-3 text-sm text-gray-900">
+                            {{i + 1}}
+                          </td>
+                          <td class="px-4 py-3">
+                            <p-select [(ngModel)]="item.itemCodeId" [ngModelOptions]="{standalone: true}"
+                              [options]="getItemOptions()" optionLabel="drpOption" optionValue="drpValue"
+                              [filter]="true" [appendTo]="'body'" [virtualScroll]="true" [virtualScrollItemSize]="30"
+                              placeholder="Select item" class="w-64" [disabled]="isItemDisabled(item)">
+                            </p-select>
+                          </td>
+                          <td class="px-4 py-3">
+                            <p-select [(ngModel)]="item.unitId" [ngModelOptions]="{standalone: true}"
+                              [options]="getUnitOptions()" optionLabel="drpOption" optionValue="drpValue"
+                              [filter]="true" [appendTo]="'body'" placeholder="Select unit" class="w-32"
+                              [disabled]="isUnitDisabled(item)">
+                            </p-select>
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="number" pInputText [(ngModel)]="item.quantity"
+                              [ngModelOptions]="{standalone: true}" class="w-24" min="1"
+                              [readonly]="isQuantityDisabled(item)">
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="number" pInputText [(ngModel)]="item.rate"
+                              [ngModelOptions]="{standalone: true}" class="w-32" min="0" step="0.01"
+                              [readonly]="isRateDisabled(item)">
+                          </td>
+                          <td class="px-4 py-3">
+                            @if(isTaxItemWise){
+                            <p-multiSelect [(ngModel)]="item.taxPercentage" [ngModelOptions]="{standalone: true}"
+                              [options]="getAvailableTaxes()" optionLabel="drpOption" optionValue="drpValue"
+                              [filter]="true" [appendTo]="'body'" placeholder="Select taxes"
+                              (ngModelChange)="onTaxDrpChange($event, item)"
+                              [disabled]="postType === 'view' || !isTaxItemWise" class="w-48">
+                            </p-multiSelect>
+
+                            <!-- Show selected taxes summary -->
+                            @if(hasTaxItems(item)){
+                            <div class="text-xs text-gray-500 mt-1">
+                              Selected: {{getSelectedTaxesText(item)}}
+                            </div>
+                            }
+                            } @else {
+                            <div class="text-sm font-medium text-gray-700 p-2 bg-gray-50 rounded">
+                              {{getOrderWiseTaxDisplay()}}
+                            </div>
+                            }
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="number" pInputText [(ngModel)]="item.discountPercentage"
+                              [ngModelOptions]="{standalone: true}" class="w-24" min="0" max="100"
+                              [readonly]="postType === 'view' || hasTaxItems(item)">
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="text" pInputText [(ngModel)]="item.tolrence"
+                              [ngModelOptions]="{standalone: true}" class="w-32" placeholder="Tolerance" value="0"
+                              [readonly]="postType === 'view'">
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="text" pInputText [(ngModel)]="item.techSpecification"
+                              [ngModelOptions]="{standalone: true}" class="w-48" placeholder="Tech Specification"
+                              [readonly]="postType === 'view'">
+                          </td>
+                          <td class="px-4 py-3">
+                            <input type="number" pInputText [value]="item.rate * item.quantity"
+                              class="w-32 bg-gray-100 text-gray-700" readonly>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+        
+                  }
+                </div>
+                }
+
+                <!-- Tab 2: Additional Tax Details -->
+                @if(activeTab === 1){
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Additional Tax Details</h5>
+                  </div>
+
+
+
+                  @if(additionalTaxArray.length === 0){
+                  <div class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+                    <p class="text-sm">No additional tax details available</p>
+                  </div>
+                  }@else{
+                  <div class="space-y-3">
+                    <div *ngFor="let tax of additionalTaxArray; let i = index"
+                      class="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <span
+                        class="w-6 h-6 flex items-center justify-center bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                        {{i + 1}}
+                      </span>
+
+                      <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label class="text-xs text-gray-500">Tax For</label>
+                          <p class="text-sm font-medium">{{tax['taxForTxt']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Nature</label>
+                          <p class="text-sm font-medium">{{tax['nature']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Tax</label>
+                          <p class="text-sm font-medium">{{tax['tax']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Tax Option</label>
+                          <p class="text-sm font-medium">{{tax['taxOption']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Discount %</label>
+                          <p class="text-sm font-medium">{{tax['discountPercentage']}}</p>
+                        </div>
+
+                        <div>
+                          <label class="text-xs text-gray-500">Amount</label>
+                          <p class="text-sm font-medium">{{tax['amount'] | currency:'INR'}}</p>
+                        </div>
+                        <div class="md:col-span-2">
+                          <label class="text-xs text-gray-500">Remarks</label>
+                          <p class="text-sm font-medium">{{tax['remarks'] || 'N/A'}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+                } 
+
+                @if(activeTab === 2){
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Discount</h5>
+                  </div>
+
+
+                  @if(discountArray.length === 0){
+                  <div class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+                    <p class="text-sm">No discounts available</p>
+                  </div>
+                  }@else{
+                  <div class="space-y-3">
+                    <div *ngFor="let disc of discountArray; let i = index"
+                      class="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <span
+                        class="w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        {{i + 1}}
+                      </span>
+
+                      <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label class="text-xs text-gray-500">Discount For</label>
+                          <p class="text-sm font-medium">{{disc.discountForTxt}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Nature</label>
+                          <p class="text-sm font-medium">{{disc.nature}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Value</label>
+                          <p class="text-sm font-medium">{{disc.value}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Remarks</label>
+                          <p class="text-sm font-medium">{{disc.remarks || 'N/A'}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+                }
+
+                <!-- Tab 3: Other Charges -->
+                @if(activeTab === 3){
+                <div class="space-y-6">
+                  <div class="flex justify-between items-center mb-4">
+                    <h5 class="text-lg font-semibold text-gray-800">Other Charges</h5>
+                  </div>
+
+
+                  @if(otherChargesArray.length === 0){
+                  <div class="text-center py-8 text-gray-500">
+                    <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+                    <p class="text-sm">No other charges available</p>
+                  </div>
+                  }@else{
+                  <div class="space-y-3">
+                    <div *ngFor="let charge of otherChargesArray; let i = index"
+                      class="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <span
+                        class="w-6 h-6 flex items-center justify-center bg-teal-100 text-teal-700 rounded-full text-xs font-semibold">
+                        {{i + 1}}
+                      </span>
+
+                      <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <label class="text-xs text-gray-500">Charge Type</label>
+                          <p class="text-sm font-medium">{{charge['chargeType']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Nature</label>
+                          <p class="text-sm font-medium">{{charge['nature']}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Amount</label>
+                          <p class="text-sm font-medium">{{charge['chargeValue'] | currency:'INR'}}</p>
+                        </div>
+                        <div>
+                          <label class="text-xs text-gray-500">Is Basic</label>
+                          <p class="text-sm font-medium">{{charge['isBasic'] ? 'Yes' : 'No'}}</p>
+                        </div>
+                        <div class="md:col-span-3">
+                          <label class="text-xs text-gray-500">Remarks</label>
+                          <p class="text-sm font-medium">{{charge['remarks'] || 'N/A'}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+        <div></div>
+
+        <div class="flex items-center gap-3">
+          <button pButton type="button" label="Reset" (click)="resetForm()"
+            class="p-button-outlined p-button-secondary">
+          </button>
+          @if(postType !== 'view'){
+          <button pButton type="submit" [label]="postType === 'add' ? 'Submit' : 'Update'" icon="pi pi-check"
+            (click)="onSubmit($event)" class="p-button-primary">
+          </button>
+          }
+        </div>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmDialog key="salesOrderConfirm" [style]="{width: '450px'}"></p-confirmDialog>
+
+  <!-- Sales Order Wizard Dialog -->
+  <p-dialog [(visible)]="jsonDetailsVisible" [header]="jsonSectionType + ' Details'" [modal]="true"
+    [style]="{ width: '70vw' }" [baseZIndex]="10000" (onHide)="closeJsonDetails()">
+    <ng-template pTemplate="content">
+      @if(selectedItemDetails){
+      <div class="space-y-6">
+
+        <!-- Order Items Section -->
+        @if(jsonSectionType === 'Order Item' && selectedItemDetails.makeDetails){
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-shopping-bag text-cyan-600"></i>
+              Order Items Details
+            </h4>
+          </div>
+          <div class="p-5">
+            @if(selectedItemDetails.makeDetails.length === 0){
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-sm">No order items available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item
+                      Code</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">UOM
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Quantity</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit
+                      Price</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Discount %</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr *ngFor="let item of selectedItemDetails.makeDetails; let i = index" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">{{i + 1}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.Item || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.ItemCode || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.uom || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.quantity || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.unitPrice | currency:'INR'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.discountPercentage || '0'}}%</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{item.tax || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if(jsonSectionType === 'Tax Details' && selectedItemDetails.companyDetails){
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-sky-50 to-indigo-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-percentage text-sky-600"></i>
+              Tax Details
+            </h4>
+          </div>
+          <div class="p-5">
+            @if(selectedItemDetails.companyDetails.length === 0){
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-sm">No tax details available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax For
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nature
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tax
+                      Option</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Discount %</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Remarks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr *ngFor="let tax of selectedItemDetails.companyDetails; let i = index" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">{{i + 1}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.taxFor || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.nature || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.tax || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.amount | currency:'INR'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.taxOptionId || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.discountPercentage || '0'}}%</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{tax.remarks || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Other Charges Section -->
+        @if(jsonSectionType === 'Other Charges' && selectedItemDetails.taxDetails){
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-teal-50 to-green-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-credit-card text-teal-600"></i>
+              Other Charges Details
+            </h4>
+          </div>
+          <div class="p-5">
+            @if(selectedItemDetails.taxDetails.length === 0){
+            <div class="text-center py-8 text-gray-500">
+              <i class="pi pi-inbox text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-sm">No other charges available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Charge
+                      Type</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nature
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Is
+                      Basic</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Remarks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr *ngFor="let charge of selectedItemDetails.taxDetails; let i = index" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">{{i + 1}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{charge.chargesType || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{charge.nature || 'N/A'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{charge.chargeValue | currency:'INR'}}</td>
+                    <td class="px-4 py-3 text-sm text-gray-900">
+                      <span [class]="charge.isBasic ? 'text-green-600 font-medium' : 'text-gray-600'">
+                        {{charge.isBasic ? 'Yes' : 'No'}}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900">{{charge.remarks || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+      </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button pButton label="Close" icon="pi pi-times" (click)="closeJsonDetails()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition">
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+
+  <!-- Confirm Dialog and Toast -->
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>

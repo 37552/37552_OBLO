@@ -1,0 +1,609 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-sm mb-4">
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <!-- Breadcrumb -->
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+
+                <!-- Tabs -->
+                <div class="flex gap-2 flex-wrap">
+                    <button class="px-4 py-2 text-sm font-medium border rounded-md transition-colors" [ngClass]="selectedRequest === 'pending'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                        (click)="onChangeRequestTab('pending')">
+                        Pending requests ({{ pendingData.length }})
+                    </button>
+
+                    <button *ngIf="currentRole == 86"
+                        class="px-4 py-2 text-sm font-medium border rounded-md transition-colors" [ngClass]="selectedRequest === 'bank'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                        (click)="onChangeRequestTab('bank')">
+                        Bank details ({{ bankData.length }})
+                    </button>
+
+                    <button class="px-4 py-2 text-sm font-medium border rounded-md transition-colors" [ngClass]="selectedRequest === 'completed'
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'"
+                        (click)="onChangeRequestTab('completed')">
+                        Completed requests ({{ completedData.length }})
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="bg-white rounded-lg shadow-sm">
+        <ng-container [ngSwitch]="selectedRequest">
+            <div *ngSwitchCase="'pending'" class="p-4">
+                <h3 class="text-lg font-semibold text-gray-800  ">Pending Requests</h3>
+                <app-table-template [data]="pendingData" [columns]="pendingDataColumns"
+                    [actionTemplate]="pendingActionTemplateRef" [isLoading]="isLoading"
+                    (refresh)="refreshPendingData()">
+                </app-table-template>
+            </div>
+            <div *ngSwitchCase="'bank'" class="p-4">
+
+                <!-- Single Row -->
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+
+                    <!-- Title -->
+                    <h3 class="text-lg font-semibold text-gray-800 whitespace-nowrap">
+                        Bank Details
+                    </h3>
+
+                    <!-- Bank Selection (only when rows selected) -->
+                    <div *ngIf="getSelectedBankRowsCount() > 0"
+                        class="flex items-center gap-3 bg-blue-50 px-3 py-2 rounded border border-blue-200">
+
+                        <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            Select Bank:
+                        </label>
+
+                        <p-select [(ngModel)]="selectedBankForPayment" [options]="travelByDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Choose Bank" [filter]="true" appendTo="body"
+                            styleClass="w-56" (ngModelChange)="onBankSelectionChanged()">
+                        </p-select>
+
+                        <span class="text-sm text-blue-600 font-medium whitespace-nowrap">
+                            {{ getSelectedBankRowsCount() }} selected
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- No Data -->
+                <div *ngIf="bankData.length === 0" class="mt-4 p-3 bg-red-50 border border-red-200 rounded text-center">
+                    <span class="text-red-700 font-medium">No pending payments found!!</span>
+                </div>
+
+                <!-- Table -->
+                <div *ngIf="bankData.length > 0" class="mt-4">
+                    <app-table-template [data]="bankData" [columns]="bankDataColumns"
+                        [actionTemplate]="actionTemplateRef" [customTemplate]="bankCheckboxTemplateRef"
+                        [headerCheckbox]="bankCheckboxRef" [isLoading]="isLoading" [showRefresh]="true"
+                        (refresh)="refreshBankData()">
+                    </app-table-template>
+                </div>
+
+            </div>
+
+            <div *ngSwitchCase="'completed'" class="p-4">
+                <h3 class="text-lg font-semibold text-gray-800">Completed Requests</h3>
+                <app-table-template [data]="completedData" [columns]="completedDataColumns"
+                    [actionTemplate]="completedActionTemplateRef" [isLoading]="isLoading" [showRefresh]="true"
+                    (refresh)="refreshCompletedData()">
+                </app-table-template>
+            </div>
+        </ng-container>
+
+        <!-- Pending Table Action Template (with Disbursed Details) -->
+        <ng-template #pendingActionTemplateRef let-item let-i="rowIndex">
+            <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                (click)="opPending.toggle($event)">
+                <i class="pi pi-ellipsis-v text-xl"></i>
+            </button>
+
+            <p-popover #opPending>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'view'); opPending.hide()" title="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i> View
+                    </button>
+                </div>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'update'); opPending.hide()" title="Edit"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i> approve
+                    </button>
+                </div>
+                <div class="flex flex-col" *ngIf="item.disbursedDetails">
+                    <button (click)="openDisbursedDetailsDialog(item); opPending.hide()" title="Disbursed Details"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-money-bill"></i> Disbursed Details
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <!-- Completed Table Action Template (with Disbursed Details) -->
+        <ng-template #completedActionTemplateRef let-item let-i="rowIndex">
+            <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                (click)="opCompleted.toggle($event)">
+                <i class="pi pi-ellipsis-v text-xl"></i>
+            </button>
+
+            <p-popover #opCompleted>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'view'); opCompleted.hide()" title="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i> View
+                    </button>
+                </div>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'update'); opCompleted.hide()" title="Edit"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i> approve
+                    </button>
+                </div>
+                <div class="flex flex-col" *ngIf="item.disbursedDetails">
+                    <button (click)="openDisbursedDetailsDialog(item); opCompleted.hide()" title="Disbursed Details"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-money-bill"></i> Disbursed Details
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <!-- Bank Table Action Template -->
+        <ng-template #actionTemplateRef let-item let-i="rowIndex">
+            <!-- <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v text-xl"></i>
+            </button> -->
+
+            <!-- <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'view'); op.hide()" title="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i> View
+                    </button>
+                </div>
+                <div class="flex flex-col">
+                    <button (click)="getViewDetails(item, 'update'); op.hide()" title="Edit"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i> approve
+                    </button>
+                </div>
+            </p-popover> -->
+        </ng-template>
+
+        <!-- Bank Table Checkbox Header Template -->
+        <ng-template #bankCheckboxRef let-col="col">
+            <p-checkbox [binary]="true" [(ngModel)]="selectAllBankRows"
+                (ngModelChange)="onSelectAllBankRowsChange($event)" inputId="select-all-bank-header"
+                styleClass="cursor-pointer">
+            </p-checkbox>
+        </ng-template>
+
+        <!-- Bank Table Checkbox Template -->
+        <ng-template #bankCheckboxTemplateRef let-col="col" let-item="item" let-index="index">
+            <ng-container *ngIf="col.key === 'checkbox'">
+                <p-checkbox [binary]="true" [(ngModel)]="item.selected"
+                    (ngModelChange)="onBankRowSelectChange(item, $event)" [inputId]="'bank-checkbox-' + index"
+                    styleClass="cursor-pointer">
+                </p-checkbox>
+            </ng-container>
+        </ng-template>
+    </div>
+    <p-drawer *ngIf="!isView" [(visible)]="visible" position="right"
+        [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+                        {{ header }}
+                    </span>
+                    <div class="bg-blue-50 p-2 rounded-full shrink-0">
+                        <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="h-full flex flex-col bg-gray-50" *ngIf="selectedItem">
+            <div class="flex-grow overflow-y-auto p-6 space-y-6">
+                <!-- Basic Information Section -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Basic Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <!-- Request Number -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Request Number:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.reqNo }}</div>
+                        </div>
+
+                        <!-- Name -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Name:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.employeeName }}</div>
+                        </div>
+
+                        <!-- Imprest -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Imprest:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.imprest }}</div>
+                        </div>
+
+                        <!-- Approved Imprest -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Approved Imprest:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.approvedImprest || selectedItem?.imprest
+                                }}</div>
+                        </div>
+
+                        <!-- Approved By -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Approved By:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.approvedByText }}</div>
+                        </div>
+
+                        <!-- Disbursed Amount -->
+                        <div class="flex flex-col gap-2" *ngIf="selectedItem?.disbursedAmt">
+                            <label class="text-sm font-medium text-gray-700">Disbursed Amount:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem.disbursedAmt }}</div>
+                        </div>
+
+                        <!-- Approved Remarks -->
+                        <div class="flex flex-col gap-2 md:col-span-2">
+                            <label class="text-sm font-medium text-gray-700">Approved Remarks:</label>
+                            <div class="text-sm text-gray-900 whitespace-normal break-words">
+                                {{ selectedItem?.approvalRemarks }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Request Details Section -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Request Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <!-- To Project -->
+                        <div *ngIf="selectedItem?.requestTypeId == 10001" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">To Project:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.toProject }}</div>
+                        </div>
+
+                        <!-- Travel By -->
+                        <div *ngIf="selectedItem?.requestTypeId != 10002" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Travel By:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem["travel By"] }}</div>
+                        </div>
+
+                        <!-- Travel Source -->
+                        <div *ngIf="selectedItem?.requestTypeId == 10001" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Travel Source:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.travelSource }}</div>
+                        </div>
+
+                        <!-- Travel Destination -->
+                        <div *ngIf="selectedItem?.requestTypeId == 10001" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Travel Destination:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem?.travelDestination }}</div>
+                        </div>
+
+                        <!-- Time Slot -->
+                        <div *ngIf="selectedItem?.requestTypeId == 10001" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Time Slot:</label>
+                            <div class="text-sm text-gray-900">{{ selectedItem["time Slot"] }}</div>
+                        </div>
+
+                        <!-- Expense For -->
+                        <div *ngIf="selectedItem?.requestTypeId == 10001" class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Expense For:</label>
+                            <div class="text-sm text-gray-900">
+                                {{ selectedItem?.expenseFor
+                                }}{{
+                                selectedItem?.employeeDetails && parsedEmployeeDetails && parsedEmployeeDetails.length >
+                                0
+                                ? "(" + parsedEmployeeDetails.length + ")"
+                                : ""
+                                }}
+                            </div>
+                        </div>
+
+                        <!-- Employee Details Table -->
+                        <div *ngIf="selectedItem?.expenseFor === 'Other' && parsedEmployeeDetails && parsedEmployeeDetails.length > 0"
+                            class="md:col-span-2 flex flex-col gap-2">
+                            <label class="text-sm font-medium text-gray-700">Employee Details:</label>
+                            <div class="overflow-x-auto">
+                                <table class="w-full border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Name</th>
+                                            <th class="border border-gray-300 p-2 text-left">Email</th>
+                                            <th class="border border-gray-300 p-2 text-left">Gender</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (emp of parsedEmployeeDetails; track $index) {
+                                        <tr>
+                                            <td class="border border-gray-300 p-2">{{ emp.name }}</td>
+                                            <td class="border border-gray-300 p-2">{{ emp.email }}</td>
+                                            <td class="border border-gray-300 p-2">{{ emp.gender }}</td>
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disbursal Details Section (Role 86) -->
+                <div *ngIf="currentRole == 86 && !isViewMode" class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Disbursal Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="flex flex-col gap-2">
+                            <label for="givenAmount" class="text-sm font-medium text-gray-700">Disbursal Amount:</label>
+                            <p-inputNumber inputId="givenAmount" [(ngModel)]="givenAmount"
+                                (ngModelChange)="validateDisbursedTotal()" (keypress)="allowOnlyNumbers($event)"
+                                mode="decimal" [useGrouping]="false" styleClass="w-full" [min]="0"
+                                [max]="selectedItem?.approvedImprest || selectedItem?.imprest" [disabled]="isViewMode">
+                            </p-inputNumber>
+                            <small class="text-red-500 text-xs mt-1" *ngIf="!validateDisbursedTotal() && !isViewMode">
+                                Total disbursed amount ({{ getTotalDisbursed() }}) cannot exceed approved imprest
+                                ({{ selectedItem?.approvedImprest || selectedItem?.imprest }}).
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Fields Section (Role 79) -->
+                <div *ngIf="currentRole == 79 && selectedItem?.requestTypeId == 10001 && !isViewMode"
+                    class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Ticket Details
+                        (Admin)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <ng-container>
+                            <!-- Upload Ticket -->
+                            <div class="flex flex-col gap-2">
+                                <label for="ticketUpload" class="text-sm font-medium text-gray-700">Upload
+                                    Ticket:</label>
+                                <div class="flex gap-2 items-center">
+                                    <p-button icon="pi pi-upload"
+                                        (click)="fileupload('expanseRequestApproval', 'TravelTicket')"
+                                        styleClass="p-button-sm p-button-outlined" title="Upload"></p-button>
+                                    <p-button [disabled]="!ticketImage" icon="pi pi-download"
+                                        (click)="viewAttachment(ticketImage)" styleClass="p-button-sm p-button-outlined"
+                                        title="View"></p-button>
+                                    <p-button [disabled]="!ticketImage" icon="pi pi-trash"
+                                        (click)="removeAttachment('ticketImage')"
+                                        styleClass="p-button-sm p-button-danger p-button-outlined"
+                                        title="Remove"></p-button>
+                                </div>
+                            </div>
+
+                            <!-- Source -->
+                            <div class="flex flex-col gap-2">
+                                <label for="source" class="text-sm font-medium text-gray-700">Source:</label>
+                                <input pInputText type="text" id="source" maxlength="100" name="source" class="w-full"
+                                    [(ngModel)]="source" [disabled]="isViewMode" />
+                            </div>
+
+                            <!-- Destination -->
+                            <div class="flex flex-col gap-2">
+                                <label for="destination" class="text-sm font-medium text-gray-700">Destination:</label>
+                                <input pInputText type="text" id="destination" maxlength="100" name="destination"
+                                    class="w-full" [(ngModel)]="destination" [disabled]="isViewMode" />
+                            </div>
+
+                            <!-- Travel Mode -->
+                            <div class="flex flex-col gap-2">
+                                <label for="travelMode" class="text-sm font-medium text-gray-700">Travel Mode:</label>
+                                <p-select inputId="travelMode" [(ngModel)]="travelMode" name="travelMode"
+                                    [options]="travelByDrpforGEadmin" optionLabel="drpOption" optionValue="drpValue"
+                                    placeholder="Select Travel By" [filter]="true" appendTo="body" styleClass="w-full"
+                                    [disabled]="isViewMode">
+                                </p-select>
+                            </div>
+
+                            <!-- Upload Accommodation -->
+                            <div *ngIf="selectedItem?.accomodation" class="flex flex-col gap-2">
+                                <label for="accomodationUpload" class="text-sm font-medium text-gray-700">Upload
+                                    Accommodation:</label>
+                                <div class="flex gap-2 items-center">
+                                    <p-button icon="pi pi-upload"
+                                        (click)="fileupload('expanseRequestApproval', 'Accommodation')"
+                                        styleClass="p-button-sm p-button-outlined" title="Upload"
+                                        [disabled]="isViewMode"></p-button>
+                                    <p-button [disabled]="!accomodationImage || isViewMode" icon="pi pi-download"
+                                        (click)="viewAttachment(accomodationImage)"
+                                        styleClass="p-button-sm p-button-outlined" title="View"></p-button>
+                                    <p-button [disabled]="!accomodationImage || isViewMode" icon="pi pi-trash"
+                                        (click)="removeAttachment('accomomodationImage')"
+                                        styleClass="p-button-sm p-button-danger p-button-outlined"
+                                        title="Remove"></p-button>
+                                </div>
+                            </div>
+
+                            <!-- Accommodation Details -->
+                            <div *ngIf="selectedItem?.accomodation" class="flex flex-col gap-2">
+                                <label for="accDetails" class="text-sm font-medium text-gray-700">Accommodation
+                                    Details:</label>
+                                <input pInputText type="text" id="accDetails" name="accDetails" maxlength="100"
+                                    class="w-full" [(ngModel)]="accDetails" [disabled]="isViewMode" />
+                            </div>
+
+                            <!-- Car Number -->
+                            <div *ngIf="selectedItem?.localConveyance" class="flex flex-col gap-2">
+                                <label for="carNumber" class="text-sm font-medium text-gray-700">Car Number:</label>
+                                <input pInputText type="text" id="carNumber" name="carNumber" maxlength="15"
+                                    [(ngModel)]="carNumber" class="w-full" [disabled]="isViewMode" />
+                            </div>
+
+                            <!-- Driver Name -->
+                            <div *ngIf="selectedItem?.localConveyance" class="flex flex-col gap-2">
+                                <label for="driverName" class="text-sm font-medium text-gray-700">Driver Name:</label>
+                                <input pInputText type="text" id="driverName" name="driverName" maxlength="100"
+                                    [(ngModel)]="driverName" class="w-full" [disabled]="isViewMode" />
+                            </div>
+
+                            <!-- Driver Number -->
+                            <div *ngIf="selectedItem?.localConveyance" class="flex flex-col gap-2">
+                                <label for="driverNumber" class="text-sm font-medium text-gray-700">Driver
+                                    Number:</label>
+                                <input pInputText type="text" id="driverNumber" name="driverNumber" maxlength="10"
+                                    [(ngModel)]="driverNumber" (keypress)="allowOnlyNumbers($event)" class="w-full"
+                                    [disabled]="isViewMode" />
+                            </div>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <!-- Remarks Section -->
+                <div *ngIf="(currentRole == 86 || (currentRole == 79 && selectedItem?.requestTypeId == 10001)) && !isViewMode"
+                    class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Remarks</h3>
+                    <div class="mt-4">
+                        <label for="remarks" class="text-sm font-medium text-gray-700 block mb-2">Remarks:</label>
+                        <textarea pInputTextarea id="remarks" name="remarks" [(ngModel)]="remarks" maxlength="500"
+                            rows="4" class="w-full" placeholder="Enter remarks (max 500 characters)"
+                            [disabled]="isViewMode"></textarea>
+                    </div>
+                </div>
+
+                <!-- Imprest History Section -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                        Imprest History
+                    </h3>
+                    <div *ngIf="selectedItem?.history && selectedItem.history.length > 0; else noHistory" class="mt-4">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-gray-300 text-sm">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="border border-gray-300 p-2 text-left">S.no</th>
+                                        <th class="border border-gray-300 p-2 text-left">To Date</th>
+                                        <th class="border border-gray-300 p-2 text-left">Imprest</th>
+                                        <th class="border border-gray-300 p-2 text-left">Approved Imprest</th>
+                                        <th class="border border-gray-300 p-2 text-left">Imprest For</th>
+                                        <th class="border border-gray-300 p-2 text-left">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (item of selectedItem.history; track $index; let i = $index) {
+                                    <tr>
+                                        <td class="border border-gray-300 p-2">{{ i + 1 }}</td>
+                                        <td class="border border-gray-300 p-2">{{ item.todate | date: 'yyyy-MM-dd' }}
+                                        </td>
+                                        <td class="border border-gray-300 p-2">{{ item.imprest }}</td>
+                                        <td class="border border-gray-300 p-2">{{ item.approvedImprest }}</td>
+                                        <td class="border border-gray-300 p-2">{{ item.imprestFor }}</td>
+                                        <td class="border border-gray-300 p-2">{{ item.Status || 'Pending' }}</td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <ng-template #noHistory>
+                        <div class="text-center py-8">
+                            <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                            <p class="text-gray-500 text-sm">No history available.</p>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="border-t border-gray-200 bg-white p-4 flex justify-end gap-3">
+                <!-- View Mode: Only Close Button -->
+                <p-button *ngIf="isViewMode" label="Close" icon="pi pi-times" (click)="onDrawerHide()"
+                    styleClass="p-button-secondary">
+                </p-button>
+
+                <!-- Edit Mode: Cancel and Submit Buttons -->
+                <ng-container
+                    *ngIf="!isViewMode && (currentRole == 86 || (currentRole == 79 && selectedItem?.requestTypeId == 10001))">
+                    <p-button label="Cancel" icon="pi pi-times" (click)="onDrawerHide()"
+                        styleClass="p-button-secondary p-button-outlined">
+                    </p-button>
+                    <p-button *ngIf="currentRole == 86" label="Submit" icon="pi pi-check" (click)="onSubmit()"
+                        [loading]="isLoading" styleClass="p-button-primary">
+                    </p-button>
+                    <p-button *ngIf="currentRole == 79 && selectedItem?.requestTypeId == 10001" label="Submit"
+                        icon="pi pi-check" (click)="onAdminSubmit()" [loading]="isLoading"
+                        styleClass="p-button-primary">
+                    </p-button>
+                </ng-container>
+            </div>
+        </div>
+    </p-drawer>
+
+    <!-- Disbursed Details Dialog -->
+    <p-dialog [(visible)]="showDisbursedDialog" [style]="{ width: '70vw', maxWidth: '900px' }" [modal]="true"
+        [closable]="true" [draggable]="false" [resizable]="false" header="Disbursed Details" styleClass="p-fluid">
+        <div class="p-4">
+            <div *ngIf="disbursedDetailsData && disbursedDetailsData.length > 0; else noDisbursedData"
+                class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300 text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-300 p-3 text-left font-semibold">S.No</th>
+                            <th class="border border-gray-300 p-3 text-left font-semibold">Amount</th>
+                            <th class="border border-gray-300 p-3 text-left font-semibold">Remarks</th>
+                            <th class="border border-gray-300 p-3 text-left font-semibold">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (detail of disbursedDetailsData; track $index; let i = $index) {
+                        <tr class="hover:bg-gray-50">
+                            <td class="border border-gray-300 p-3">{{ i + 1 }}</td>
+                            <td class="border border-gray-300 p-3">₹{{ detail.amount }}</td>
+                            <td class="border border-gray-300 p-3">{{ detail.remarks || '-' }}</td>
+                            <td class="border border-gray-300 p-3">
+                                {{ detail.date | date: 'dd-MM-yyyy HH:mm' }}
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                    <tfoot *ngIf="disbursedDetailsData.length > 0">
+                        <tr class="bg-gray-100 font-semibold">
+                            <td class="border border-gray-300 p-3 text-right" colspan="1">Total:</td>
+                            <td class="border border-gray-300 p-3">
+                                ₹{{ getTotalDisbursedAmount() }}
+                            </td>
+                            <td class="border border-gray-300 p-3" colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <ng-template #noDisbursedData>
+                <div class="text-center py-8">
+                    <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                    <p class="text-gray-500 text-sm">No disbursed details available.</p>
+                </div>
+            </ng-template>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" icon="pi pi-times" (click)="showDisbursedDialog = false"
+                styleClass="p-button-secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+
+</div>

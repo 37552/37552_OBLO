@@ -1,0 +1,24 @@
+// :host ::ng-deep .p-dialog {
+//     height: auto !important;
+//     max-height: 100vh !important;
+//     /* responsive */
+// }
+
+// :host ::ng-deep .p-dialog-content {
+//     max-height: calc(90vh - 120px) !important;
+//     /* leave room for header + footer */
+//     overflow-y: auto;
+//     /* only vertical scroll */
+//     overflow-x: hidden;
+//     /* no horizontal scroll */
+// }
+
+
+// :host ::ng-deep .p-dialog-footer {
+//     position: sticky;
+//     bottom: 0;
+//     background: #fff;
+//     padding-top: 0rem !important;
+//     border-top: 1px solid #eee;
+//     z-index: 10;
+// }

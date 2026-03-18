@@ -1,0 +1,191 @@
+<div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <!-- Loading State -->
+  <div *ngIf="isLoading && cardData.length === 0" class="flex justify-center items-center h-64">
+    <i class="pi pi-spin pi-spinner text-4xl text-blue-500"></i>
+    <p class="ml-3 text-gray-600">Loading dashboard data...</p>
+  </div>
+
+  <!-- Dashboard Cards -->
+  <div *ngIf="!isLoading || cardData.length > 0"
+    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div *ngFor="let card of cardData"
+      class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border-l-4 flex flex-col max-h-[450px] cursor-pointer"
+      [style.border-left-color]="card.colour || '#3b82f6'">
+
+      <!-- Card Header -->
+      <div class="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <p class="m-0 font-bold text-gray-700 text-sm">
+          {{ card.machineType }} ({{ card.machineCount }})
+        </p>
+        <i class="pi pi-plus text-gray-600 hover:text-blue-600 cursor-pointer transition-colors"
+          (click)="onPlusClick($event, card)">
+        </i>
+      </div>
+
+      <!-- Card Image -->
+      <div class="flex-grow overflow-hidden m-2 rounded-lg cursor-pointer h-[200px]"
+        (click)="openModal(card, 'MACHINEDETAILS', $event)">
+        <img [alt]="card.machineType" [src]="getMachineImage(card.machineType)" (error)="onImageError($event)"
+          class="w-full h-full object-contain block" />
+      </div>
+
+      <!-- Card Footer -->
+      <div class="flex justify-between items-center px-4 py-3 border-t border-gray-100 bg-gray-50 h-12 cursor-pointer"
+        (click)="openModal(card, 'TICKETDETAILS', $event)">
+        <p class="m-0 text-gray-700 font-medium">Tickets: <span
+            class="font-bold text-blue-600">{{card.noOfTickets}}</span></p>
+        <i class="pi pi-eye text-gray-600 hover:text-blue-600"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && cardData.length === 0" class="bg-white rounded-lg shadow p-8 text-center">
+    <i class="pi pi-inbox text-4xl text-gray-400 mb-4"></i>
+    <p class="text-gray-600">No data available</p>
+  </div>
+
+  <!-- Ticket/Machine Details Modal -->
+  <p-dialog [(visible)]="isModalOpen" [modal]="true" [style]="{ width: '90vw', maxWidth: '1200px' }" [draggable]="false"
+    [resizable]="false" [closable]="true" [header]="(modalType == 'TICKETDETAILS' ? 'Ticket' : 'Machine') + ' Details'"
+    styleClass="p-fluid">
+    <div class="flex flex-col gap-4">
+      <!-- Search and Total Records -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div class="text-sm text-gray-600 font-medium">
+          Total Records: <span class="font-bold text-gray-800">{{ filteredRows.length }}</span>
+        </div>
+        <span class="p-input-icon-left w-full sm:w-auto">
+          <i class="pi pi-search"></i>
+          <input type="text" pInputText placeholder="Search..." [(ngModel)]="searchText" (input)="applyFilters()"
+            class="w-full" />
+        </span>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-auto max-h-[500px]">
+        <p-table [value]="paginatedRows" [scrollable]="true" scrollHeight="500px" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 60px">S.No</th>
+              <ng-container *ngFor="let col of tableColumns">
+                <th *ngIf="col !== 'ticketId' && col !== 'ratings' && col !== 'remarks' && col !== 'machineList'">
+                  {{ col | titlecase }}
+                </th>
+              </ng-container>
+              <th *ngIf="modalType == 'TICKETDETAILS'" style="width: 80px">Machines</th>
+              <th *ngIf="modalType == 'TICKETDETAILS'" style="width: 100px">Rate</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row let-index="rowIndex">
+            <tr>
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
+              <ng-container *ngFor="let col of tableColumns">
+                <td *ngIf="col !== 'ticketId' && col !== 'ratings' && col !== 'remarks' && col !== 'machineList'">
+                  {{ row[col] }}
+                </td>
+              </ng-container>
+              <td *ngIf="modalType == 'TICKETDETAILS'">
+                <i class="pi pi-folder text-blue-600 hover:text-blue-800 cursor-pointer text-lg"
+                  (click)="openMachineModal(row, $event)" pTooltip="View Machines" tooltipPosition="top">
+                </i>
+              </td>
+              <td *ngIf="modalType == 'TICKETDETAILS'">
+                <ng-container *ngIf="row.ratings; else noRating">
+                  <div class="flex gap-1">
+                    <i *ngFor="let s of [].constructor(row.ratings)" class="pi pi-star-fill text-yellow-500"></i>
+                  </div>
+                </ng-container>
+                <ng-template #noRating>
+                  <p-button *ngIf="row.status !== 'Open'" label="Rate" icon="pi pi-star"
+                    (onClick)="openRatingModal(row, $event)" styleClass="p-button-sm p-button-outlined" severity="info">
+                  </p-button>
+                </ng-template>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="tableColumns.length + (modalType == 'TICKETDETAILS' ? 3 : 1)" class="text-center p-4">
+                No records found.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center items-center gap-4 mt-4">
+        <p-button icon="pi pi-chevron-left" label="Prev" (onClick)="prevPage()" [disabled]="currentPage === 1"
+          styleClass="p-button-sm" severity="secondary" [outlined]="true">
+        </p-button>
+        <span class="font-semibold text-gray-700">Page {{ currentPage }} / {{ totalPages }}</span>
+        <p-button icon="pi pi-chevron-right" iconPos="right" label="Next" (onClick)="nextPage()"
+          [disabled]="currentPage === totalPages" styleClass="p-button-sm" severity="secondary" [outlined]="true">
+        </p-button>
+      </div>
+    </div>
+  </p-dialog>
+
+  <!-- Rating Modal -->
+  <p-dialog [(visible)]="isRatingModalOpen" [modal]="true" [style]="{ width: '500px' }" [draggable]="false"
+    [resizable]="false" [closable]="true" header="Rate Service" styleClass="p-fluid">
+    <div class="flex flex-col gap-4 text-center">
+      <h3 class="text-lg font-semibold text-gray-800 m-0">Rate {{ selectedRow?.Name || 'Service' }}</h3>
+
+      <!-- Star Rating -->
+      <div class="flex justify-center gap-2 text-3xl cursor-pointer">
+        <i *ngFor="let star of [1,2,3,4,5]"
+          [ngClass]="star <= rating ? 'pi pi-star-fill text-yellow-500' : 'pi pi-star text-gray-300'"
+          (click)="setRating(star)" class="transition-all hover:scale-110">
+        </i>
+      </div>
+
+      <!-- Feedback Textarea -->
+      <textarea [(ngModel)]="ratingDescription" placeholder="Write your feedback here..." rows="4"
+        class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"></textarea>
+
+      <!-- Submit Button -->
+      <p-button label="Submit Rating" icon="pi pi-check" (onClick)="submitRating()" [loading]="isLoading"
+        styleClass="w-full" severity="info">
+      </p-button>
+
+      <p class="text-xs text-gray-500 m-0">Highest rating is 5 stars</p>
+    </div>
+  </p-dialog>
+
+  <!-- Machine Details Modal -->
+  <p-dialog [(visible)]="isMachineModalOpen" [modal]="true" [style]="{ width: '90vw', maxWidth: '1000px' }"
+    [draggable]="false" [resizable]="false" [closable]="true" header="Machine Details" styleClass="p-fluid">
+    <div class="overflow-auto max-h-[500px]">
+      <p-table [value]="machineTableData" [scrollable]="true" scrollHeight="500px" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 60px">S.No</th>
+            <ng-container *ngFor="let col of tableMachineColumns">
+              <th>{{ col | titlecase }}</th>
+            </ng-container>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row let-index="rowIndex">
+          <tr>
+            <td>{{ index + 1 }}</td>
+            <ng-container *ngFor="let col of tableMachineColumns">
+              <td>{{ row[col] }}</td>
+            </ng-container>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td [attr.colspan]="tableMachineColumns.length + 1" class="text-center p-4">
+              No machine data available.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-dialog>
+
+  <!-- Toast for notifications -->
+  <p-toast position="top-right"></p-toast>
+</div>

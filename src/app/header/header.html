@@ -1,0 +1,67 @@
+<header class="sticky top-0 z-40 flex h-16 items-center justify-between bg-white px-4 shadow-md md:px-6">
+
+  <!-- Mobile Left Area -->
+  <div class="flex items-center space-x-2 md:hidden">
+    <a href="/home">
+      <img src="../../assets/oblo_icon_fevicon.png" class="h-8" />
+    </a>
+
+    <button (click)="toggleSidebar.emit()" class="rounded p-2 text-gray-500 hover:bg-gray-200">
+      <i [ngClass]="getIcon()"></i>
+    </button>
+  </div>
+
+  <!-- Desktop Sidebar Toggle -->
+  <div class="hidden md:flex space-x-4">
+    <button (click)="toggleSidebar.emit()" class="rounded p-2 cursor-pointer text-gray-500 hover:bg-gray-200">
+      <i [ngClass]="getIcon()"></i>
+    </button>
+  </div>
+
+  <!-- Right Section -->
+  <div class="flex items-center space-x-4">
+
+    <!-- District Dropdown -->
+    <div class="relative min-w-[180px] max-w-xs">
+      <p-select [options]="filteredDistList" optionLabel="drpoption" optionValue="drpvalue"
+        [(ngModel)]="selectedDistrictValue" [placeholder]="selectedDistrict || 'Select District'" appendTo="body"
+        (onChange)="changeDistrict($event.value)" [filter]="true" filterBy="drpoption"
+        styleClass="w-full h-8 header-dropdown">
+      </p-select>
+    </div>
+
+    <!-- Role Dropdown -->
+    <div class="relative">
+      <p-select [options]="filteredRoleList" optionLabel="rolDes" optionValue="roleId" [(ngModel)]="selectedRoleId"
+        [placeholder]="currentRole || 'Select Role'" appendTo="body" (onChange)="onRoleDropdownChange($event)"
+        [filter]="true" filterBy="rolDes" styleClass="w-full h-8 header-dropdown">
+      </p-select>
+    </div>
+
+    <!-- User Avatar + Menu -->
+    <div class="relative">
+      <div class="flex items-center gap-2">
+        <p-avatar #userMenuTrigger
+          class="shadow cursor-pointer flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg"
+          size="xlarge" shape="circle" (click)="userMenu.toggle($event)" [pTooltip]="getUserName()"
+          tooltipPosition="bottom" [style]="{
+            'background-color': '#ece9fc',
+            color: '#2a1261',
+            width: '30px',
+            height: '30px',
+            border: '2px solid #d1d5db'
+          }">
+          <p class="text-sm font-semibold">{{ getUserInitial() }}</p>
+        </p-avatar>
+
+        <div class="hidden md:block">
+          <p class="text-xs font-semibold text-gray-700">{{ getUserName() }}</p>
+        </div>
+      </div>
+
+      <p-menu #userMenu [model]="userMenuItems" [popup]="true" [appendTo]="'body'" styleClass="user-profile-menu">
+      </p-menu>
+    </div>
+  </div>
+</header>
+<p-confirmDialog></p-confirmDialog> 

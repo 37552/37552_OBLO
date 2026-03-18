@@ -1,0 +1,16 @@
+/* ================================================
+   holiday-list.scss
+   Only custom CSS needed — rest handled by Tailwind
+================================================ */
+
+/* Shimmer animation for skeleton loader rows */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.hl-skeleton {
+  background     : linear-gradient(90deg, #f1f5f9 25%, #e8edf5 50%, #f1f5f9 75%);
+  background-size: 400% 100%;
+  animation      : shimmer 1.4s ease infinite;
+}

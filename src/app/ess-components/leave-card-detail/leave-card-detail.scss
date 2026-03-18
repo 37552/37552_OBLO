@@ -1,0 +1,10 @@
+:host ::ng-deep .p-select,
+:host ::ng-deep .p-datepicker,
+:host ::ng-deep .p-inputtext {
+    width: 100%;
+}
+
+:host ::ng-deep .p-select .p-select-label,
+:host ::ng-deep .p-datepicker input {
+    padding: 0.6rem 0.75rem;
+}

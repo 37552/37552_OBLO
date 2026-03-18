@@ -1,0 +1,1001 @@
+<div class="min-h-screen bg-gray-50 p-4">
+  <p-toast position="top-right"></p-toast>
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+    <h2 class="text-base font-semibold text-gray-800">
+      <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+      </p-breadcrumb>
+    </h2>
+  </div>
+
+  <!-- Main Card -->
+  <p-card class="mb-6">
+    <ng-template pTemplate="header">
+      <div class="flex justify-between items-center p-4 border-b border-gray-200">
+        <h1 class="text-2xl font-bold text-gray-800">Employee Performance Appraisal</h1>
+        <div class="flex gap-2">
+          <p-button 
+            *ngIf="finalsubmitted" 
+            icon="pi pi-arrow-left" 
+            label="Back to List"
+            (onClick)="returnToAppraisalView()"
+            styleClass="p-button-outlined">
+          </p-button>
+          <p-button 
+            *ngIf="finalsubmitted"
+            icon="pi pi-file-excel"
+            label="Download Excel"
+            (onClick)="downloadAsExcel()"
+            styleClass="p-button-success">
+          </p-button>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Tab Navigation -->
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-1">
+        <button
+          (click)="switchTab('first')"
+          [class]="activeTab === 'first' ? 'bg-blue-50 border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+          class="px-4 py-3 text-sm font-medium flex items-center gap-2 transition-colors">
+          <i class="pi pi-user"></i>
+          Employee Details
+        </button>
+        
+        <button
+          *ngFor="let tab of basicInfoTabs"
+          (click)="switchTab(tab.drpOption)"
+          [class]="activeTab === tab.drpOption ? 'bg-blue-50 border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+          [disabled]="isTabDisabled(tab.drpOption)"
+          class="px-4 py-3 text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <i [class]="getTabIcon(tab.drpOption)"></i>
+          {{tab.drpOption}}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="p-6">
+      <!-- Employee Details Tab -->
+      <div *ngIf="activeTab === 'first'">
+        <form [formGroup]="appraisalForm" class="space-y-6">
+          <!-- Employee Information Section -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="pi pi-user text-blue-500"></i>
+              Employee Information
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Employee Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="employeeName"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('employeeName')}"
+                    placeholder="Enter employee name">
+                  <small *ngIf="isFieldInvalid('employeeName')" class="text-red-500 text-xs">
+                    Employee name is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Employee ID <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="employeeId"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('employeeId')}"
+                    placeholder="Enter employee ID">
+                  <small *ngIf="isFieldInvalid('employeeId')" class="text-red-500 text-xs">
+                    Employee ID is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Department <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="department"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('department')}"
+                    placeholder="Enter department">
+                  <small *ngIf="isFieldInvalid('department')" class="text-red-500 text-xs">
+                    Department is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Designation <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="designation"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('designation')}"
+                    placeholder="Enter designation">
+                  <small *ngIf="isFieldInvalid('designation')" class="text-red-500 text-xs">
+                    Designation is required
+                  </small>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Reporting Authority Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="reportingAuthorityName"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('reportingAuthorityName')}"
+                    placeholder="Enter reporting authority name">
+                  <small *ngIf="isFieldInvalid('reportingAuthorityName')" class="text-red-500 text-xs">
+                    Reporting authority name is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Reporting Authority Designation <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="reportingAuthorityDesignation"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('reportingAuthorityDesignation')}"
+                    placeholder="Enter reporting authority designation">
+                  <small *ngIf="isFieldInvalid('reportingAuthorityDesignation')" class="text-red-500 text-xs">
+                    Reporting authority designation is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Reviewer's Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="reviewerName"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('reviewerName')}"
+                    placeholder="Enter reviewer's name">
+                  <small *ngIf="isFieldInvalid('reviewerName')" class="text-red-500 text-xs">
+                    Reviewer's name is required
+                  </small>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Reviewer's Designation <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    pInputText
+                    formControlName="reviewerDesignation"
+                    class="w-full"
+                    [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('reviewerDesignation')}"
+                    placeholder="Enter reviewer's designation">
+                  <small *ngIf="isFieldInvalid('reviewerDesignation')" class="text-red-500 text-xs">
+                    Reviewer's designation is required
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Information Section -->
+          <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="pi pi-calendar text-green-500"></i>
+              Date Information
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Date of Self-Appraisal <span class="text-red-500">*</span>
+                </label>
+                <p-datepicker
+                  formControlName="dateOfSelfAppraisal"
+                  inputStyleClass="w-full"
+                  [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('dateOfSelfAppraisal')}"
+                  [showIcon]="true"
+                  placeholder="Select date"
+                  class="w-full">
+                </p-datepicker>
+                <small *ngIf="isFieldInvalid('dateOfSelfAppraisal')" class="text-red-500 text-xs">
+                  Date of self-appraisal is required
+                </small>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Date of Appraisal by Appraiser <span class="text-red-500">*</span>
+                </label>
+                <p-datepicker
+                  formControlName="dateOfAppraisalByAppraiser"
+                  inputStyleClass="w-full"
+                  [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('dateOfAppraisalByAppraiser')}"
+                  [showIcon]="true"
+                  placeholder="Select date"
+                  class="w-full">
+                </p-datepicker>
+                <small *ngIf="isFieldInvalid('dateOfAppraisalByAppraiser')" class="text-red-500 text-xs">
+                  Date of appraisal by appraiser is required
+                </small>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Date of Appraisal by Reviewer <span class="text-red-500">*</span>
+                </label>
+                <p-datepicker
+                  formControlName="dateOfAppraisalByReviewer"
+                  inputStyleClass="w-full"
+                  [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('dateOfAppraisalByReviewer')}"
+                  [showIcon]="true"
+                  placeholder="Select date"
+                  class="w-full">
+                </p-datepicker>
+                <small *ngIf="isFieldInvalid('dateOfAppraisalByReviewer')" class="text-red-500 text-xs">
+                  Date of appraisal by reviewer is required
+                </small>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Financial Year <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="financialYear"
+                  class="w-full"
+                  [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('financialYear')}"
+                  placeholder="Enter financial year">
+                <small *ngIf="isFieldInvalid('financialYear')" class="text-red-500 text-xs">
+                  Financial year is required
+                </small>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Appraisal Period <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  formControlName="appraisalFor"
+                  [options]="table8"
+                  optionLabel="drpOption"
+                  optionValue="drpOption"
+                  [ngClass]="{'ng-invalid p-invalid': isFieldInvalid('appraisalFor')}"
+                  placeholder="Select appraisal period"
+                  class="w-full">
+                </p-select>
+                <small *ngIf="isFieldInvalid('appraisalFor')" class="text-red-500 text-xs">
+                  Appraisal period is required
+                </small>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Section I Tab -->
+      <div *ngIf="activeTab === 'Section I'">
+        <form [formGroup]="sectionIForm">
+          <div class="space-y-6">
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <i class="pi pi-chart-line text-blue-500"></i>
+                  Key Result Areas (KRA {{table11[0]?.kra}}%)
+                </h3>
+                <p-button
+                  icon="pi pi-plus"
+                  label="Add KPI"
+                  (onClick)="addIndicator()"
+                  [disabled]="isAddKPIDisabled"
+                  styleClass="p-button-sm p-button-outlined p-button-primary">
+                </p-button>
+              </div>
+
+              <p class="text-sm text-gray-600 mb-4">
+                Please list out a minimum of six job objectives/KPI's for the past year and carry out assessments in terms of achievement/fulfillment.
+              </p>
+
+              <!-- KPI Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">KRA</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Key Deliverables (KPIs)</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Weightage %</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Self Assessment</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Appraiser Assessment</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Reviewer Assessment</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="performanceIndicators">
+                    <tr *ngFor="let indicator of indicators.controls; let i = index" [formGroupName]="i" class="hover:bg-gray-50">
+                      <!-- Actions -->
+                      <td class="border border-gray-300 px-4 py-3 text-center">
+                        <div class="flex flex-col gap-1">
+                          <p-button
+                            icon="pi pi-trash"
+                            (onClick)="removeIndicator(i)"
+                            [disabled]="indicators.length === 1 || !isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                            styleClass="p-button-sm p-button-danger p-button-text">
+                          </p-button>
+                        </div>
+                      </td>
+
+                      <!-- KRA -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <p-select
+                          formControlName="kra"
+                          [options]="getAvailableKRAs(i)"
+                          optionLabel="drpOption"
+                          optionValue="drpValue"
+                          [filter]="true"
+                          [ngClass]="{'ng-invalid p-invalid': indicator.get('kra')?.invalid && (indicator.get('kra')?.touched || indicator.get('kra')?.dirty)}"
+                          placeholder="Select KRA"
+                          (onChange)="onKRAChange(i)"
+                          [disabled]="!isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                          class="w-full">
+                        </p-select>
+                        <small *ngIf="indicator.get('kra')?.invalid && (indicator.get('kra')?.touched || indicator.get('kra')?.dirty)" class="text-red-500 text-xs">
+                          KRA is required
+                        </small>
+                      </td>
+
+                      <!-- KPIs -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div *ngIf="getKPIsForKRA(indicator.get('kra')?.value) && getKPIsForKRA(indicator.get('kra')?.value)!.length > 0" class="space-y-2">
+                          <ul class="list-disc pl-4 space-y-1">
+                            <li *ngFor="let kpi of getKPIsForKRA(indicator.get('kra')?.value)" class="text-sm text-gray-700">
+                              {{kpi.drpOption}}
+                              <div *ngIf="kpi.measurementIndex" class="text-xs text-gray-500 ml-4">
+                                <strong>Measurement:</strong> {{kpi.measurementIndex}}
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                        <div *ngIf="!getKPIsForKRA(indicator.get('kra')?.value)?.length" class="text-gray-400 text-sm">
+                          {{ indicator.get('kra')?.value ? 'No KPIs available' : 'No KRA Selected' }}
+                        </div>
+                      </td>
+
+                      <!-- Weightage -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <p-inputNumber
+                          formControlName="weightage"
+                          [min]="0"
+                          [max]="100"
+                          [disabled]="!isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                          [ngClass]="{'ng-invalid p-invalid': indicator.get('weightage')?.invalid && (indicator.get('weightage')?.touched || indicator.get('weightage')?.dirty)}"
+                          placeholder="0"
+                          class="w-full">
+                        </p-inputNumber>
+                        <small *ngIf="indicator.get('weightage')?.invalid && (indicator.get('weightage')?.touched || indicator.get('weightage')?.dirty)" class="text-red-500 text-xs">
+                          Weightage is required
+                        </small>
+                        <small *ngIf="totalWeightageCompleted !== 100" class="block text-red-500 text-xs mt-1">
+                          Total Cumulated weightage is {{ totalWeightageCompleted }}% — must be exactly 100%
+                        </small>
+                      </td>
+
+                      <!-- Self Assessment -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                              <i class="pi pi-users text-gray-500 mr-1.5 text-xs"></i>
+                              Shared KRA
+                            </label>
+                            <p-multiSelect
+                              formControlName="selfSharedKRA"
+                              [options]="table10"
+                              optionLabel="drpOption"
+                              optionValue="drpValue"
+                              placeholder="Select collaborators..."
+                              [disabled]="!isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                              [ngClass]="{'ng-invalid p-invalid': indicator.get('selfSharedKRA')?.invalid && (indicator.get('selfSharedKRA')?.touched || indicator.get('selfSharedKRA')?.dirty)}"
+                              display="chip"
+                              class="w-full text-sm border-gray-300 rounded-lg"
+                              [panelStyleClass]="'shadow-lg border border-gray-200 rounded-lg'">
+                            </p-multiSelect>
+                            <small *ngIf="indicator.get('selfSharedKRA')?.invalid && (indicator.get('selfSharedKRA')?.touched || indicator.get('selfSharedKRA')?.dirty)" class="text-red-500 text-xs">
+                              Shared KRA is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Self Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'selfRating' + i"
+                                  formControlName="selfRating"
+                                  [ngClass]="{'ng-invalid p-invalid': indicator.get('selfRating')?.invalid && (indicator.get('selfRating')?.touched || indicator.get('selfRating')?.dirty)}"
+                                  [value]="option.drpOption"
+                                  [disabled]="!isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('selfRating')?.invalid && (indicator.get('selfRating')?.touched || indicator.get('selfRating')?.dirty)" class="text-red-500 text-xs">
+                              Self rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Self)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(indicator.get('weightage')?.value, indicator.get('selfRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">
+                              Self Feedback
+                            </label>
+                            <textarea
+                              formControlName="selfRemark"
+                              rows="3"
+                              placeholder="Enter self feedback"
+                              class="w-full p-2 border border-gray-300 rounded text-sm p-inputtext"
+                              [ngClass]="{'ng-invalid p-invalid': indicator.get('selfRemark')?.invalid && (indicator.get('selfRemark')?.touched || indicator.get('selfRemark')?.dirty)}"
+                              [readonly]="!isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small
+                              *ngIf="indicator.get('selfRemark')?.invalid && (indicator.get('selfRemark')?.touched || indicator.get('selfRemark')?.dirty)"
+                              class="text-red-500 text-xs">
+                              Self feedback is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Appraiser Assessment -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Appraiser Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'appraiserRating' + i"
+                                  formControlName="appraiserRating"
+                                  [ngClass]="{'ng-invalid p-invalid': indicator.get('appraiserRating')?.invalid && (indicator.get('appraiserRating')?.touched || indicator.get('appraiserRating')?.dirty)}"
+                                  [value]="option.drpOption"
+                                  [disabled]="isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('appraiserRating')?.invalid && (indicator.get('appraiserRating')?.touched || indicator.get('appraiserRating')?.dirty)" class="text-red-500 text-xs">
+                              Appraiser rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Appraiser)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(indicator.get('weightage')?.value, indicator.get('appraiserRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Appraiser Feedback</label>
+                            <textarea
+                              formControlName="appraiserRemark"
+                              rows="3"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Appraiser feedback"
+                              [ngClass]="{'ng-invalid p-invalid': indicator.get('appraiserRemark')?.invalid && (indicator.get('appraiserRemark')?.touched || indicator.get('appraiserRemark')?.dirty)}"
+                              [readonly]="isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="indicator.get('appraiserRemark')?.invalid && (indicator.get('appraiserRemark')?.touched || indicator.get('appraiserRemark')?.dirty)" class="text-red-500 text-xs">
+                              Appraiser feedback is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Reviewer Assessment -->
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Reviewer Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'reviewerRating' + i"
+                                  formControlName="reviewerRating"
+                                  [ngClass]="{'ng-invalid p-invalid': indicator.get('reviewerRating')?.invalid && (indicator.get('reviewerRating')?.touched || indicator.get('reviewerRating')?.dirty)}"
+                                  [value]="option.drpOption"
+                                  [disabled]="!isHOD || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('reviewerRating')?.invalid && (indicator.get('reviewerRating')?.touched || indicator.get('reviewerRating')?.dirty)" class="text-red-500 text-xs">
+                              Reviewer rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Reviewer)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(indicator.get('weightage')?.value, indicator.get('reviewerRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Reviewer Feedback</label>
+                            <textarea
+                              formControlName="reviewerRemark"
+                              rows="3"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Reviewer feedback"
+                              [ngClass]="{'ng-invalid p-invalid': indicator.get('reviewerRemark')?.invalid && (indicator.get('reviewerRemark')?.touched || indicator.get('reviewerRemark')?.dirty)}"
+                              [readonly]="!isHOD || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="indicator.get('reviewerRemark')?.invalid && (indicator.get('reviewerRemark')?.touched || indicator.get('reviewerRemark')?.dirty)" class="text-red-500 text-xs">
+                              Reviewer feedback is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+
+                  <!-- Footer -->
+                  <tfoot class="bg-gray-50">
+                    <tr>
+                      <td colspan="4" class="text-right font-semibold px-4 py-3">Total Wt. Rating:</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalWeightedRating('self') | number:'1.2-2'}}</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalWeightedRating('appraiser') | number:'1.2-2'}}</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalWeightedRating('reviewer') | number:'1.2-2'}}</td>
+                    </tr>
+                    <tr class="bg-blue-50">
+                      <td colspan="4" class="text-right font-semibold px-4 py-3">Final KRA Score ({{table11[0]?.kra}}%):</td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalWeightedRating('self') * (table11[0]?.kra / 100)) | number:'1.2-2'}}
+                      </td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalWeightedRating('appraiser') * (table11[0]?.kra / 100)) | number:'1.2-2'}}
+                      </td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalWeightedRating('reviewer') * (table11[0]?.kra / 100)) | number:'1.2-2'}}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Weightage Summary -->
+              <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-blue-800">
+                    Total Weightage: {{totalWeightageCompleted | number:'1.0-2'}}%
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Section I validation error -->
+              <div *ngIf="sectionIForm.errors?.['weightageExceeded']" class="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                <div class="flex items-center text-red-700">
+                  <i class="pi pi-exclamation-triangle mr-2"></i>
+                  <span class="text-sm font-medium">
+                    Total weightage cannot exceed 100% (Current: {{totalWeightageCompleted | number:'1.0-2'}}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Section II Tab -->
+      <div *ngIf="activeTab === 'Section II'">
+        <form [formGroup]="sectionIIForm">
+          <div class="space-y-6">
+            <!-- Competency Assessment -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="pi pi-chart-bar text-purple-500"></i>
+                Competency Assessment ({{table11[0]?.competencies}}%)
+              </h3>
+              
+              <p class="text-sm text-gray-600 mb-4">
+                Please provide detailed assessments for each of the following areas
+              </p>
+
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Competency</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Self Assessment</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Appraiser Assessment</th>
+                      <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">Reviewer Assessment</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="competencyIndicators">
+                    <tr *ngFor="let indicator of competencyIndicators.controls; let i = index" [formGroupName]="i" class="hover:bg-gray-50">
+                      <td class="border border-gray-300 px-4 py-3">
+                        <strong class="text-gray-800">
+                          {{(CompetencyAssessment && CompetencyAssessment[i]) ? CompetencyAssessment[i]?.copetencies : (Comptenance && Comptenance[i]) 
+                              ? Comptenance[i]?.copetencies 
+                              : 'Competency ' + (i + 1)}}
+                        </strong>
+                      </td>
+                      
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Self Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'compSelfRating' + i"
+                                  formControlName="selfRating"
+                                  [value]="option.drpOption"
+                                  [ngClass]="{'ng-invalid p-invalid': indicator.get('selfRating')?.invalid && (indicator.get('selfRating')?.touched || indicator.get('selfRating')?.dirty)}"
+                                  [disabled]="!isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('selfRating')?.invalid && (indicator.get('selfRating')?.touched || indicator.get('selfRating')?.dirty)" class="text-red-500 text-xs">
+                              Self rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Self)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(10, indicator.get('selfRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Self Feedback</label>
+                            <textarea
+                              formControlName="SelfAssessment"
+                              rows="3"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Enter self assessment"
+                               [ngClass]="{
+                                 'border-red-500 focus:ring-red-500': indicator.get('SelfAssessment')?.invalid &&
+                                 (indicator.get('SelfAssessment')?.touched || indicator.get('SelfAssessment')?.dirty)
+                               }"
+                               [readonly]="!isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="indicator.get('SelfAssessment')?.invalid && (indicator.get('SelfAssessment')?.touched || indicator.get('SelfAssessment')?.dirty)" class="text-red-500 text-xs">
+                              Self assessment is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Appraiser Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'compAppraiserRating' + i"
+                                  formControlName="appraiserRating"
+                                  [value]="option.drpOption"
+                                  [ngClass]="{'ng-invalid p-invalid': indicator.get('appraiserRating')?.invalid && (indicator.get('appraiserRating')?.touched || indicator.get('appraiserRating')?.dirty)}"
+                                  [disabled]="isAppraisee || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('appraiserRating')?.invalid && (indicator.get('appraiserRating')?.touched || indicator.get('appraiserRating')?.dirty)" class="text-red-500 text-xs">
+                              Appraiser rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Appraiser)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(10, indicator.get('appraiserRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Appraiser Feedback</label>
+                            <textarea
+                              formControlName="AppraisersRemarks"
+                              rows="3"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Appraiser feedback"
+                              [ngClass]="{
+                                 'border-red-500 focus:ring-red-500': indicator.get('AppraisersRemarks')?.invalid &&
+                                 (indicator.get('AppraisersRemarks')?.touched || indicator.get('AppraisersRemarks')?.dirty)
+                               }"
+                               [readonly]="isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="indicator.get('AppraisersRemarks')?.invalid && (indicator.get('AppraisersRemarks')?.touched || indicator.get('AppraisersRemarks')?.dirty)" class="text-red-500 text-xs">
+                              Appraiser feedback is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td class="border border-gray-300 px-4 py-3">
+                        <div class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Reviewer Rating</label>
+                            <div class="flex flex-wrap gap-2">
+                              <div *ngFor="let option of Radiobuttonsection1" class="flex items-center">
+                                <p-radioButton
+                                  [name]="'compReviewerRating' + i"
+                                  formControlName="reviewerRating"
+                                  [value]="option.drpOption"
+                                  [ngClass]="{
+                                 'border-red-500 focus:ring-red-500': indicator.get('reviewerRating')?.invalid &&
+                                 (indicator.get('reviewerRating')?.touched || indicator.get('reviewerRating')?.dirty)
+                               }"
+                               [disabled]="!isHOD || finalsubmitted || finalSubmittedByHOD"
+                                  class="mr-2">
+                                </p-radioButton>
+                                <label class="text-xs">{{option.drpOption}}</label>
+                              </div>
+                            </div>
+                            <small *ngIf="indicator.get('reviewerRating')?.invalid && (indicator.get('reviewerRating')?.touched || indicator.get('reviewerRating')?.dirty)" class="text-red-500 text-xs">
+                              Reviewer rating is required
+                            </small>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Wt. Rating (Reviewer)</label>
+                            <input
+                              type="number"
+                              [value]="calculateWeightedRating(10, indicator.get('reviewerRating')?.value)"
+                              class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-center font-semibold"
+                              readonly>
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Reviewer Feedback</label>
+                            <textarea
+                              formControlName="reviewerRemark"
+                              rows="3"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                              placeholder="Reviewer feedback"
+                              [ngClass]="{'ng-invalid p-invalid': indicator.get('reviewerRemark')?.invalid && (indicator.get('reviewerRemark')?.touched || indicator.get('reviewerRemark')?.dirty)}"
+                              [readonly]="!isHOD || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="indicator.get('reviewerRemark')?.invalid && (indicator.get('reviewerRemark')?.touched || indicator.get('reviewerRemark')?.dirty)" class="text-red-500 text-xs">
+                              Reviewer feedback is required
+                            </small>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-gray-50">
+                    <tr>
+                      <td class="text-right font-semibold px-4 py-3">Total Wt. Rating:</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalCompetencyWeightedRating('self') | number:'1.2-2'}}</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalCompetencyWeightedRating('appraiser') | number:'1.2-2'}}</td>
+                      <td class="text-center font-bold px-4 py-3">{{getTotalCompetencyWeightedRating('reviewer') | number:'1.2-2'}}</td>
+                    </tr>
+                    <tr class="bg-blue-50">
+                      <td class="text-right font-semibold px-4 py-3">Final Competency Score ({{table11[0]?.competencies}}%):</td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalCompetencyWeightedRating('self') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                      </td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalCompetencyWeightedRating('appraiser') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                      </td>
+                      <td class="text-center font-bold px-4 py-3">
+                        {{(getTotalCompetencyWeightedRating('reviewer') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Final Combined Scores -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4">Final Combined Appraisal Scores</h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center p-4 bg-white rounded-lg border border-green-200">
+                  <h5 class="text-md font-semibold text-green-700 mb-2">Self Assessment</h5>
+                  <div class="text-3xl font-bold text-green-600 mb-2">
+                    {{getFinalCombinedScore('self') | number:'1.2-2'}}
+                  </div>
+                  <small class="text-gray-500">
+                    KRA: {{(getTotalWeightedRating('self') * (table11[0]?.kra / 100)) | number:'1.2-2'}} + 
+                    Competency: {{(getTotalCompetencyWeightedRating('self') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                  </small>
+                </div>
+                
+                <div class="text-center p-4 bg-white rounded-lg border border-blue-200">
+                  <h5 class="text-md font-semibold text-blue-700 mb-2">Appraiser Assessment</h5>
+                  <div class="text-3xl font-bold text-blue-600 mb-2">
+                    {{getFinalCombinedScore('appraiser') | number:'1.2-2'}}
+                  </div>
+                  <small class="text-gray-500">
+                    KRA: {{(getTotalWeightedRating('appraiser') * (table11[0]?.kra / 100)) | number:'1.2-2'}} + 
+                    Competency: {{(getTotalCompetencyWeightedRating('appraiser') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                  </small>
+                </div>
+                
+                <div class="text-center p-4 bg-white rounded-lg border border-red-200">
+                  <h5 class="text-md font-semibold text-red-700 mb-2">Reviewer Assessment</h5>
+                  <div class="text-3xl font-bold text-red-600 mb-2">
+                    {{getFinalCombinedScore('reviewer') | number:'1.2-2'}}
+                  </div>
+                  <small class="text-gray-500">
+                    KRA: {{(getTotalWeightedRating('reviewer') * (table11[0]?.kra / 100)) | number:'1.2-2'}} + 
+                    Competency: {{(getTotalCompetencyWeightedRating('reviewer') * (table11[0]?.competencies / 100)) | number:'1.2-2'}}
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Topics and Assessments -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="pi pi-briefcase text-orange-500"></i>
+                Topics and Assessments
+              </h3>
+
+              <form [formGroup]="appraisalTopicsForm">
+                <div class="overflow-x-auto">
+                  <table class="w-full border-collapse border border-gray-300">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-1/4">Topic</th>
+                        <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-3/8">Self Assessment</th>
+                        <th class="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700 w-3/8">Appraiser's Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody formArrayName="topics">
+                      <tr *ngFor="let topic of topics.controls; let i = index" [formGroupName]="i" class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-3">
+                          <div class="space-y-2">
+                            <strong class="text-gray-800">{{appraisalTopics[i]?.label}}</strong>
+                            <p class="text-xs text-gray-600 italic">{{appraisalTopics[i]?.instructions}}</p>
+                            <textarea
+                              formControlName="instructions"
+                              rows="4"
+                              class="w-full p-2 border border-gray-300 rounded text-sm"
+                               [ngClass]="{
+                                   'border-red-500 focus:ring-red-500':
+                                     topic.get('instructions')?.invalid &&
+                                     (topic.get('instructions')?.touched || topic.get('instructions')?.dirty)
+                                 }"
+                               placeholder="Enter instructions"
+                              [readonly]="!isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                            </textarea>
+                            <small *ngIf="topic.get('instructions')?.invalid && (topic.get('instructions')?.touched || topic.get('instructions')?.dirty)" class="text-red-500 text-xs">
+                              Instructions are required
+                            </small>
+                          </div>
+                        </td>
+                        <td class="border border-gray-300 px-4 py-3">
+                          <textarea
+                            formControlName="selfAssessment"
+                            rows="6"
+                            class="w-full p-2 border border-gray-300 rounded text-sm"
+                             [ngClass]="{
+                                  'border-red-500 focus:ring-red-500':
+                                    topic.get('selfAssessment')?.invalid &&
+                                    (topic.get('selfAssessment')?.touched || topic.get('selfAssessment')?.dirty)
+                                }"
+                               [placeholder]="'Enter your ' + (appraisalTopics[i]?.label?.toLowerCase() || 'assessment')"
+                            [readonly]="!isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                          </textarea>
+                          <small *ngIf="topic.get('selfAssessment')?.invalid && (topic.get('selfAssessment')?.touched || topic.get('selfAssessment')?.dirty)" class="text-red-500 text-xs">
+                            Self assessment is required
+                          </small>
+                        </td>
+                        <td class="border border-gray-300 px-4 py-3">
+                          <textarea
+                            formControlName="appraiserRemarks"
+                            rows="6"
+                            class="w-full p-2 border border-gray-300 rounded text-sm"
+                            [ngClass]="{
+                               'border-red-500 focus:ring-red-500':
+                                 topic.get('appraiserRemarks')?.invalid &&
+                                 (topic.get('appraiserRemarks')?.touched || topic.get('appraiserRemarks')?.dirty)
+                             }"
+                               [placeholder]="'Appraiser remarks for ' + (appraisalTopics[i]?.label?.toLowerCase() || 'this topic')"
+                            [readonly]="isAppraisee || finalsubmitted || finalSubmittedByHOD">
+                          </textarea>
+                          <small *ngIf="topic.get('appraiserRemarks')?.invalid && (topic.get('appraiserRemarks')?.touched || topic.get('appraiserRemarks')?.dirty)" class="text-red-500 text-xs">
+                            Appraiser remarks are required
+                          </small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </form>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <ng-template pTemplate="footer">
+      <div class="flex justify-between items-center">
+        <div>
+          <p-button
+            *ngIf="activeTab !== 'first'"
+            icon="pi pi-chevron-left"
+            label="Previous"
+            (onClick)="goToPreviousTab()"
+            styleClass="p-button-outlined p-button-secondary">
+          </p-button>
+        </div>
+
+        <div class="flex gap-3">
+          <p-button
+            *ngIf="!isLastTab()"
+            label="Next"
+            icon="pi pi-chevron-right"
+            iconPos="right"
+            (onClick)="handleNextClick()"
+            styleClass="p-button-primary">
+          </p-button>
+
+          <p-button
+            *ngIf="isLastTab() && !finalsubmitted && !finalSubmittedByHOD"
+            icon="pi pi-check"
+            label="Submit Appraisal"
+            (onClick)="showSubmitConfirmation()"
+            [loading]="isFormLoading"
+            styleClass="p-button-success">
+          </p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <!-- Loading Spinner -->
+  <p-progressSpinner *ngIf="isLoading" 
+    [style]="{'position': 'fixed', 'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)', 'z-index': '9999'}">
+  </p-progressSpinner>
+
+  <!-- Confirmation Dialog -->
+  <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+</div>

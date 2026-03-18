@@ -1,0 +1,309 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header Section -->
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb
+          [model]="breadcrumbItems"
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="border-b border-gray-200 bg-white px-4">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button
+          *ngFor="let tab of statusTabs"
+          (click)="onChangeTabs(tab.value)"
+          [class]="selectedAction === tab.value 
+            ? 'border-' + tab.color + '-500 text-' + tab.color + '-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'"
+          type="button">
+          <i [class]="tab.icon"></i>
+          {{tab.label}}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Table Section -->
+    <app-table-template
+      [data]="data"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      [searchText]="searchText"
+      [actionTemplate]="actionTemplateRef"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button 
+          type="button" 
+          class="text-gray-400 hover:text-gray-600 cursor-pointer" 
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button 
+              (click)="openApprovalDialog(item); op.hide()" 
+              pTooltip="Approve/Reject"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-check-square"></i>
+              <span>Process</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <!-- Approval Dialog -->
+  <p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '50vw', maxWidth: '800px' }"
+    [contentStyle]="{ 'overflow': 'hidden' }"
+    (onHide)="closeDialog()">
+
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+          <span class="font-semibold text-xl text-gray-800">Sales Order Approval</span>
+          <i class="text-blue-500 text-lg pi pi-check-circle"></i>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(selectedItem){
+      <div class="space-y-6">
+        <!-- Order Information Card -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+          <h4 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <i class="pi pi-info-circle text-blue-600"></i>
+            Order Information
+          </h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-gray-600">SO Number:</label>
+              <p class="text-sm font-semibold text-gray-800">{{selectedItem.soNumber}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600">Customer:</label>
+              <p class="text-sm font-semibold text-gray-800">{{selectedItem.customerName}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600">Contact Person:</label>
+              <p class="text-sm font-semibold text-gray-800">{{selectedItem.contactPerson}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600">Delivery Date:</label>
+              <p class="text-sm font-semibold text-gray-800">{{selectedItem.deliveryDate}}</p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600">Current Status:</label>
+              <p class="text-sm">
+                <span 
+                  class="px-2 py-1 rounded-full text-xs font-medium"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': selectedItem.status?.toLowerCase() === 'approved',
+                    'bg-red-100 text-red-800': selectedItem.status?.toLowerCase() === 'rejected',
+                    'bg-yellow-100 text-yellow-800': selectedItem.status?.toLowerCase() === 'pending'
+                  }">
+                  {{selectedItem.status}}
+                </span>
+              </p>
+            </div>
+            <div>
+              <label class="text-xs text-gray-600">Grand Total:</label>
+              <p class="text-sm font-semibold text-green-600">{{selectedItem.grandTotal | currency:'INR'}}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approval Form -->
+        <form [formGroup]="approvalForm" class="space-y-6">
+          <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h4 class="text-md font-semibold text-gray-800 mb-4">Approval Details</h4>
+            
+            <div class="space-y-4">
+              <!-- Status Selection -->
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700">
+                  Status <span class="text-red-500">*</span>
+                </label>
+                <p-select
+                  formControlName="statusId"
+                  [options]="statusData"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  placeholder="Select status"
+                  (onChange)="onStatusChange($event)"
+                  [class.p-invalid]="isInvalid('statusId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('statusId')){
+                <small class="text-red-500 text-xs">Status is required</small>
+                }
+              </div>
+
+              <!-- Remarks -->
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700">
+                  Remarks <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                  pInputTextarea
+                  formControlName="remarks"
+                  rows="4"
+                  [class.p-invalid]="isInvalid('remarks')"
+                  class="w-full"
+                  placeholder="Enter your remarks..."></textarea>
+                @if(isInvalid('remarks')){
+                <small class="text-red-500 text-xs">Remarks are required (minimum 5 characters)</small>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- File Upload Section (Only for Approved Status) -->
+          <!-- @if(showUploadSection){
+          <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h4 class="text-md font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="pi pi-paperclip text-orange-600"></i>
+              Upload Documents (Required for Approval)
+            </h4>
+
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700">Document Name</label>
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="documentName"
+                  class="w-full"
+                  placeholder="Enter document name" />
+              </div>
+
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700">Select File</label>
+                <p-fileUpload
+                  #fileUpload
+                  name="file[]"
+                  customUpload="true"
+                  (onSelect)="onFileSelect($event)"
+                  [multiple]="false"
+                  [showCancelButton]="false"
+                  [showUploadButton]="false"
+                  chooseLabel="Choose File"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  class="w-full">
+                </p-fileUpload>
+              </div>
+
+
+              @if(selectedFile){
+              <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                <i class="pi pi-file text-xl text-blue-500"></i>
+                <div class="flex-1">
+                  <span class="text-sm font-medium">{{selectedFile.name}}</span>
+                  <span class="text-xs text-gray-500 ml-2">({{getFileSize(selectedFile.size)}})</span>
+                </div>
+                <button 
+                  type="button" 
+                  pButton
+                  icon="pi pi-upload"
+                  label="Upload"
+                  (click)="uploadFile()"
+                  [loading]="isUploadingFile"
+                  class="p-button-sm p-button-success">
+                </button>
+              </div>
+              }
+
+
+              @if(selectedFile && filePreviewUrl && isImageFile(selectedFile.name)){
+              <div class="flex justify-center p-4 border border-gray-200 rounded bg-white">
+                <img [src]="filePreviewUrl" alt="File Preview" class="max-h-48 max-w-full rounded shadow" />
+              </div>
+              }
+
+              @if(uploadedFiles.length > 0){
+              <div class="space-y-3">
+                <h5 class="text-sm font-semibold text-gray-700">Uploaded Documents ({{uploadedFiles.length}}/3)</h5>
+                <div class="space-y-2">
+                  <div
+                    *ngFor="let file of uploadedFiles; let i = index"
+                    class="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <i class="pi pi-file text-xl text-green-600"></i>
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-gray-800">{{file.documentName}}</p>
+                      <p class="text-xs text-gray-500">{{file.name}}</p>
+                    </div>
+                    <button
+                      type="button"
+                      pButton
+                      icon="pi pi-trash"
+                      (click)="removeFile(i)"
+                      class="p-button-sm p-button-danger p-button-text">
+                    </button>
+                  </div>
+                </div>
+              </div>
+              }
+
+              <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start gap-2">
+                  <i class="pi pi-info-circle text-blue-600 mt-1"></i>
+                  <div class="text-xs text-blue-800">
+                    <p class="font-semibold mb-1">Upload Requirements:</p>
+                    <ul class="list-disc ml-4 space-y-1">
+                      <li>At least 1 file is required for approval</li>
+                      <li>Maximum 3 files can be uploaded</li>
+                      <li>Supported formats: PDF, JPG, PNG</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          } -->
+        </form>
+      </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end items-center gap-3 pt-4 border-t border-gray-200">
+        <button
+          pButton
+          type="button"
+          label="Cancel"
+          (click)="closeDialog()"
+          class="p-button-outlined p-button-secondary">
+        </button>
+        <button
+          pButton
+          type="button"
+          label="Submit Approval"
+          icon="pi pi-check"
+          (click)="onSubmitApproval()"
+          [loading]="isLoading"
+          class="p-button-success">
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

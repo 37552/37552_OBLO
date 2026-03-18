@@ -1,0 +1,248 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Hearings
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Hearing Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Hearing Date</label>
+                    <input
+                    type="date"
+                    formControlName="hearingDate"
+                    class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                    (keydown)="blockTyping($event)"
+                    (click)="openCalendar($event)"
+                    [class.border-red-500]="isInvalid('hearingDate')"
+                  />
+                    @if(isInvalid('hearingDate')){
+                        <p class="text-red-500 text-xs mt-1">Hearing Date is required.</p>
+                    }
+                </div>
+
+
+                <!-- Hearing Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Hearing Type *</label>
+                    <p-select [options]="hearingMasterDrpr" formControlName="hearingType" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Hearing Type" [class.border-red-500]="isInvalid('hearingType')"
+                        class="custom-p-select w-full" appendTo="body">
+                    </p-select>
+                    @if(isInvalid('hearingType')){
+                    <p class="text-red-500 text-xs mt-1">Hearing Type is required.</p>
+                    }
+                </div>
+
+                <!-- Related Cases (Litigation) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Related Cases *</label>
+                    <p-select [options]="caseDetailsDrp" formControlName="relatedCase" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Related Cases" [class.border-red-500]="isInvalid('relatedCase')"
+                        class="custom-p-select w-full" appendTo="body">
+                    </p-select>
+                    @if(isInvalid('relatedCase')){
+                    <p class="text-red-500 text-xs mt-1">Related Cases is required.</p>
+                    }
+                </div>
+
+                <!--Outcome / Notes -->
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Outcome / Notes *</label>
+                    <input type="text" maxlength="100" formControlName="outcomeNotes" placeholder="Enter Outcome / Notes
+                     " [class.border-red-500]="isInvalid('outcomeNotes')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('outcomeNotes')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('outcomeNotes')?.errors?.['required']){
+                            Outcome / Notes is required.
+                        } @else if(groupMasterForm1.get('outcomeNotes')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('outcomeNotes')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+                  
+                <!-- Assigned Legal -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Assigned Legal*</label>
+                    <p-select [options]="legalMasterDrp" formControlName="assignedLegal" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Assigned Legal" [class.border-red-500]="isInvalid('assignedLegal')"
+                        class="custom-p-select w-full" appendTo="body">
+                    </p-select>
+                    @if(isInvalid('assignedLegal')){
+                    <p class="text-red-500 text-xs mt-1">Assigned Legal
+                        is required.</p>
+                    }
+                </div>
+
+                <!-- Related Arbitration-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Related Arbitration *</label>
+                    <p-select [options]="arbitrationDrp" formControlName="relatedArbitration" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Related Arbitration"
+                        [class.border-red-500]="isInvalid('relatedArbitration')" class="custom-p-select w-full" appendTo="body">
+                    </p-select>
+                    @if(isInvalid('relatedArbitration')){
+                    <p class="text-red-500 text-xs mt-1">Related Arbitration is required.</p>
+                    }
+                </div>
+            
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                    <p-select [options]="hearinfStatusDrp" formControlName="status" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Status" [class.border-red-500]="isInvalid('status')" class="custom-p-select w-full" appendTo="body">
+                    </p-select>
+                    @if(isInvalid('status')){
+                    <p class="text-red-500 text-xs mt-1">Statusis required.</p>
+                    }
+                </div>
+
+            </form>
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+    <!-- Folder Data SHowing -->
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{  width: '60%', 'max-width': '100%'}">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">Group List</span>
+                <i class="text-blue-500 pi pi-list"></i>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="content">
+            <table class="min-w-full divide-y divide-gray-200 mt-6 raised shadow-md rounded-lg">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                            Organisation
+                        </th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                            Department
+                        </th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                            Designation
+                        </th>
+                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                            User
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @for (item of groupListArray; track $index) {
+                    <tr class="hover:bg-[#F9FAFB]">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{item['org']}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{item['dept']}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{item['desg']}}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{item['emp']}}
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+
+        </ng-template>
+
+    </p-dialog>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

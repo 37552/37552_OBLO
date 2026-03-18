@@ -1,0 +1,182 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]">
+  <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+  </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+
+    <!-- Main Table with Pending / Processed Tabs -->
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [tabs]="tabs" [activeTab]="activeTabValue" [jsonTemplate]="mainViewBtnRef"
+      (refresh)="getTableData(true)" (tabChange)="onTabChange($event)" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-table-template>
+
+    <!-- Main table: "Candidate Details" View button -->
+    <ng-template #mainViewBtnRef let-item>
+      <p-button label="View" icon="pi pi-eye" size="small" (click)="openCandidateDetail(item)"
+        styleClass="p-button-text p-button-sm">
+      </p-button>
+    </ng-template>
+
+  </div>
+
+
+  <!-- Drawer for Candidate Details -->
+  <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl">Candidate Details</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }" />
+      </div>
+      } @else {
+
+      <!-- Detail Table inside Drawer -->
+      <app-table-template [data]="detailData" [columns]="detailColumns" [pageSize]="detailPageSize"
+        [totalCount]="detailTotalCount" [isLoading]="false" [currentPage]="detailPageNo"
+        [actionTemplate]="detailActionRef" [jsonTemplate]="detailResumeRef" (pageChange)="onDetailPageChange($event)"
+        (pageSizeChange)="onDetailPageSizeChange($event)" (searchChange)="onDetailSearchChange($event)">
+      </app-table-template>
+
+      <!-- Action column: 3-dot popover menu -->
+      <ng-template #detailActionRef let-c>
+        <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer"
+          (click)="actionMenu.toggle($event)">
+          <i class="pi pi-ellipsis-v text-xl"></i>
+        </button>
+
+        <p-popover #actionMenu>
+          <div class="flex flex-col min-w-[140px]">
+
+            <!-- Acknowledge — only when no profileStatus -->
+            <button *ngIf="!c.profileStatus" [disabled]="c.acknowledged"
+              (click)="acknowledge(c, selectedParentId); actionMenu.hide()"
+              [ngClass]="{'opacity-50 cursor-not-allowed': c.acknowledged}"
+              class="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-left text-sm text-blue-700">
+              <i class="pi pi-check-circle"></i> Acknowledge
+            </button>
+
+            <!-- Shortlist — when no profileStatus OR profileStatus === 'ACKNOWLEDGE' -->
+            <button *ngIf="!c.profileStatus || c.profileStatus === 'ACKNOWLEDGE'" [disabled]="c.shortlistRejected"
+              (click)="openShorlistedModal(c, selectedParentId); actionMenu.hide()"
+              [ngClass]="{'opacity-50 cursor-not-allowed': c.shortlistRejected}"
+              class="flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-left text-sm text-green-700">
+              <i class="pi pi-user-plus"></i> Shortlist
+            </button>
+
+            <!-- Reject — when no profileStatus OR profileStatus === 'ACKNOWLEDGE' -->
+            <button *ngIf="!c.profileStatus || c.profileStatus === 'ACKNOWLEDGE'" [disabled]="c.shortlistRejected"
+              (click)="reject(c, selectedParentId); actionMenu.hide()"
+              [ngClass]="{'opacity-50 cursor-not-allowed': c.shortlistRejected}"
+              class="flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-left text-sm text-red-600">
+              <i class="pi pi-times-circle"></i> Reject
+            </button>
+
+            <!-- No actions available -->
+            <span *ngIf="c.profileStatus && c.profileStatus !== 'ACKNOWLEDGE'"
+              class="px-4 py-2 text-sm text-gray-400 italic">
+              No actions available already shortlisted or rejected
+            </span>
+
+          </div>
+        </p-popover>
+      </ng-template>
+
+      <!-- jsonDetails column: Resume link -->
+      <ng-template #detailResumeRef let-c>
+        <a *ngIf="c.resumeUpload" [href]="c.resumeUpload" target="_blank"
+          class="flex items-center justify-center gap-1 text-blue-500 hover:text-blue-700">
+          <i class="pi pi-file text-xl"></i>
+        </a>
+        <span *ngIf="!c.resumeUpload" class="text-gray-400 text-xs">N/A</span>
+      </ng-template>
+
+      }
+    </ng-template>
+  </p-drawer>
+
+
+  <!-- Shortlist Dialog -->
+  <p-dialog [modal]="true" [(visible)]="shortlistDailog"
+    [style]="{ width: '50%',  height: '100%', 'max-width': '100%' }" [closable]="true" [blockScroll]="true"
+    header="Shortlist Candidate" (onHide)="handleDialogClose()">
+
+    <form [formGroup]="shortlistForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Mode of Interview -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Mode of Interview *</label>
+        <p-select [options]="modeOfInterView" optionLabel="drpoption" optionValue="drpvalue"
+          formControlName="modeIdControl" [filter]="true" filterBy="drpoption" [showClear]="true"
+          placeholder="Select Mode of Interview" [class.border-red-500]="isInvalid('modeIdControl')"
+          class="custom-p-select w-full" appendTo="body">
+        </p-select>
+        <p *ngIf="isInvalid('modeIdControl')" class="text-red-500 text-xs mt-1">Mode of Interview is required.</p>
+      </div>
+
+      <!-- Location -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+        <p-select [options]="locationDrp" optionLabel="drpoption" optionValue="drpvalue"
+          formControlName="locationIdControl" [filter]="true" filterBy="drpoption" [showClear]="true"
+          placeholder="Select Location" [class.border-red-500]="isInvalid('locationIdControl')"
+          class="custom-p-select w-full" appendTo="body">
+        </p-select>
+        <p *ngIf="isInvalid('locationIdControl')" class="text-red-500 text-xs mt-1">Location is required.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Interview Date *
+        </label>
+        <p-datepicker formControlName="dateControl" dateFormat="dd/mm/yy" [showIcon]="true" inputStyleClass="w-full"
+          styleClass="w-full" appendTo="body">
+        </p-datepicker>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Interview Time *
+        </label>
+        <p-datepicker formControlName="timeControl" timeOnly="true" hourFormat="12" inputStyleClass="w-full"
+          styleClass="w-full" appendTo="body">
+        </p-datepicker>
+      </div>
+
+      <!-- Interviewer Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Interviewer Name *</label>
+        <p-select [options]="interviewerDrp" optionLabel="drpOption" optionValue="drpValue"
+          formControlName="interviewerIdControl" [filter]="true" filterBy="drpOption" [showClear]="true"
+          placeholder="Select Interviewer Name" [class.border-red-500]="isInvalid('interviewerIdControl')"
+          class="custom-p-select w-full" appendTo="body">
+        </p-select>
+        <p *ngIf="isInvalid('interviewerIdControl')" class="text-red-500 text-xs mt-1">Interviewer Name is required.</p>
+      </div>
+
+    </form>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end gap-3 mt-4">
+        <p-button label="Submit" severity="success" (click)="onSubmit($event)"></p-button>
+        <p-button label="Reset" severity="secondary" (click)="onClear()" styleClass="p-button-outlined"></p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

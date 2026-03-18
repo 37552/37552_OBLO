@@ -1,0 +1,110 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB + HEADER ================= -->
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+        </div>
+
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+
+        <form #bankTransferReportForm="ngForm" (ngSubmit)="generateReport(bankTransferReportForm)" class="space-y-6">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Organisation -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">
+                        Organisation
+                    </label>
+
+                    <p-select name="organisation" #organisation="ngModel" [options]="organisationDrpData"
+                        optionLabel="drpOption" optionValue="drpValue" [(ngModel)]="selectedOrg" required
+                        appendTo="body" placeholder="Select Organisation" class="w-full">
+                    </p-select>
+
+                    <small class="text-red-500"
+                        *ngIf="organisation.invalid && (organisation.dirty || organisation.touched)">
+                        Please select an organisation
+                    </small>
+                </div>
+
+                <!-- Month -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">
+                        Month
+                    </label>
+
+                    <p-select name="month" #month="ngModel" [options]="monthDrpData" optionLabel="drpOption"
+                        optionValue="drpValue" [(ngModel)]="selectedMonth" required appendTo="body"
+                        placeholder="Select Month" class="w-full">
+                    </p-select>
+
+                    <small class="text-red-500" *ngIf="month.invalid && (month.dirty || month.touched)">
+                        Please select a month
+                    </small>
+                </div>
+
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
+
+                <p-button type="button" (click)="resetReport(bankTransferReportForm)" label="Reset" icon="pi pi-refresh"
+                    severity="secondary" [outlined]="true">
+                </p-button>
+
+                <p-button type="button" (click)="exportAsXLSX()" label="Export to Excel" icon="pi pi-file-excel"
+                    severity="success" [outlined]="true" [disabled]="!tblData || tblData.length === 0">
+                </p-button>
+
+                <p-button type="submit" label="Generate Report" icon="pi pi-file-excel" [loading]="loading"
+                    styleClass="orange-button" [raised]="true">
+                </p-button>
+
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Loader -->
+    <div *ngIf="loading" class="flex justify-center mt-6">
+        <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <!-- No Data -->
+    <div *ngIf="showTabledata && noDatafoundCard && !loading"
+        class="bg-white rounded-xl shadow-md p-6 mt-6 text-center text-gray-500">
+        No data found for selected criteria.
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="showTabledata && !noDatafoundCard && !loading" class="bg-white rounded-xl shadow-md p-6 mt-6">
+
+        <p-table [value]="tblData" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th *ngFor="let col of tableHeaders">
+                        {{ col | titlecase }}
+                    </th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td *ngFor="let col of tableHeaders">
+                        {{ row[col] }}
+                    </td>
+                </tr>
+            </ng-template>
+
+        </p-table>
+        <a class="btn mr-2" (click)="exportAsXLSXCustom()" class="white"><i class="fa fa-file-excel-o"></i></a>
+    </div>
+
+</div>

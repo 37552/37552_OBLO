@@ -1,0 +1,214 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb
+          [model]="breadcrumbItems"
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+    </div>
+
+    <div class="border-b border-gray-200 bg-white px-4">
+      <div class="flex items-center justify-between">
+        <nav class="flex space-x-8" aria-label="Tabs">
+          <button
+            *ngFor="let tab of statusTabs"
+            (click)="onChangeTabs(tab.value)"
+            [class]="selectedAction === tab.procedure
+              ? 'border-' + tab.color + '-500 text-' + tab.color + '-600 py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2'">
+            <i [class]="tab.icon"></i>
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <div *ngIf="selectedAction === 'uspGetPendingEmployeeAppraisals'" class="relative">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:from-indigo-700 hover:to-blue-700 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            (click)="toggleQuarterDropdown()"
+            title="Select Quarter to Start Appraisal">
+            <i class="pi pi-calendar-plus text-base"></i>
+            <span>Select Quarter</span>
+            <i class="pi pi-chevron-down text-xs transition-transform duration-200" [class.rotate-180]="showQuarterDropdown"></i>
+          </button>
+
+          <div 
+            *ngIf="showQuarterDropdown && pendingMetaData.length > 0" 
+            class="absolute right-0 mt-3 w-[420px] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 max-h-[480px] overflow-hidden animate-fadeIn">
+            <div class="bg-blue-600 px-6 py-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold text-white">Appraisal Quarters</h3>
+                  <p class="text-indigo-100 text-sm mt-1 opacity-90">Select a quarter to begin performance appraisal</p>
+                </div>
+                <button 
+                  (click)="toggleQuarterDropdown()"
+                  class="text-white hover:text-indigo-200 transition-colors p-1 rounded-full hover:bg-white/10">
+                  <i class="pi pi-times text-base"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- <div class="px-5 py-3 bg-gray-50 border-b border-gray-100">
+              <div class="relative">
+                <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="quarterSearch"
+                  (ngModelChange)="filterQuarters()"
+                  placeholder="Search quarters..."
+                  class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+              </div>
+            </div> -->
+
+            <div class="overflow-y-auto max-h-[320px] p-2">
+              <div *ngIf="isLoadingMetaData" class="py-10 text-center">
+                <div class="inline-flex flex-col items-center">
+                  <div class="relative">
+                    <i class="pi pi-spin pi-spinner text-blue-500 text-2xl"></i>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-100 to-transparent blur-sm"></div>
+                  </div>
+                  <p class="text-sm font-medium text-gray-700 mt-4">Loading quarters...</p>
+                  <p class="text-xs text-gray-500 mt-1">Fetching available appraisal periods</p>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingMetaData && filteredQuarters.length > 0" class="grid grid-cols-1 gap-3 p-2">
+                <div 
+                  *ngFor="let quarter of filteredQuarters; let i = index" 
+                  class="group relative p-4 bg-white hover:bg-blue-50 cursor-pointer rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+                  (click)="selectQuarter(quarter)">
+                  <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                      <i class="pi pi-arrow-right text-white text-xs"></i>
+                    </div>
+                  </div>
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                      <div class="relative">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                          Q{{ quarter.quarterNo }}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <i class="pi pi-check text-white text-[8px]"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 class="font-semibold text-gray-900 text-base leading-tight">
+                          {{ quarter.appraisalFor }}
+                        </h4>
+                        <div class="flex items-center gap-2 mt-1">
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                            <i class="pi pi-calendar text-[10px]"></i>
+                            FY {{ quarter.financialYear }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="space-y-2 pt-3 border-t border-gray-100">
+                    <div class="flex items-center gap-2">
+                      <i class="pi pi-clock text-gray-400 text-sm"></i>
+                      <span class="text-sm text-gray-700">{{ quarter.appraisalFor }}</span>
+                    </div>
+                    <!-- <div class="pt-3 mt-3 border-t border-gray-100">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
+                          Click to start appraisal process
+                        </span>
+                        <i class="pi pi-arrow-up-right text-xs text-gray-400 group-hover:text-blue-500 transition-colors transform group-hover:translate-x-0.5"></i>
+                      </div>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="!isLoadingMetaData && filteredQuarters.length === 0" class="py-12 text-center">
+                <div class="max-w-xs mx-auto">
+                  <div class="relative inline-block mb-4">
+                    <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                      <i class="pi pi-calendar-times text-3xl text-gray-300"></i>
+                    </div>
+                    <div class="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-r from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
+                      <i class="pi pi-exclamation-circle text-white text-sm"></i>
+                    </div>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-800 mb-2">No quarters available</h4>
+                  <p class="text-sm text-gray-600 mb-4">
+                    {{ quarterSearch ? 'No results found for your search.' : 'All appraisal periods have been processed.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="px-5 py-3 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-info-circle text-blue-500 text-sm"></i>
+                  <span class="text-xs text-gray-600">
+                    Select a quarter to begin the appraisal process
+                  </span>
+                </div>
+              </div>
+            </div> -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <app-table-template
+      [data]="data"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      [searchText]="searchText"
+      [actionTemplate]="actionTemplateRef"
+      [jsonTemplate]="packageDetailsTemplate"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-600"
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v"></i>
+        </button>
+
+        <p-popover #op>
+          <button
+            class="px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+            (click)="openApprovalDialog(item); op.hide()">
+            <i class="pi pi-check-square"></i>
+            Process
+          </button>
+        </p-popover>
+      </ng-template>
+
+      <ng-template #packageDetailsTemplate let-QuarterData>
+        <button
+          pButton
+          icon="pi pi-list"
+          class="p-button-rounded p-button-text p-button-info"
+          pTooltip="View Data"
+          (click)="viewPackageDetails(QuarterData)">
+        </button>
+      </ng-template>
+
+    </app-table-template>
+  </div>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>

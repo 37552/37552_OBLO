@@ -1,0 +1,14 @@
+::ng-deep .custom-p-select {
+    .p-multiselect-clear-icon {
+        top: 0.75rem !important;
+        /* Adjust based on input padding */
+        right: 0.75rem !important;
+        margin-top: 0 !important;
+        /* Remove vertical centering margin */
+    }
+}
+
+@page {
+    size: A4;
+    margin: 10mm;
+}

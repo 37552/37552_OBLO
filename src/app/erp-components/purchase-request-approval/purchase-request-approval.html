@@ -1,0 +1,130 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]">
+    <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+        </div>
+    </div>
+
+    <p-button icon="pi pi-file-excel" class="mr-2 text-green-600 hover:text-green-700" styleClass="p-button-text"
+    pTooltip="Excel Download" (onClick)="exportAsXLSXCustom()"></p-button>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [jsonTemplate]="jsonTemplateRef" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+    </app-table-template>
+
+    <ng-template #jsonTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="getDetails(item.id)">
+            <i class="pi pi-pen-to-square cursor-pointer"></i>
+        </button>
+    </ng-template>
+
+
+    <p-dialog [modal]="true" [(visible)]="approveDailog" [style]="{ width: '60vw', 'max-width': '100%' }"
+        [closable]="true" [blockScroll]="true" header="Approve/Reject" (onHide)="closeDataDialog()" id="approveReject">
+
+        <p-table #dt [value]="itemData" showGridlines [rows]="5">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th class="text-sm font-medium">Item</th>
+                    <th class="text-sm font-medium">UOM</th>
+                    <th class="text-sm font-medium">Available Qty.</th>
+                    <th class="text-sm font-medium">PO Qty.</th>
+                    <th class="text-sm font-medium">Required Qty.</th>
+                    <th class="text-sm font-medium">Approved Qty.</th>
+                    <th class="text-sm font-medium">Action</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+                    <tr class="Uiparamschild" *ngFor="let item of itemData;let i = index;">
+                    <td class="text-sm"><a href="javascript:void(0)" (click)="getAvailabletWarehouse(item)" title="See Available Warehouse Stock"> {{item.itemName}}</a></td>
+                    <td class="text-sm">{{item?.uom}}</td>
+                    <td class="text-sm">{{item.availableQty}}</td>
+                    <td class="text-sm">{{item.poQty?item.poQty:0}} </td>
+                    <td class="text-sm">{{item.reqQty}}</td>                     
+                    <td class="text-sm">
+                        <input type="number" min="0" maxlength="3" (change)="setApprovedQty($event,item)"
+                            class="form-control" [value]="item.approvedQty">
+                    </td>
+                    <td class="text-sm">
+                        <label>
+                            <input type="checkbox" (change)="checkValue($event,item)"
+                                [checked]="item.isApproved=='1'" class="filled-in"
+                                style="margin-right: 5px;">
+                            <span>Checked- Approved<br>
+                                Unchecked - Reject
+                            </span>
+                        </label>
+                    </td>
+
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-3 mt-4">
+                <p-button label="Submit" severity="success" (click)="OnSubmitModal()"></p-button>
+                <p-button label="Close" severity="secondary" (click)="closeDataDialog()"
+                    styleClass="p-button-outlined"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+<p-dialog [(visible)]="warehouseStockDialog" [modal]="true" [closable]="true" [style]="{ width: '70vw', 'max-width': '100%' }"
+ header="Available Warehouse Stock" (onHide)="onCloseWarehoseModal()">
+  
+  <div class="overflow-x-auto">
+
+        <p-table [value]="[1]" showGridlines [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Sr. No.</th>
+               <th class="text-sm font-medium">Warehouse</th>
+               <th class="text-sm font-medium">Available Stock</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+              <ng-container *ngIf="availableWarehouseData.length > 0">
+              <tr *ngFor="let item of availableWarehouseData; let idx = index;"
+                [ngStyle]="{'background-color': item['transferStock']>0 ? '#eff3f8' : '#fff'}">
+                <td style="text-align: center;">{{idx+1}}</td>
+                <td>{{item['text']?item['text']:'-'}}</td>
+                <td>{{item['availableStock']}}</td>
+              </tr>
+            </ng-container>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+      </tr>
+    </ng-template>
+        </p-table>
+  </div>
+
+  <div class="stockButtons text-right mt-[10px]">
+  <button pButton type="button" severity="secondary" (click)="onCloseWarehoseModal()" class="mr-[10px]">Close</button>
+  </div>
+
+</p-dialog>
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

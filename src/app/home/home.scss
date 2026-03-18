@@ -1,0 +1,60 @@
+.home-container {
+    font-family: 'Poppins', sans-serif;
+    height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    text-align: center;
+    overflow-y: hidden; /* hide vertical scroll */
+    box-sizing: border-box; /* ensure padding doesn't overflow */
+  }
+  
+  .hero-logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .highlight {
+    color: #1976D2; // accent color for OBLO
+  }
+
+
+  .hero-logo {
+    width: 400px;
+    height: auto;
+    animation: logoBounce 0.6s ease-in-out infinite alternate; /* faster */
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-top: 10px;
+  }
+  
+
+  @keyframes logoBounce {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-8px); // smaller bounce to avoid scroll
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-logo-container {
+      .hero-logo {
+        width: 150px;
+      }
+
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+    }
+  }
+  

@@ -1,0 +1,89 @@
+
+::ng-deep .p-inputtext {
+    width: 100% !important;
+}
+
+input:disabled,
+textarea:disabled {
+    background-color: #e2e8f0 !important;
+}
+
+::ng-deep #printWrapper .p-dialog-content {
+   padding: 0 !important;
+}
+
+::ng-deep #printWrapper .p-dialog-header {
+  padding: 0 10px !important;
+}
+
+::ng-deep #printWrapper .p-dialog-content td,
+::ng-deep #printWrapper .p-dialog-content th {
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+.printFooter {
+    text-align: right;
+    margin: 12px;
+}
+
+.itemDetailDataMR input {
+    border: 1px solid #cbd5e1 !important;
+    padding: 2px;
+}
+
+.alert-message .alerts {
+    color: #E2755F !important;
+}
+
+.alert-message .success p {
+   color:#87B87F !important;
+}
+
+
+/* ========== Responsive ========== */
+
+@media (max-width: 1280px) {
+  ::ng-deep .p-drawer {
+    width:80% !important;
+  }
+
+}  
+
+@media (max-width: 1024px) {
+  ::ng-deep .p-dialog {
+    width: 90% !important;
+  }
+
+  ::ng-deep .p-dialog-title {
+    font-size:18px !important;
+  }
+
+}
+
+@media (max-width: 768px) {
+  ::ng-deep .p-drawer {
+    width:90% !important;
+  }
+
+  ::ng-deep .p-dialog-title {
+    font-size:16px !important;
+  }
+
+  }
+
+  @media (max-width: 640px) {
+
+     ::ng-deep .p-dialog {
+      width: 95% !important;
+    }
+
+    ::ng-deep .p-drawer {
+    width:95% !important;
+   }
+
+  ::ng-deep .p-dialog-title {
+    font-size:14px !important;
+  }
+
+  }

@@ -1,0 +1,466 @@
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-pink-50 to-purple-50 p-4 md:p-6">
+
+    <div class="flex items-center gap-6 mb-6 border-b border-gray-200">
+
+        <div (click)="setTab('dashboard')" class="cursor-pointer pb-2 text-sm font-medium transition-all" [ngClass]="activeTab === 'dashboard' 
+            ? 'text-blue-600 border-b-2 border-blue-600' 
+            : 'text-gray-500 hover:text-blue-500'">
+            Dashboard
+        </div>
+
+        <!-- Pending Tab -->
+        <!-- <div (click)="setTab('pending')"
+            class="cursor-pointer pb-2 text-sm font-medium transition-all flex items-center gap-1" [ngClass]="activeTab === 'pending' 
+            ? 'text-blue-600 border-b-2 border-blue-600' 
+            : 'text-gray-500 hover:text-blue-500'">
+            <i class="pi pi-bell text-xs"></i>
+            Pending (2)
+        </div> -->
+
+    </div>
+
+
+    <div *ngIf="activeTab === 'dashboard'" class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="margin-bottom: 30px;">
+
+        <div class="lg:col-span-1 space-y-6">
+
+            <p-card class="user-card-new">
+
+                <!-- HEADER -->
+                <div class="user-header">
+                    <span class="user-title">My Info</span>
+                </div>
+
+                <!-- BODY -->
+                <div class="user-body-new">
+
+                    <!-- LEFT -->
+                    <div class="user-left">
+                        <lottie-player src="https://assets2.lottiefiles.com/packages/lf20_49rdyysj.json"
+                            background="transparent" speed="1" class="emp-animation" loop autoplay>
+                        </lottie-player>
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="user-right">
+
+                        <div class="user-info-box">
+
+                            <div class="user-row">
+                                <span class="user-label">Name</span>
+                                <span class="user-value">{{ userInfo?.name }}</span>
+                            </div>
+
+                            <div class="user-row">
+                                <span class="user-label">Designation</span>
+                                <span class="user-value">{{ userInfo?.designation }}</span>
+                            </div>
+
+                            <div class="user-row">
+                                <span class="user-label">Department</span>
+                                <span class="user-value">{{ userInfo?.department }}</span>
+                            </div>
+
+                            <div class="user-row">
+                                <span class="user-label">Reporting Manager</span>
+                                <span class="user-value">{{ userInfo?.['reporting Manager'] }}</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </p-card>
+
+            <p-card class="leave-card-new">
+
+                <!-- HEADER -->
+                <div class="header">
+                    <span class="title">Leave Status</span>
+
+                    <span class="leave-count">
+                        {{ leaveList?.length || 0 }} Types
+                    </span>
+                </div>
+
+                <!-- BODY -->
+                <div class="leave-body">
+
+                    <!-- LEFT ICON -->
+                    <div class="left">
+
+                        <lottie-player src="https://assets1.lottiefiles.com/packages/lf20_kkflmtur.json"
+                            background="transparent" speed="1" class="leave-animation" loop autoplay>
+                        </lottie-player>
+
+                    </div>
+
+                    <!-- RIGHT DETAILS -->
+                    <div class="right">
+
+                        <div class="leave-box">
+
+                            <div class="row" *ngFor="let item of leaveList">
+
+                                <!-- NAME + STATUS -->
+                                <div class="leave-info">
+
+                                    <span class="leave-name">
+                                        {{ item.name }}
+                                    </span>
+                                </div>
+
+                                <!-- VALUE -->
+                                <div class="leave-value" [ngClass]="item.status === 'Approved' ? 'used' : 'available'">
+                                    {{ item.value }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </p-card>
+
+            <p-card class="holiday-card">
+
+                <div class="flex items-center justify-between mb-3">
+                    <h4 style="font-size:18px; font-weight:700;">Monthly Holidays</h4>
+
+                    <span class="text-xs text-gray-400">
+                        {{ currentIndex + 1 }}/{{ holidays.length }}
+                    </span>
+                </div>
+
+                <div class="relative flex items-center justify-center">
+
+                    <button (click)="prevHoliday()">
+                        <i class="pi pi-chevron-left"></i>
+                    </button>
+
+                    <div class="holiday-content" *ngIf="holidays.length > 0">
+
+                        <div class="image-wrapper">
+                            <img [src]="holidays[currentIndex]?.image || 'assets/images/default-holiday.png'"
+                                class="holiday-img" />
+                        </div>
+
+                        <p class="date-text">
+                            {{ holidays[currentIndex]?.date }}
+                        </p>
+
+                        <div class="flex justify-center gap-2 mt-2 flex-wrap">
+                            <span class="tag dark">
+                                {{ holidays[currentIndex]?.name }}
+                            </span>
+
+                            <span class="tag blue">
+                                {{ holidays[currentIndex]?.type }}
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <button (click)="nextHoliday()">
+                        <i class="pi pi-chevron-right"></i>
+                    </button>
+
+                </div>
+
+                <div *ngIf="holidays.length === 0" class="text-center text-gray-400">
+                    No holidays available
+                </div>
+
+            </p-card>
+
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+
+            <p-card *ngIf="latestEntry" class="attendance-card shadow-lg border-round-2xl">
+
+                <div class="flex items-center justify-between">
+
+                    <div class="flex flex-col gap-1">
+
+                        <p class="text-large font-medium" [ngClass]="{
+                         'text-green-500': latestEntry?.etype === 'Swipe In',
+                         'text-red-500': latestEntry?.etype === 'Swipe Out'
+                       }">
+                            {{ latestEntry?.etype }}
+                        </p>
+
+                        <p class="text-xl font-bold text-gray-800">
+                            {{ latestEntry?.edate | date:'hh:mm:ss a' }}
+                        </p>
+
+                        <p class="text-sm text-gray-500">
+                            {{ latestEntry?.edate | date:'EEE, dd MMM yyyy' }}
+                        </p>
+
+                    </div>
+
+                    <div class="icon-box" [ngClass]="{
+                         'bg-green-100': latestEntry?.etype === 'Swipe In',
+                         'bg-red-100': latestEntry?.etype === 'Swipe Out'
+                       }">
+
+                        <i class="pi" [ngClass]="{
+                         'pi-sign-in text-green-600': latestEntry?.etype === 'Swipe In',
+                         'pi-sign-out text-red-600': latestEntry?.etype === 'Swipe Out'
+                       }" style="font-size: 1.5rem;">
+                        </i>
+
+                    </div>
+
+                </div>
+
+            </p-card>
+
+            <p-card class="calendar-card">
+
+                <!-- HEADER -->
+                <div class="calendar-header">
+                    <button class="nav-btn" (click)="prevMonth()">Previous</button>
+
+                    <div class="month-title">
+                        {{ currentDate | date:'MMMM yyyy' }}
+                    </div>
+
+                    <button class="nav-btn" (click)="nextMonth()">Next</button>
+                </div>
+
+                <!-- DAYS HEADER -->
+                <div class="calendar-grid header">
+                    <div *ngFor="let d of ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']">
+                        {{ d }}
+                    </div>
+                </div>
+
+                <!-- CALENDAR BODY -->
+                <div class="calendar-grid">
+
+                    <div *ngFor="let day of calendarDays" class="calendar-cell">
+
+                        <ng-container *ngIf="day">
+
+                            <!-- DATE -->
+                            <span class="date-number">
+                                {{ day.getDate() }}
+                            </span>
+
+                            <!-- STATUS BADGE -->
+                            <ng-container *ngIf="getDayData(day) as data">
+
+                                <span class="status-badge" [ngStyle]="{'background-color': data.backColor}"
+                                    [title]="data.time">
+
+                                    {{ data.status }}
+
+                                </span>
+
+                            </ng-container>
+
+                        </ng-container>
+
+                    </div>
+
+                </div>
+
+            </p-card>
+
+
+            <p-card class="main-feed-card">
+
+                <h4 style="font-size: 18px;font-weight: 700;">My Feed</h4>
+
+                <div class="space-y-4 max-h-[900px] overflow-y-auto pr-1" style="margin-top:20px;">
+
+                    <p-card *ngFor="let feed of feeds" class="feed-sub-card">
+
+                        <div class="flex justify-between items-center text-large text-gray-500 mb-2">
+                            <span class="text-blue-600 font-medium">
+                                {{ feed.title }}
+                            </span>
+                            <span>{{ feed.date }}</span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+
+                            <!-- LOTTIE IMAGE -->
+
+                            <lottie-player [attr.src]="feed?.image" background="transparent" speed="1"
+                                style="width:170px;height:170px;margin:auto;" loop autoplay>
+                            </lottie-player>
+
+                            <p class="text-large text-gray-700 flex-1 text-center font-medium">
+                                {{ feed.message }}
+                            </p>
+
+                        </div>
+
+                        <div class="flex justify-between items-center mt-3 text-gray-500 text-sm">
+
+                            <div class="flex items-center gap-2">
+                                <button (click)="onClickLike(feed)" [ngStyle]="{'color': feed.myLike ? 'red' : 'grey'}"
+                                    style="cursor:pointer; font-size:20px; border:none; background:none;">
+                                    ❤
+                                </button>
+
+                                <span>{{ feed.likes }}</span>
+
+                            </div>
+
+                            <div class="flex items-center gap-1 cursor-pointer hover:text-blue-500"
+                                (click)="getBlogLikeandCommentDetails(feed,'COMMENTS')">
+                                <i class="pi pi-comments"></i>
+                                <span>{{ feed.comments }}</span>
+                            </div>
+
+                        </div>
+
+                    </p-card>
+
+                </div>
+
+            </p-card>
+
+        </div>
+
+    </div>
+
+    <div *ngIf="activeTab === 'pending'" class="text-center py-20 text-gray-500">
+
+        <i class="pi pi-inbox text-4xl mb-3"></i>
+        <p class="text-sm">No pending items</p>
+
+    </div>
+
+    <div class="backdrop" [class.active]="detailData" (click)="closeModal()">
+    </div>
+
+    <div class="approval-history-modal" [class.active]="detailData">
+
+        <span class="close-btn" (click)="closeModal()">✕</span>
+        <h2 class="side-header">
+            {{ actionType === 'LIKES' ? 'Likes' : 'Comments' }}
+        </h2>
+
+        <div class="approval-content">
+
+            <div class="approval-history-container">
+
+                <ng-container *ngIf="detailData !== 'isActive'; else nodata">
+
+                    <div class="timeline-step-container" *ngFor="let item of detailData">
+
+                        <div class="profile-feed">
+
+                            <div class="profile-activity">
+
+                                <ng-container *ngIf="actionType === 'LIKES'; else COMMENTS">
+
+                                    <div class="feed-item">
+
+                                        <div class="feed-content">
+                                            <div class="user">
+                                                {{ item.empName }} ({{ item.department }})
+                                            </div>
+
+                                            <div class="time">
+                                                <i class="pi pi-clock" style="margin-top: 2px;"></i>
+                                                {{ timeSinceComment(item.time) }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </ng-container>
+
+                                <ng-template #COMMENTS>
+
+                                    <div class="feed-item">
+
+
+                                        <div class="feed-content">
+
+                                            <div class="user">
+                                                {{ item.empName }}
+                                            </div>
+
+                                            <div class="comment">
+                                                {{ item.comment }}
+                                            </div>
+
+                                            <div class="time">
+                                                <i class="pi pi-clock" style="margin-top: 5px;"></i>
+                                                {{ timeSinceComment(item.time) }}
+                                            </div>
+
+                                        </div>
+
+                                        <div class="actions" *ngIf="item.userId == userId">
+                                            <i class="pi pi-pencil edit" (click)="onEditComment(item)"></i>
+
+                                            <i class="pi pi-trash delete" (click)="onDelelteComment(item)"></i>
+                                        </div>
+
+                                    </div>
+
+                                </ng-template>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </ng-container>
+
+                <ng-template #nodata>
+
+                    <div class="no-data">
+
+                        <lottie-player src="https://assets10.lottiefiles.com/packages/lf20_qp1q7mct.json"
+                            style="width:150px;height:150px;" loop autoplay>
+                        </lottie-player>
+
+                        <p>No data found</p>
+
+                    </div>
+
+                </ng-template>
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer" *ngIf="actionType !== 'LIKES'">
+
+            <input type="text" [(ngModel)]="commentInput" placeholder="Enter your comment..." maxlength="200"
+                class="comment-input" />
+
+            <button *ngIf="commentType === 'ADD' && commentInput" class="btn-submit" (click)="addComment()">
+                Add Comment
+            </button>
+
+            <button *ngIf="commentType === 'EDIT'" class="btn-submit" (click)="addComment()">
+                Update
+            </button>
+
+            <button *ngIf="commentType === 'EDIT'" class="btn-cancel" (click)="cancelEdit()">
+                Cancel
+            </button>
+
+        </div>
+
+
+    </div>
+
+
+
+</div>

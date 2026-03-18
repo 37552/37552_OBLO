@@ -1,0 +1,99 @@
+<div class="bg-gray-50 min-h-screen">
+    <!-- Breadcrumb -->
+    <div class="border-b bg-white p-4 shadow-sm">
+        <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-8 bg-white p-8 rounded-2xl shadow-xl">
+        <!-- Profile Header -->
+        <div class="flex items-center gap-6 mb-12">
+            <!-- Avatar Upload -->
+            <div class="relative group cursor-pointer" (click)="triggerFileInput()">
+                <p-avatar *ngIf="!imagePreview" [label]="profileForm.get('empnam')?.value?.charAt(0)" size="xlarge"
+                    shape="circle" class="bg-green-600 text-white shadow-lg w-28 h-28">
+                </p-avatar>
+
+                <img *ngIf="imagePreview" [src]="imagePreview"
+                    class="w-28 h-28 rounded-full object-cover border-4 border-green-500 shadow-lg transition" />
+
+                <!-- Hover Overlay -->
+                <div
+                    class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
+                    <i class="pi pi-camera text-white text-2xl"></i>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800">
+                    {{ profileForm.get('empnam')?.value || 'User Name' }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">Click image to change profile picture</p>
+            </div>
+
+            <input type="file" #fileInput hidden accept="image/*" (change)="onFileSelect($event)" />
+        </div>
+
+        <!-- FORM -->
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Name</label>
+                    <input pInputText formControlName="empnam" class="w-full cursor-not-allowed" readonly />
+                    <small class="text-red-500"
+                        *ngIf="profileForm.get('empnam')?.touched && profileForm.get('empnam')?.invalid">
+                        Name is required
+                    </small>
+                </div>
+
+                <!-- Employee ID -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Employee ID</label>
+                    <input pInputText formControlName="userID" class="w-full bg-gray-100 cursor-not-allowed" readonly />
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Email ID</label>
+
+                    <input pInputText formControlName="personalemail" (blur)="onEmailBlur()" class="w-full" />
+
+                    <small class="text-red-500"
+                        *ngIf="  profileForm.get('personalemail')?.touched && profileForm.get('personalemail')?.invalid">
+                        Enter valid email address
+                    </small>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm text-gray-600 mb-2">Phone Number</label>
+
+                    <div class="flex">
+                        <!-- Prefix (show only if valid first digit) -->
+                        <span *ngIf="showPrefix"
+                            class="bg-gray-100 px-3 flex items-center border border-gray-300 border-r-0 rounded-l-md text-gray-600">
+                            +91
+                        </span>
+
+                        <!-- Input -->
+                        <input pInputText type="text" formControlName="phone" maxlength="10" (input)="onPhoneInput()"
+                            class="w-full border border-gray-300"
+                            [ngClass]="{ 'rounded-l-md': !showPrefix, 'rounded-r-md': showPrefix, }" />
+                    </div>
+
+                    <small class="text-red-500"
+                        *ngIf="profileForm.get('phone')?.touched && profileForm.get('phone')?.invalid">
+                        Phone must start from 6–9 and be 10 digits
+                    </small>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-4 mt-12">
+                <button pButton type="button" label="Cancel" severity="secondary" (click)="onCancel()"></button>
+
+                <button pButton type="submit" label="Save Changes"></button>
+            </div>
+        </form>
+    </div>
+</div>

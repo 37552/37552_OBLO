@@ -1,0 +1,635 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+       <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div> 
+
+        <p-button icon="pi pi-file-excel" class="mr-2 text-green-600 hover:text-green-700" styleClass="p-button-text"
+          pTooltip="Excel Download" (onClick)="exportAsXLSXCustom()"></p-button>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef" 
+        [jsonTemplate1]="jsonTemplate1Ref" (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button 
+                     (click)="openprintModalData(item.id); op.hide()"
+                      class="px-4 py-2 hover:bg-gray-100 text-left"
+                       pTooltip="Print">
+                     <i class="pi pi-print"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+       <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="openDetail(item['item Details'],'Item Details')">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <ng-template #jsonTemplate1Ref let-item>
+          <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" [disabled]="!item['approvalFiles']" 
+          (click)="openDetail(item['approvalFiles'],'Approved Detail')">
+          <i class="pi pi-folder-open cursor-pointer"></i>
+       </button>
+      </ng-template>
+
+</div>  
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '70%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{ header }}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+     <div class="tabbable">
+     <form [formGroup]="mrnForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Material Receipt Type *</label>
+      <p-select
+        [options]="maetrialReceiptTypeDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="materialIndentTypeId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Material Receipt Type"
+        [class.border-red-500]="isInvalid('materialIndentTypeId')"
+        class="custom-p-select w-full"
+        (onChange)="onMaterialReceiptChange()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('materialIndentTypeId')){
+      <p class="text-red-500 text-xs mt-1">Material Receipt Type is required.</p>
+      }
+    </div>  
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name *</label>
+      <p-select
+        [options]="vendorDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="VendorNameId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Vendor Name"
+        [class.border-red-500]="isInvalid('VendorNameId')"
+        class="custom-p-select w-full"
+        (onChange)="onVendorChange()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('VendorNameId')){
+      <p class="text-red-500 text-xs mt-1">Vendor Name is required.</p>
+      }
+    </div> 
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Source Document *</label>
+      <p-select
+        [options]="sourceDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="SourceDocumentId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Source"
+        [class.border-red-500]="isInvalid('SourceDocumentId')"
+        class="custom-p-select w-full"
+        (onChange)="getSourceDocumentNumber()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('SourceDocumentId')){
+      <p class="text-red-500 text-xs mt-1">Source Document is required.</p>
+      }
+    </div> 
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Request No *</label>
+      <p-select
+        [options]="referenceNumberDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="sourceDocReqNoId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Request No"
+        [class.border-red-500]="isInvalid('sourceDocReqNoId')"
+        class="custom-p-select w-full"
+        (onChange)="getMaterialDetail()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('sourceDocReqNoId')){
+      <p class="text-red-500 text-xs mt-1">Request No is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Item Type *</label>
+      <p-select
+        [options]="itemTypeDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="purchaseTypeId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Purchase Item Type"
+        [class.border-red-500]="isInvalid('purchaseTypeId')"
+        class="custom-p-select w-full"
+        (onChange)="getSourceDocumentNumber()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('purchaseTypeId')){
+      <p class="text-red-500 text-xs mt-1">Item Type is required.</p>
+      }
+    </div>
+
+      <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Division *</label>
+      <p-select
+        [options]="divisionDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="DivisonNameId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Division"
+        [class.border-red-500]="isInvalid('DivisonNameId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('DivisonNameId')){
+      <p class="text-red-500 text-xs mt-1">Division is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+      <p-select
+        [options]="departmentDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="department"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Department"
+        [class.border-red-500]="isInvalid('department')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('department')){
+      <p class="text-red-500 text-xs mt-1">Department is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
+      <p-select
+        [options]="warehouseDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="WarehouseId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Warehouse"
+        [class.border-red-500]="isInvalid('WarehouseId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('WarehouseId')){
+      <p class="text-red-500 text-xs mt-1">Warehouse is required.</p>
+      }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+    <p-datepicker
+      formControlName="DocumentDate" 
+      [minDate]="currentDate"
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Choose a date"
+      [class.border-red-500]="isInvalid('DocumentDate')"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      class="w-full">
+      </p-datepicker>
+      <p *ngIf="isInvalid('DocumentDate')" class="text-red-500 text-xs mt-1">Date is required.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Document Type *</label>
+      <p-select
+        [options]="documentTypeDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="DocumentTypeId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Document Type"
+        [class.border-red-500]="isInvalid('DocumentTypeId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('DocumentTypeId')){
+      <p class="text-red-500 text-xs mt-1">Document Type is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Dispatch Challan No *</label>
+      <input
+        type="text"
+        formControlName="DispatchChallanNo"
+        placeholder="Enter Dispatch Challan No"
+        [class.border-red-500]="isInvalid('DispatchChallanNo')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('DispatchChallanNo')){
+      <p class="text-red-500 text-xs mt-1">Dispatch Challan No is required.</p>
+      }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Challan Date *</label>
+    <p-datepicker
+      formControlName="ChalllanDate" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Choose a date"
+      [class.border-red-500]="isInvalid('ChalllanDate')"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      class="w-full">
+      </p-datepicker>
+      <p *ngIf="isInvalid('ChalllanDate')" class="text-red-500 text-xs mt-1">Challan Date is required.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Bill No *</label>
+      <input
+        type="text"
+        formControlName="VendorBillNo"
+        placeholder="Enter Vendor Bill No"
+        [class.border-red-500]="isInvalid('VendorBillNo')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('VendorBillNo')){
+      <p class="text-red-500 text-xs mt-1">Vendor Bill No is required.</p>
+      }
+    </div>
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Bill Date *</label>
+    <p-datepicker
+      formControlName="VendorBillDate" 
+      [maxDate]="currentDate"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      placeholder="Choose a date"
+      [class.border-red-500]="isInvalid('VendorBillDate')"
+      [iconDisplay]="'input'"
+      [readonlyInput]="true"
+      class="w-full">
+      </p-datepicker>
+      <p *ngIf="isInvalid('VendorBillDate')" class="text-red-500 text-xs mt-1">Bill Date is required.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Transporter *</label>
+      <input
+        type="text"
+        formControlName="Transporter"
+        placeholder="Enter Transporter"
+        [class.border-red-500]="isInvalid('Transporter')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('Transporter')){
+      <p class="text-red-500 text-xs mt-1">Transporter is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Driver Name *</label>
+      <input
+        type="text"
+        formControlName="DriverName"
+        placeholder="Enter Driver Name"
+        [class.border-red-500]="isInvalid('DriverName')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('DriverName')){
+      <p class="text-red-500 text-xs mt-1">Driver Name is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle No *</label>
+      <input
+        type="text"
+        formControlName="VehicleNo"
+        placeholder="Enter Vehicle No"
+        [class.border-red-500]="isInvalid('VehicleNo')"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+      @if(isInvalid('VehicleNo')){
+      <p class="text-red-500 text-xs mt-1">Vehicle No is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Freight Type *</label>
+      <p-select
+        [options]="freightTypeIdDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="FreightTypeId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Freight Type"
+        [class.border-red-500]="isInvalid('FreightTypeId')"
+        class="custom-p-select w-full"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('FreightTypeId')){
+      <p class="text-red-500 text-xs mt-1">Freight Type is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Rupees Per Currency <ng-container *ngIf="currency">({{currency.currencyName}})</ng-container></label>
+      <input
+        type="text"
+        formControlName="currencyConversion"
+        maxlength="50"
+        placeholder="Enter Currency"
+        class="w-full rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      />
+    </div>
+
+    <div>
+    <div class="checkField">
+    <label for="chk_isInspection" style="margin-bottom: 0;">Is Inspection</label>
+    <input type="checkbox" formControlName="isInspection" class="filled-in" id="chk_isInspection">
+    </div>
+    <div class="checkField">
+    <label for="chk_shortClose" style="margin-bottom: 0;">Short Close</label>
+    <input type="checkbox" formControlName="shortClose" class="filled-in" id="chk_shortClose">
+    </div>
+    </div>
+
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Remarks *</label>
+      <textarea
+        formControlName="text"
+        rows="2"
+        maxlength="200"
+        placeholder="Enter Remark"
+        [class.border-red-500]="isInvalid('text')"
+        class="w-full resize-none rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      ></textarea>
+       @if(isInvalid('text')){
+        <p class="text-xs text-red-500 mt-1">
+        @if(mrnForm.get('text')?.errors?.['required']){
+         Remarks is required.
+        } @else if(mrnForm.get('text')?.errors?.['invalidValue']){
+        Only dots or blank spaces are not allowed.
+        } @else if(mrnForm.get('text')?.errors?.['noAlphaNumeric']){
+        Must contain at least one letter or number. 
+      } 
+    </p>
+        }
+    </div>
+
+    </form>
+
+    <div class="col-span-full mt-6 border-t pt-4">
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Other Details</h3>
+
+    <p-table *ngIf="itemDetailData.length > 0" [value]="[1]" showGridlines
+     [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">Action</th>
+               <th class="text-sm font-medium" style="min-width: 240px;">Request No.</th>
+               <th class="text-sm font-medium" style="min-width: 240px;">Item Name</th>
+               <th class="text-sm font-medium" style="min-width: 100px;">UOM</th>
+               <th class="text-sm font-medium" style="min-width: 100px;">Quantity</th>
+               <th class="text-sm font-medium" style="min-width: 100px;">Price</th>
+               <th class="text-sm font-medium" style="min-width: 150px;">Challan Quantity</th>
+               <th class="text-sm font-medium" style="min-width: 150px;">Challan Price</th>
+               <th class="text-sm font-medium" style="min-width: 150px;">Received Quantity</th>
+               <th class="text-sm font-medium" style="min-width: 150px;">Date</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let item of itemDetailData; let i=index">
+                <td class="text-sm">
+                  <div class="input-field" style="text-align:center" >
+                  <input class='filled-in itemCheck' type='checkbox' (onChange)="onChangeAction($event,item)"
+                  [checked]="item['active']"> 
+                  </div>
+                </td>
+                <td class="text-sm">
+                  <div class="input-field" title="{{item['poNumber']}}">
+                   <input type="text" value="{{item['poNumber']}}" readonly style="cursor: no-drop;" style="width:100%;cursor: no-drop;">
+                  </div>
+                </td>
+                <td class="text-sm">
+                 <div class="input-field" title="{{item['item']}}">
+                 <input type="text" value="{{item['item']}}" readonly style="cursor: no-drop;" style="width:100%;cursor: no-drop;">
+                 </div>
+                </td>
+                <td class="text-sm">
+                  <div class="input-field" title="{{item['uom']}}">
+                  <input class="getFieldval" type="text" readonly value="{{item.uom}}" style="width:100%;cursor: no-drop;">
+                  </div>
+                 </td>
+                <td class="text-sm">
+                  <div class="input-field" title="{{item['quantity']}}">
+                  <input class="getFieldval" min="0" type="number" readonly value="{{item.quantity}}" style="width:100%;cursor: no-drop;">
+                   </div>
+                </td>
+                <td class="text-sm">
+                <div class="input-field" title="{{item['rate']}}">
+                  <input class="getFieldval" min="0" type="number" id="prItemRate{{i+1}}" value="{{item.rate}}" style="width:100%" readonly>
+                 </div>
+                </td>
+                <td class="text-sm">
+                <input type="number" min="0"  [(ngModel)]="item.ChallanQuantity" (ngModelChange)="onChangeValue($event, item, 'ChallanQuantity')"
+                style="width:100%;border: 1px solid #e2e8f0;">
+                </td>
+                <td class="text-sm">
+                <input type="number" min="0" [(ngModel)]="item.ChallanPrice" (ngModelChange)="onChangeValue($event, item, 'ChallanPrice')"
+               style="width:100%;border: 1px solid #e2e8f0;">
+               </td>
+               <td class="text-sm">
+               <input type="number" min="0" [(ngModel)]="item.ReceivedQuantity" (ngModelChange)="onChangeValue($event, item, 'ReceivedQuantity')"
+               style="width:100%;border: 1px solid #e2e8f0;">
+               </td>
+              <td class="text-sm">
+              <input type="date" min="0" [(ngModel)]="item.validity" (ngModelChange)="onChangeValue($event, item, 'validity')"
+               style="width:100%">
+              </td>
+            </tr>
+      </ng-template>
+    </p-table>
+
+    </div>
+
+   </div>
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"
+        >
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"
+        ></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+<p-dialog [(visible)]="itemDailog" [modal]="true" [closable]="true" [style]="{ width: '70vw', 'max-width': '100%' }" header="{{ modelHeading }}"
+(onHide)="closeDataDialog()">
+  
+  <div class="overflow-x-auto">
+    <p-table [value]="recordViewData" showGridlines [responsiveLayout]="'scroll'" [tableStyle]="{'min-width':'100%'}" class="min-w-full border-gray-300 rounded-lg">
+      
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-100">
+          <ng-container *ngFor="let key of recordHeaderViewData;let i= index">
+          <th *ngIf="i==0" class="px-3 py-2 text-sm">S.No.</th>
+          <th class="px-3 py-2 text-sm" style="text-transform:capitalize"
+               [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='unitId' || key =='itemCode'">
+            {{ key | titlecase }}
+          </th>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 text-sm">{{ i + 1 }}</td>
+          <ng-container *ngFor="let key of recordHeaderViewData;">
+                <td class="px-3 py-2 text-sm" [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='unitId' || key =='itemCode'"> 
+                   <ng-container *ngIf="key =='fileURL';else elsePart1">
+                      <button *ngIf="item[key]" type="button" class="btn btn-link "
+                        (click)="filedownloadview(item[key])">
+                        <i class="fa fa-download" style="font-size:24px;"></i>
+                      </button>
+                      <span *ngIf="!item[key]">-</span>
+                    </ng-container>             
+                    <ng-template #elsePart1>
+                      <span>{{ item[key] }}</span>
+                    </ng-template>
+                </td>
+            </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="recordHeaderViewData.length + 1" class="text-center text-sm no-border">
+            No data found
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+</p-dialog>
+
+
+<p-dialog [(visible)]="printDialog" header="Print Preview" [modal]="true"
+  [style]="{ width: '60rem', maxWidth: '100%' }" id="printWrapper">
+
+  <div #poPrintWrapper [innerHTML]="printContent"></div>
+
+  <div class="printFooter">
+    <button pButton type="button" label="Print" (click)="print()"></button>
+  </div>
+
+</p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>      
+
+

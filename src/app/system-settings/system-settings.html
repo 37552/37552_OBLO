@@ -1,0 +1,547 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">System Settings</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button"></p-button>
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"></app-table-template>
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+    </div>
+
+    <!-- Drawer -->
+<p-drawer [(visible)]="visible" position="right" [modal]="true" (onHide)="onDrawerHide()"
+    class="sm:w-[60%] w-full !max-w-full" [style]="{ width: '80%', 'max-width': '100%' }">
+
+    <!-- Header -->
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <span class="font-semibold text-2xl">{{ header }}</span>
+            <i class="text-blue-500" [ngClass]="headerIcon"></i>
+        </div>
+    </ng-template>
+
+    <!-- Content -->
+    <ng-template pTemplate="content" [style]="{ padding: '2rem' }">
+        <div *ngIf="isFormLoading" class="flex items-center justify-center min-h-[400px]">
+            <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                [style]="{ width: '50px', height: '50px' }"></p-progress-spinner>
+        </div>
+
+        <div *ngIf="!isFormLoading">
+
+            <!-- ====================== CARD 1: DETAILS ====================== -->
+            <p-card [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+                class="rounded-lg border border-gray-200 mb-6">
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+                    <span class="font-semibold text-lg">Details</span>
+                </div>
+
+                <!-- Card Content (Always Visible) -->
+                <form [formGroup]="systemSettingsForm" (ngSubmit)="onSubmit($event)"
+                    class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+
+                    <!-- Country -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Country*</label>
+                        <p-select [options]="countries" formControlName="country" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Country"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('country', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('country', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Country is required.
+                        </p>
+                    </div>
+
+                    <!-- Time Zone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Time Zone*</label>
+                        <p-select [options]="timeZones" formControlName="timeZone" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Time Zone"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('timeZone', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('timeZone', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Time Zone is required.
+                        </p>
+                    </div>
+
+                    <!-- Branch -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Branch*</label>
+                        <p-select [options]="branches" formControlName="branch" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Branch"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('branch', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('branch', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Branch is required.
+                        </p>
+                    </div>
+
+                    <!-- Language -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Language*</label>
+                        <p-select [options]="languages" formControlName="language" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Language"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('language', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('language', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Language is required.
+                        </p>
+                    </div>
+
+                    <!-- Currency -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Currency*</label>
+                        <p-select [options]="currencies" formControlName="currency" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Currency"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('currency', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('currency', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Currency is required.
+                        </p>
+                    </div>
+
+                    <!-- Date Format -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Format*</label>
+                        <p-select [options]="dateFormats" formControlName="dateFormat" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Date Format"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('dateFormat', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('dateFormat', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Date Format is required.
+                        </p>
+                    </div>
+
+                    <!-- Time Format -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Time Format*</label>
+                        <p-select [options]="timeFormats" formControlName="timeFormat" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select Time Format"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('timeFormat', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('timeFormat', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Time Format is required.
+                        </p>
+                    </div>
+
+                    <!-- Float Precision -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Float Precision*</label>
+                        <input type="number" formControlName="floatPrecision" placeholder="Enter Float Precision"
+                            [class.border-red-500]="isInvalid('floatPrecision', systemSettingsForm)"
+                            class="w-full border rounded-md p-2" />
+                        <p *ngIf="isInvalid('floatPrecision', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Float Precision is required.
+                        </p>
+                    </div>
+
+                    <!-- First Day Of Week -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">First Day Of Week*</label>
+                        <p-select [options]="firstDaysOfWeek" formControlName="firstDayOfWeek" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true" placeholder="Select First Day"
+                            optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('firstDayOfWeek', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('firstDayOfWeek', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            First Day Of Week is required.
+                        </p>
+                    </div>
+
+                    <!-- Rounding Method -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rounding Method*</label>
+                        <p-select [options]="roundingMethods" formControlName="roundingMethod" optionLabel="drpOption"
+                            [filter]="true" filterBy="drpOption" [showClear]="true"
+                            placeholder="Select Rounding Method" optionValue="drpValue"
+                            [class.border-red-500]="isInvalid('roundingMethod', systemSettingsForm)"
+                            class="custom-p-select w-full">
+                        </p-select>
+                        <p *ngIf="isInvalid('roundingMethod', systemSettingsForm)" class="text-red-500 text-xs mt-1">
+                            Rounding Method is required.
+                        </p>
+                    </div>
+
+                </form>
+            </p-card>
+
+            <!-- ====================== CARD 2: LOGIN ====================== -->
+            <p-card [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+    class="rounded-lg border border-gray-200 mb-6">
+
+    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+        <span class="font-semibold text-lg">Login</span>
+    </div>
+
+    <div class="mt-4">
+        <form [formGroup]="loginSettingsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- LEFT SIDE INPUTS -->
+            <div class="space-y-4">
+                
+                <!-- Session Expiry -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Session Expiry*</label>
+
+                    <input type="number"
+                        pInputText 
+                        formControlName="idleTimeout"
+                        placeholder="Enter idle timeout"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('idleTimeout', loginSettingsForm)" />
+
+                    <p *ngIf="isInvalid('idleTimeout', loginSettingsForm)" 
+                       class="text-red-500 text-xs mt-1">
+                        Session Expiry is required.
+                    </p>
+                </div>
+
+                <!-- Consecutive Login Attempts -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Consecutive Login Attempts*
+                    </label>
+
+                    <input type="number"
+                        pInputText 
+                        formControlName="consecutiveLoginAttempts"
+                        placeholder="Enter number"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('consecutiveLoginAttempts', loginSettingsForm)" />
+
+                    <p *ngIf="isInvalid('consecutiveLoginAttempts', loginSettingsForm)" 
+                       class="text-red-500 text-xs mt-1">
+                        Consecutive Login Attempts is required.
+                    </p>
+                </div>
+
+                <!-- Login After Fail Seconds -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Login After Fail (seconds)*
+                    </label>
+
+                    <input type="number"
+                        pInputText 
+                        formControlName="loginAfterFailSeconds"
+                        placeholder="Enter seconds"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('loginAfterFailSeconds', loginSettingsForm)" />
+
+                    <p *ngIf="isInvalid('loginAfterFailSeconds', loginSettingsForm)" 
+                       class="text-red-500 text-xs mt-1">
+                        Login After Fail Seconds is required.
+                    </p>
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE CHECKBOXES (NO VALIDATION NEEDED) -->
+            <div class="space-y-4 mt-1 md:mt-0 pl-4">
+
+                <div class="flex items-center space-x-2 mt-6">
+                    <input type="checkbox" formControlName="allowLoginMobile"
+                        class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">
+                        Allow login using mobile number
+                    </label>
+                </div>
+
+                <div class="flex items-center space-x-2 mt-6">
+                    <input type="checkbox" formControlName="allowLoginUsername"
+                        class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">
+                        Allow login using Username
+                    </label>
+                </div>
+
+                <div class="flex items-center space-x-2 mt-6">
+                    <input type="checkbox" formControlName="twoFactorAuth"
+                        class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">
+                        Two Factor Authentication
+                    </label>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</p-card>
+
+
+            <!-- ====================== CARD 3: PASSWORD ====================== -->
+            <p-card [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+    class="rounded-lg border border-gray-200 mb-6">
+
+    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+        <span class="font-semibold text-lg">Password</span>
+    </div>
+
+    <div class="mt-4">
+        <form [formGroup]="passwordSettingsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- LEFT SIDE INPUTS -->
+            <div class="flex flex-col space-y-4">
+
+                <!-- Force Reset Days -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Force user to reset password (days)*
+                    </label>
+
+                    <input type="number"
+                        pInputText
+                        formControlName="forceResetDays"
+                        placeholder="Enter days"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('forceResetDays', passwordSettingsForm)" />
+
+                    <p *ngIf="isInvalid('forceResetDays', passwordSettingsForm)"
+                       class="text-red-500 text-xs mt-1">
+                        Reset days is required.
+                    </p>
+                </div>
+
+                <!-- Reset Link Expiry -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Reset password link expiry (minutes)*
+                    </label>
+
+                    <input type="number"
+                        pInputText
+                        formControlName="resetLinkExpiry"
+                        placeholder="Enter minutes"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('resetLinkExpiry', passwordSettingsForm)" />
+
+                    <p *ngIf="isInvalid('resetLinkExpiry', passwordSettingsForm)"
+                       class="text-red-500 text-xs mt-1">
+                        Reset link expiry is required.
+                    </p>
+                </div>
+
+                <!-- Reset Link Limit -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Password reset link generation limit (hourly)*
+                    </label>
+
+                    <input type="number"
+                        pInputText
+                        formControlName="resetLinkLimit"
+                        placeholder="Enter number"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('resetLinkLimit', passwordSettingsForm)" />
+
+                    <p *ngIf="isInvalid('resetLinkLimit', passwordSettingsForm)"
+                       class="text-red-500 text-xs mt-1">
+                        Reset link limit is required.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDE CHECKBOXES (NO VALIDATION) -->
+            <div class="flex flex-col space-y-4">
+
+                <div class="flex items-center space-x-2 mt-6">
+                    <input type="checkbox" formControlName="logoutAllSessions"
+                        class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">
+                        Logout all sessions on password reset
+                    </label>
+                </div>
+
+                <div class="flex items-center space-x-2 mt-6">
+                    <input type="checkbox" formControlName="enablePasswordPolicy"
+                        class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
+                    <label class="text-sm font-medium text-gray-700">
+                        Enable password policy
+                    </label>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</p-card>
+
+            <!-- ====================== CARD 4: FILES ====================== -->
+            <p-card [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+    class="rounded-lg border border-gray-200 mb-6">
+
+    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+        <span class="font-semibold text-lg">Files</span>
+    </div>
+
+    <div class="mt-4">
+        <form [formGroup]="fileSettingsForm">
+
+            <div class="flex flex-col sm:flex-row sm:gap-4 gap-2">
+
+                <!-- Max File Size -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Maximum File Size (MB)*
+                    </label>
+
+                    <input type="number"
+                        pInputText
+                        formControlName="maxFileSize"
+                        placeholder="Enter maximum file size"
+                        class="w-full border rounded-md p-2"
+                        [class.border-red-500]="isInvalid('maxFileSize', fileSettingsForm)" />
+
+                    <p *ngIf="isInvalid('maxFileSize', fileSettingsForm)"
+                        class="text-red-500 text-xs mt-1">
+                        Maximum file size is required.
+                    </p>
+                </div>
+
+                <!-- Allowable Extensions -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Allowable Extensions*
+                    </label>
+
+                    <p-multiSelect
+                        [options]="extensionsOptions"
+                        formControlName="allowableExtensions"
+                        appendTo="body"
+                        optionLabel="drpOption"
+                        placeholder="Select extensions"
+                        class="w-full"
+                        [ngClass]="{ 'border-red-500': isInvalid('allowableExtensions', fileSettingsForm) }">
+                    </p-multiSelect>
+
+                    <p *ngIf="isInvalid('allowableExtensions', fileSettingsForm)"
+                        class="text-red-500 text-xs mt-1">
+                        At least one extension must be selected.
+                    </p>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+</p-card>
+
+
+            <!-- ====================== CARD 5: ADVANCE ====================== -->
+           <p-card [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+    class="rounded-lg border border-gray-200 mb-6">
+
+    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+        <span class="font-semibold text-lg">Advance</span>
+    </div>
+
+    <div class="mt-4">
+        <form [formGroup]="advanceForm" class="flex flex-wrap gap-6">
+
+            <!-- Max Auto Email Report per User -->
+            <div class="flex flex-col w-full md:w-[48%]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Max Auto Email Report per User*
+                </label>
+
+                <input type="number"
+                    pInputText
+                    formControlName="maxAutoEmailReport"
+                    placeholder="Enter number of reports"
+                    class="w-full border rounded-md p-2"
+                    [class.border-red-500]="isInvalid('maxAutoEmailReport', advanceForm)" />
+
+                <p *ngIf="isInvalid('maxAutoEmailReport', advanceForm)"
+                    class="text-red-500 text-xs mt-1">
+                    This field is required.
+                </p>
+            </div>
+
+            <!-- Maximum Report Rows -->
+            <div class="flex flex-col w-full md:w-[48%]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum Report Rows*
+                </label>
+
+                <input type="number"
+                    pInputText
+                    formControlName="maxReportRows"
+                    placeholder="Enter number of rows"
+                    class="w-full border rounded-md p-2"
+                    [class.border-red-500]="isInvalid('maxReportRows', advanceForm)" />
+
+                <p *ngIf="isInvalid('maxReportRows', advanceForm)"
+                    class="text-red-500 text-xs mt-1">
+                    This field is required.
+                </p>
+            </div>
+
+        </form>
+    </div>
+</p-card>
+
+        </div>
+    </ng-template>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+        <div *ngIf="postType !== 'view'" class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+            <button pButton type="submit" (click)="onSubmit($event)"
+                class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+                {{ postType === 'add' ? 'Submit' : 'Update' }}
+            </button>
+            <button *ngIf="postType === 'add'" pButton label="Reset" (click)="onClear()"
+                class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+        </div>
+    </ng-template>
+</p-drawer>
+
+</div>
+
+<p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>

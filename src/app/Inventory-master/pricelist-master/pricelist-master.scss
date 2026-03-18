@@ -1,0 +1,13 @@
+/* Force datepicker to take full width */
+::ng-deep .p-calendar {
+  width: 100%;
+}
+
+::ng-deep .p-calendar .p-inputtext {
+  width: 100%;
+}
+
+/* If using PrimeNG's w-full class */
+::ng-deep .p-calendar.w-full {
+  width: 100%;
+}

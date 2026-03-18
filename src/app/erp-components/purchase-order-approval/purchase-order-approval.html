@@ -1,0 +1,428 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+    </div>
+  </div>
+
+<p-tabs value="0">
+    <p-tablist>
+        <p-tab value="0">Pending</p-tab>
+        <p-tab value="1">Approved</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+        <p-tabpanel value="0">
+          <p class="m-0">
+    
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+        (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+          <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                  <button (click)="openprintModalData(item.poid); op.hide()"
+                      class="px-4 py-2 hover:bg-gray-100 text-left" pTooltip="Print">
+                     <i class="pi pi-print"></i>
+                    </button>
+                   <button (click)="showDialog('update', item); op.hide()" pTooltip="Edit"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+      <ng-template #jsonTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" [disabled]="!item['itemDetail']" 
+        (click)="openDetailModal(item['itemDetail'],'Item Detail')">
+         <i class="pi pi-folder-open cursor-pointer"></i>
+        </button>
+      </ng-template>
+
+        
+        </p>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          <p class="m-0">
+                
+        <app-table-template [data]="data1" [columns]="columns1" [pageSize]="pageSize" [totalCount]="totalCount1"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef1"
+        (pageChange)="onPageChange1($event)" (searchChange)="onSearchChange1($event)"
+        (sortChange)="onSortChange1($event)" (pageSizeChange)="onPageSizeChange1($event)">
+        </app-table-template>
+
+          <ng-template #actionTemplateRef1 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="openprintModalData(item.poid); op.hide()"
+                      class="px-4 py-2 hover:bg-gray-100 text-left" pTooltip="Print">
+                     <i class="pi pi-print"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+            </p>
+        </p-tabpanel>
+    </p-tabpanels>
+</p-tabs>
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">Change Status ({{selectedItem?.refNo}})</span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner
+          strokeWidth="8"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }"
+        />
+      </div>
+      } @else {
+
+     <div class="tabbable">
+     <form [formGroup]="POApprovalForm" class="grid grid-cols-1 md:grid-cols-1 gap-6">
+
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+      <p-select
+        [options]="statusData"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="statusId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Status"
+        [class.border-red-500]="isInvalid('statusId')"
+        class="custom-p-select w-full"
+        (onChange)="onChangeStatus()"
+        appendTo="body">
+      </p-select>
+      @if(isInvalid('statusId')){
+      <p class="text-red-500 text-xs mt-1">Status is required.</p>
+      }
+    </div> 
+
+    <ng-container *ngIf="showUploadFile">
+
+    <div class="flex flex-col md:flex-row gap-4 w-full">
+    <div class="w-1/2">  
+    <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Document Name *</label>
+    <input type="text" class="form-control" formControlName="documentId"
+     class="form-control w-full rounded-md text-base border-2 border-gray-300 px-3 py-1"
+     [class.border-red-500]="isInvalid('documentId')"/>
+      @if(isInvalid('documentId')){
+      <p class="text-red-500 text-xs mt-1">
+      @if(POApprovalForm.get('documentId')?.errors?.['required']){
+       Document is required.
+      } 
+    </p>
+    }
+    </div>
+    </div>
+
+    <div class="w-1/2">
+    <div class="card flex flex-col w-full border border-gray-300 rounded p-4 fileUpload">
+    <div class="flex items-center justify-between mb-3">
+    <label class="text-sm font-semibold text-gray-700">Upload File*</label>
+    <p-button 
+      (click)="openFileUploadDialog()" 
+      label="Upload File" 
+      icon="pi pi-upload" 
+      variant="text" 
+      [raised]="true"
+      [disabled]="postType === 'view'"
+      styleClass="text-xs p-1" />
+  </div>
+
+  @if (uploadedFileUrl) {
+    <div class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+      <div class="flex-1 flex items-center gap-3">
+        <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+        <div>
+          <p class="text-sm text-gray-600">Current File</p>
+          <a [href]="uploadedFileUrl"
+             target="_blank"
+             class="text-xs text-blue-500 hover:underline">
+             View / Download
+          </a>
+        </div>
+      </div>
+      @if (postType !== 'view') {
+        <button type="button" (click)="removeFileUpload()" class="text-red-500 hover:text-red-700 px-2">
+          <i class="pi pi-trash"></i>
+        </button>
+      }
+    </div>
+  } @else {
+    <p class="text-xs text-gray-500 italic">No file uploaded yet.</p>
+  }
+
+  @if (isInvalid('fileUploadControl')) {
+    <small class="text-red-500 text-xs mt-2">File is required.</small>
+  }
+    </div>
+    </div>
+
+    </div> 
+
+           <p-table  *ngIf="fileData?.length > 0" [value]="[1]" showGridlines
+             [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <div>
+                <p>{{fileData?.length}} files selected : </p>
+              </div>
+              <ng-template pTemplate="header">
+               <tr>
+               <th class="text-sm font-medium">S.No</th>
+               <th class="text-sm font-medium">Document Name</th>
+               <th class="text-sm font-medium">File</th>
+               <th class="text-sm font-medium" style="text-align:center;">Action</th>
+               </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+               <tr *ngFor="let file of fileData; let i=index">
+                <td class="text-sm">{{i+1}}</td>
+                <td class="text-sm">{{file['documentName']}}</td>
+                <td class="text-sm">{{file['name']}}</td>
+               <td class="text-sm" style="text-align:center;">
+               <button type="button"
+                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                (click)="removeFile(i)"><i class="pi pi-trash"></i>
+              </button>
+              </td>
+            </tr>
+      </ng-template>
+    </p-table>
+
+    </ng-container>
+
+     <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Remarks *</label>
+      <textarea
+        formControlName="remark"
+        rows="2"
+        maxlength="200"
+        placeholder="Enter Remark"
+        [class.border-red-500]="isInvalid('remark')"
+        class="w-full resize-none rounded-md text-sm border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+      ></textarea>
+       @if(isInvalid('remark')){
+        <p class="text-red-500 text-xs mt-1">
+        @if(POApprovalForm.get('remark')?.errors?.['required'])
+        { Remark is required.   
+        } @else if(POApprovalForm.get('remark')?.errors?.['invalidValue'])
+        { Only dots or blank spaces are not allowed. 
+        } @else if(POApprovalForm.get('remark')?.errors?.['noAlphaNumeric']){ 
+        Must contain at least one letter or number. 
+        }
+        </p>
+        }
+    </div>
+
+    </form>
+
+   </div>
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button pButton label="Submit" type="submit" (click)="onSubmit()"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"></button>
+        <button pButton label="Reset" (click)="clearData()"
+        class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+      </div>
+    </ng-template>
+  </p-drawer>
+
+<p-dialog [(visible)]="printDialog" header="Print Preview" [modal]="true"
+  [style]="{ width: '60rem', maxWidth: '100%' }" id="printWrapper">
+  <div #poPrintWrapper [innerHTML]="printContent"></div>
+  <div class="printFooter">
+    <button pButton type="button" label="Print" (click)="print()"></button>
+  </div>
+</p-dialog>
+
+<p-dialog 
+  [(visible)]="showFileUploadDialog" 
+  [modal]="true" 
+  header="Upload File"
+  [style]="{ width: '40vw' }" 
+  (onHide)="closeFileUploadDialog()">
+  
+  <ng-template pTemplate="content">
+    <div class="flex flex-col gap-4">
+      <p-fileUpload 
+        #documentFileUpload
+        name="resume[]" 
+        customUpload="true"
+        (onSelect)="onUploadFileSelect($event)"
+        accept="image/*,.pdf,.doc,.docx"  
+        [multiple]="false"
+        [showCancelButton]="false"
+        [showUploadButton]="false"
+        chooseLabel="Select File"
+        class="w-full">
+      </p-fileUpload>
+
+      @if(selectedUploadFile){
+      <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+        <i class="pi pi-file text-xl text-blue-500"></i>
+        <div class="flex-1">
+          <span class="text-sm font-medium">{{selectedUploadFile.name}}</span>
+          <span class="text-xs text-gray-500 ml-2">({{getFileSize(selectedUploadFile.size)}})</span>
+        </div>
+        <button type="button" (click)="clearFileSelection()" class="text-red-500 hover:text-red-700">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end space-x-3">
+      <p-button label="Cancel" (click)="closeFileUploadDialog()" severity="secondary" [disabled]="isUploadingFile" />
+      <p-button label="Upload" (click)="uploadFileDoc()" [loading]="isUploadingFile"[disabled]="!selectedUploadFile || isUploadingFile" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="itemDailog" [modal]="true" [closable]="true" [style]="{ width: '70vw', 'max-width': '100%' }" header="{{ modelHeading }}"
+(onHide)="closeDataDialog()" appendTo="body" [baseZIndex]="10000">
+  
+  <div class="overflow-x-auto">
+    <p-table [value]="recordViewData" showGridlines [responsiveLayout]="'scroll'" [tableStyle]="{'min-width':'100%'}" class="min-w-full border-gray-300 rounded-lg">
+      
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-100">
+          <ng-container *ngFor="let key of recordHeaderViewData;let i= index">
+          <th *ngIf="i==0" class="px-3 py-2 text-sm">S.No.</th>
+          <th class="px-3 py-2 text-sm" style="text-transform:capitalize"
+            [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='poDetailId' || key =='ItemCode' || key =='poHeaderId' || key =='wareHouseId'">
+            {{ key | titlecase }}
+          </th>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-i="rowIndex">
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2 text-sm">{{ i + 1 }}</td>
+          <ng-container *ngFor="let key of recordHeaderViewData;">
+                <td class="px-3 py-2 text-sm" [hidden]="key =='id' || key =='itemId' || key =='itemCodeId' || key =='poDetailId' || key =='ItemCode' || key =='poHeaderId' || key =='wareHouseId'">
+                  <span *ngIf="key != 'item'">{{ item[key] }}</span>
+                  <span *ngIf="key == 'item'">
+                    <a title="Click here to see previous purchase rates" href="javascript:void(0)"
+                    (click)="getRateList(item)" class="underline">{{ item[key] }}</a>
+                  </span>
+                </td>
+            </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="recordHeaderViewData.length + 1" class="text-center text-sm no-border">
+            No data found
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+</p-dialog>
+
+<p-dialog [(visible)]="priceListDialog" [modal]="true" [closable]="true" [style]="{ width: '60vw', 'max-width': '100%' }" 
+ (onHide)="closePriceListDialog()" appendTo="body" [baseZIndex]="11000">
+  <ng-template pTemplate="header">
+    <h2 *ngIf="priceListData.length > 0">
+      Previous Purchase Rate of {{ priceListData[0]?.itemName }}
+    </h2>
+    <h2 *ngIf="priceListData.length === 0">
+      No Record
+    </h2>
+  </ng-template>
+  <div class="overflow-x-auto">
+    <p-table *ngIf="priceListData.length>0" [value]="[1]" showGridlines [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+    <ng-template pTemplate="header">
+      <tr>
+      <th class="text-sm font-medium">S.No.</th>
+      <th class="text-sm font-medium">Warehouse</th>
+      <th class="text-sm font-medium">PO Number</th>
+      <th class="text-sm font-medium">Item Name</th>
+      <th class="text-sm font-medium">Make</th>
+      <th class="text-sm font-medium">Unit</th>
+      <th class="text-sm font-medium">Quantity</th>
+      <th class="text-sm font-medium">Date</th>
+      <th class="text-sm font-medium">Party Name</th>
+      <th class="text-sm font-medium">Tax</th>
+      <th class="text-sm font-medium">Rate</th>    
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body">
+      <tr *ngFor="let item of priceListData; let i=index">
+      <td class="text-sm">{{i+1}}</td>
+      <td class="text-sm">{{item.warehouse}}</td>
+      <td class="text-sm">{{item.poNumber}}</td>
+      <td class="text-sm">{{item.itemName}}</td>
+      <td class="text-sm">{{item.make}}</td>
+      <td class="text-sm">{{item.unit}}</td>
+      <td class="text-sm">{{item.quantity}}</td>
+      <td class="text-sm">{{item.date}}</td>
+      <td class="text-sm">{{item.partyName}}</td>
+      <td class="text-sm">
+      <span *ngFor="let tax of item.taxList; let isLast = last">
+      {{ tax.tax }}<span *ngIf="!isLast">, </span>
+      </span>
+      </td>
+      <td class="text-sm">{{item.rate}}</td>
+      </tr>
+      <tr *ngIf="priceListData.length<=0">
+        <ng-container>
+          <td colspan="10"><p style="text-align: center;padding-top: 10px;">No data found</p></td>           
+        </ng-container>
+      </tr>
+    </ng-template>
+    </p-table>
+  </div>
+</p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+
+</div>

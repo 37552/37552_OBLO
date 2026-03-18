@@ -1,0 +1,308 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+
+    <div class="bg-white  overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add', [])" label="Add New Lead" icon="pi pi-plus"
+                    styleClass="orange-button" [raised]="true"></p-button>
+            </div>
+        </div>
+
+        <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            [actionTemplate]="actionTemplateRef">
+
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+
+                        <button (click)="showDialog('view', item); op.hide()" title="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-eye "></i>
+                        </button>
+
+                        <button (click)="showDialog('update', item); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left" [disabled]="item.leadStageId == '10007'"
+                            [ngClass]="{'opacity-50 cursor-not-allowed': item.leadStageId == '10007'}">
+                            <span>
+                                <i class="pi pi-pencil"></i>
+                            </span>
+                        </button>
+
+
+                        <button (click)="deleteItem(item, $event); op.hide()" title="Delete"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-trash  "></i>
+                        </button>
+
+                    </div>
+                </p-popover>
+            </ng-template>
+
+        </app-table-template>
+    </div>
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true"
+        [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{ header }}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <form [formGroup]="crmLeadForm" (ngSubmit)="onSubmit($event)" class="flex flex-col gap-6 p-4">
+
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i> Lead Details
+                        </h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-5">
+
+                        <div>
+                            <label class="font-medium text-sm">Lead Series</label>
+                            <input pInputText formControlName="leadSeries" class="w-full" readonly />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Lead Source<span class="text-red-500">*</span></label>
+                            <p-select [options]="leadSourceDrp" optionLabel="drpOption" optionValue="drpValue"
+                                formControlName="leadSource" placeholder="Select Lead Source" [filter]="true"
+                                [showClear]="true" class="w-full" [class.p-invalid]="isInvalid('leadSource')"
+                                [readonly]="postType === 'view'"></p-select>
+                            @if (isInvalid('leadSource')) {
+                            <small class="text-red-500 text-xs mt-1 block">Lead Source is required.</small>
+                            }
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Lead Owner<span class="text-red-500">*</span></label>
+                            <p-select [options]="leadOwnerDrp" optionLabel="drpOption" optionValue="drpValue"
+                                formControlName="leadOwner" placeholder="Select Lead Owner" [filter]="true"
+                                [showClear]="true" class="w-full" [class.p-invalid]="isInvalid('leadOwner')"
+                                [readonly]="postType === 'view'"></p-select>
+                            @if (isInvalid('leadOwner')) {
+                            <small class="text-red-500 text-xs mt-1 block">Lead Owner is required.</small>
+                            }
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Company </label>
+                            <input pInputText formControlName="company" class="w-full"
+                                [readonly]="postType === 'view'" />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Company Size </label>
+                            <input pInputText formControlName="companySize" class="w-full"
+                                [readonly]="postType === 'view'" />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Website </label>
+                            <input pInputText formControlName="website" class="w-full"
+                                [readonly]="postType === 'view'" />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Annual Revenue </label>
+                            <input pInputText formControlName="annualRevenue" class="w-full"
+                                [readonly]="postType === 'view'" />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Industry </label>
+                            <p-select [options]="industryDrp" optionLabel="drpOption" optionValue="drpValue"
+                                formControlName="industry" placeholder="Select Industry" [filter]="true"
+                                [showClear]="true" class="w-full" [readonly]="postType === 'view'"></p-select>
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Address<span class="text-red-500">*</span></label>
+                            <input pInputText formControlName="address" class="w-full" [readonly]="postType === 'view'"
+                                [class.p-invalid]="isInvalid('address')" placeholder="Enter Address" />
+                            @if (isInvalid('address')) {
+                            <small class="text-red-500 text-xs mt-1 block">Address is required.</small>
+                            }
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Contact Person<span class="text-red-500">*</span></label>
+                            <input pInputText formControlName="contactPerson" class="w-full"
+                                [readonly]="postType === 'view'" [class.p-invalid]="isInvalid('contactPerson')"
+                                placeholder="Enter Contact Person" />
+                            @if (isInvalid('contactPerson')) {
+                            <small class="text-red-500 text-xs mt-1 block">Contact Person is required.</small>
+                            }
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Phone </label>
+                            <input pInputText formControlName="phone" class="w-full" [readonly]="postType === 'view'" />
+                        </div>
+
+                        <div>
+                            <label class="font-medium text-sm">Email<span class="text-red-500">*</span></label>
+                            <input pInputText formControlName="email" class="w-full" [readonly]="postType === 'view'"
+                                [class.p-invalid]="isInvalid('email')" />
+                            @if (isInvalid('email')) {
+                            <small class="text-red-500 text-xs mt-1 block">Email is required or invalid format.</small>
+                            }
+                        </div>
+
+                        <div class="md:col-span-2 lg:col-span-3">
+                            <label class="font-medium text-sm">Notes </label>
+                            <textarea pInputTextarea formControlName="notes" rows="3" [readonly]="postType === 'view'"
+                                class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                                placeholder="Enter Notes"></textarea>
+                        </div>
+
+                        <div class="md:col-span-2 lg:col-span-3">
+                            <label class="font-medium text-sm">Product/Service of interest </label>
+                            <input pInputText formControlName="product" class="w-full"
+                                [readonly]="postType === 'view'" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-cog text-indigo-600"></i> Lead Status
+                        </h4>
+                    </div>
+
+                    <div class="p-5 pt-0" *ngIf="postType !== 'add' && leadStatusArray.length">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Status History</h5>
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">S.no</th>
+                                        <th scope="col" class="px-6 py-3">Lead Stage</th>
+                                        <th scope="col" class="px-6 py-3">Lead Stage Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let data of leadStatusArray; let i=index" class="bg-white border-b">
+                                        <td class="px-6 py-4">{{i+1}}</td>
+                                        <td class="px-6 py-4">{{data['leadStage']}}</td>
+                                        <td class="px-6 py-4">{{data['leadStageDate']}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
+                        <div>
+                            <label for="leadStatus" class="block text-sm font-medium text-gray-700">
+                                Next Lead Status<span class="text-red-500">*</span>
+                            </label>
+                            <p-select [options]="leadStatusDrp" optionLabel="drpOption" optionValue="drpValue"
+                                formControlName="leadStatus" placeholder="Select Lead Status" [filter]="true"
+                                [showClear]="true" class="w-full" [class.p-invalid]="isInvalid('leadStatus')"
+                                [readonly]="postType === 'view'"></p-select>
+                            @if (isInvalid('leadStatus')) {
+                            <small class="text-red-500 text-xs mt-1 block">Lead Status is required.</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-calendar text-indigo-600"></i> {{ postType === 'update' ? 'Follow-up Date' :
+                            'Next Follow-up Date' }}
+                        </h4>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5" *ngIf="postType !== 'view'">
+                        <div>
+                            <label class="font-medium text-sm">Next Follow-up Date</label>
+                            <input pInputText type="date" formControlName="nextFollowUpDate" class="w-full"
+                                [min]="postType=='update'?nextFollowUpDateValidate:tomorrow"
+                                (change)="transformDate($event,'crmLeadForm','nextFollowUpDate')"
+                                [class.p-invalid]="isInvalid('nextFollowUpDate')" />
+                        </div>
+                        <div>
+                            <label class="font-medium text-sm">Description</label>
+                            <input pInputText formControlName="followUpDescription" class="w-full"
+                                [class.p-invalid]="isInvalid('followUpDescription')" />
+                        </div>
+                        <div class="flex items-end">
+                            <p-button label="Add Follow-up" icon="pi pi-plus" (click)="AddRow('nextFollowUp')"
+                                styleClass="p-button-sm w-full" [raised]="true" type="button"></p-button>
+                        </div>
+                    </div>
+
+                    <div class="p-5 pt-0">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Follow-up History</h5>
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3">S.no</th>
+                                        <th class="px-6 py-3">Follow up Date</th>
+                                        <th class="px-6 py-3">Description</th>
+                                        <th class="px-6 py-3" *ngIf="postType !== 'view'">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let data of followUpArray; let i = index" class="bg-white border-b">
+                                        <td class="px-6 py-4">{{ i + 1 }}</td>
+                                        <td class="px-6 py-4">{{ data.followupDate | date:'dd-MM-yyyy' }}</td>
+                                        <td class="px-6 py-4">{{ data.description }}</td>
+                                        <td class="px-6 py-4" *ngIf="postType !== 'view'">
+                                            <p-button icon="pi pi-trash" severity="danger"
+                                                styleClass="p-button-sm p-button-text"
+                                                (click)="deleteChildTableRow('followUpArray', i)" type="button">
+                                            </p-button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4">
+                    <p-button label="Reset" severity="secondary" icon="pi pi-refresh" type="button"
+                        (click)="crmLeadForm.reset()" *ngIf="postType === 'add'"></p-button>
+
+                    <p-button [label]="postType === 'update' ? 'Update' : 'Submit'" icon="pi pi-check" type="submit"
+                        styleClass="orange-button" [loading]="isFormLoading" *ngIf="postType !== 'view'"></p-button>
+
+                    <p-button label="Close" severity="secondary" icon="pi pi-times" type="button"
+                        (click)="onDrawerHide()"></p-button>
+                </div>
+
+            </form>
+        </ng-template>
+    </p-drawer>
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+
+</div>

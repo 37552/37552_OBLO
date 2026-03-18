@@ -1,0 +1,22 @@
+button:disabled {
+    opacity: 0.6;
+}
+
+@media (max-width: 1024px) {
+  ::ng-deep .p-dialog {
+    width: 90% !important;
+  }
+}
+
+
+@media (max-width: 640px) {
+    ::ng-deep .p-dialog {
+    width: 90% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  ::ng-deep .p-dialog {
+    width: 95% !important;
+ }
+}

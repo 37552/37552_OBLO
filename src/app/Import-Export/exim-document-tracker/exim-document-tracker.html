@@ -1,0 +1,653 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Exim Document Tracker
+
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+
+
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!--Order Type-->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Order Type *</label>
+                    <p-select [options]="orderTypeDrp" formControlName="orderType" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Order Type" [class.border-red-500]="isInvalid('orderType')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('orderType')){
+                    <p class="text-red-500 text-xs mt-1">Order Type is required.</p>
+                    }
+                </div>
+
+                <!--Sales Order-->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sales Order *</label>
+                    <p-select [options]="salesOrderDrp" formControlName="salesOrder" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Sales Order" [class.border-red-500]="isInvalid('salesOrder')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('salesOrder')){
+                    <p class="text-red-500 text-xs mt-1">Sales Order is required.</p>
+                    }
+                </div>
+
+                <!-- Purchase Order -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Order *</label>
+                    <p-select [options]="purchaseOrderDrp" formControlName="purchaseOrder" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Purchase Order" [class.border-red-500]="isInvalid('purchaseOrder')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('purchaseOrder')){
+                    <p class="text-red-500 text-xs mt-1">Purchase Order is required.</p>
+                    }
+                </div>
+
+                <!-- Customer Name  -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+                    <p-select [options]="customerMaster" formControlName="customerName" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Customer Name" [class.border-red-500]="isInvalid('customerName')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('customerName')){
+                    <p class="text-red-500 text-xs mt-1">Customer Name is required.</p>
+                    }
+                </div>
+
+                <!-- Country  -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+                    <p-select [options]="countryMasterDrp" formControlName="countryName" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Country" [class.border-red-500]="isInvalid('countryName')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('countryName')){
+                    <p class="text-red-500 text-xs mt-1">Country is required.</p>
+                    }
+                </div>
+
+                <!-- Shipment Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Shipment Date *</label>
+                    <input type="date" formControlName="shipmentDate"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1" (keydown)="blockTyping($event)"
+                        (click)="openCalendar($event)" [class.border-red-500]="isInvalid('shipmentDate')" />
+                    @if(isInvalid('shipmentDate')){
+                    <p class="text-red-500 text-xs mt-1">Shipment Date is required.</p>
+                    }
+                </div>
+
+
+                <div class="col-span-full mt-6 border-t pt-4" *ngIf="postType != 'view'">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Document Details and Status</h3>
+
+                    <div [formGroup]="DocumentDetails" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+
+                        <!-- Document Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Document Name *</label>
+                            <p-select [options]="documnetMasterDrp" formControlName="documentName"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" placeholder="Select Document Name"
+                                [class.border-red-500]="DocumentDetails.get('documentName')?.touched && DocumentDetails.get('documentName')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('documentName')?.touched && DocumentDetails.get('documentName')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Document Name is required.
+                            </p>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                            <p-select [options]="documentStatusDrp" formControlName="statusId" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Status"
+                                [class.border-red-500]="DocumentDetails.get('statusId')?.touched && DocumentDetails.get('statusId')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('statusId')?.touched && DocumentDetails.get('statusId')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Status is required.
+                            </p>
+                        </div>
+
+                        <!-- Uploaded By -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Uploaded By *</label>
+                            <p-select [options]="handoverUsersDrp" formControlName="uploadedBy" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Uploaded By"
+                                [class.border-red-500]="DocumentDetails.get('uploadedBy')?.touched && DocumentDetails.get('uploadedBy')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('uploadedBy')?.touched && DocumentDetails.get('uploadedBy')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Uploaded By is required.
+                            </p>
+                        </div>
+
+                        <!-- Upload Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Date *</label>
+                            <input type="date" formControlName="uploadDate"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                                (keydown)="blockTyping($event)" (click)="openCalendar($event)"
+                                [class.border-red-500]="DocumentDetails.get('uploadDate')?.touched && DocumentDetails.get('uploadDate')?.invalid" />
+                            <p *ngIf="DocumentDetails.get('uploadDate')?.touched && DocumentDetails.get('uploadDate')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Upload Date is required.
+                            </p>
+                        </div>
+
+                        <!-- Handover By -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Handover By *</label>
+                            <p-select [options]="handoverUsersDrp" formControlName="handoverBy" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Handover By"
+                                [class.border-red-500]="DocumentDetails.get('handoverBy')?.touched && DocumentDetails.get('handoverBy')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('handoverBy')?.touched && DocumentDetails.get('handoverBy')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Handover By is required.
+                            </p>
+                        </div>
+
+                        <!-- Handed Over To -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Handed Over To *</label>
+                            <p-select [options]="handoverUsersDrp" formControlName="handoverToId"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" placeholder="Select Handed Over To"
+                                [class.border-red-500]="DocumentDetails.get('handoverToId')?.touched && DocumentDetails.get('handoverToId')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('handoverToId')?.touched && DocumentDetails.get('handoverToId')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Handed Over To is required.
+                            </p>
+                        </div>
+
+                        <!-- Handover Date -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Handover Date *</label>
+                            <input type="date" formControlName="handoverDate"
+                                class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                                (keydown)="blockTyping($event)" (click)="openCalendar($event)"
+                                [class.border-red-500]="DocumentDetails.get('handoverDate')?.touched && DocumentDetails.get('handoverDate')?.invalid" />
+                            <p *ngIf="DocumentDetails.get('handoverDate')?.touched && DocumentDetails.get('handoverDate')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Handover Date is required.
+                            </p>
+                        </div>
+
+                        <!-- Handover Method -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Handover Method *</label>
+                            <p-select [options]="handoverMethod" formControlName="handoverMethod"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                [showClear]="true" placeholder="Select Handover Method"
+                                [class.border-red-500]="DocumentDetails.get('handoverMethod')?.touched && DocumentDetails.get('handoverMethod')?.invalid"
+                                class="custom-p-select w-full" appendTo="body">
+                            </p-select>
+                            <p *ngIf="DocumentDetails.get('handoverMethod')?.touched && DocumentDetails.get('handoverMethod')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Handover Method is required.
+                            </p>
+                        </div>
+
+                        <!-- Clearance Status (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Clearance Status</label>
+                            <input type="text" maxlength="100" formControlName="clearanceStatus"
+                                placeholder="Enter Clearance Status"
+                                [class.border-red-500]="DocumentDetails.get('clearanceStatus')?.touched && DocumentDetails.get('clearanceStatus')?.invalid"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                        </div>
+
+                        <!-- Remarks -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks *</label>
+                            <input type="text" maxlength="100" formControlName="remarks" placeholder="Enter Remarks"
+                                [class.border-red-500]="DocumentDetails.get('remarks')?.touched && DocumentDetails.get('remarks')?.invalid"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p *ngIf="DocumentDetails.get('remarks')?.touched && DocumentDetails.get('remarks')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                Remarks are required.
+                            </p>
+                        </div>
+
+                        <!-- Is Mandatory -->
+                        <div class="flex flex-col mt-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="isMandatory" formControlName="isMandatory"
+                                    (change)="onCheckboxChange('isMandatory', $event)"
+                                    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                                <label for="isMandatory" class="ml-2 text-sm text-gray-700">Is Mandatory</label>
+                            </div>
+                            <p *ngIf="DocumentDetails.get('isMandatory')?.touched && DocumentDetails.get('isMandatory')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                This field is required.
+                            </p>
+                        </div>
+
+                        <!-- Handover Required -->
+                        <div class="flex flex-col mt-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="handoverRequired" formControlName="handoverRequired"
+                                    (change)="onCheckboxChange('handoverRequired', $event)"
+                                    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                                <label for="handoverRequired" class="ml-2 text-sm text-gray-700">Handover
+                                    Required</label>
+                            </div>
+                            <p *ngIf="DocumentDetails.get('handoverRequired')?.touched && DocumentDetails.get('handoverRequired')?.invalid"
+                                class="text-red-500 text-xs mt-1">
+                                This field is required.
+                            </p>
+                        </div>
+
+                        <!-- Attach File -->
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4 attachResume">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">Uploaded File *</label>
+                                <p-button (click)="openResumeUploadDialog()" label="Upload File" icon="pi pi-upload"
+                                    variant="text" [raised]="true" [disabled]="postType === 'view'"
+                                    styleClass="text-xs p-1" />
+                            </div>
+
+                            <div *ngIf="uploadedResumeUrl; else noFile"
+                                class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <div class="flex-1 flex items-center gap-3">
+                                    <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Uploaded File</p>
+                                        <a [href]="uploadedResumeUrl" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+                                <button *ngIf="postType !== 'view'" type="button" (click)="removeResume()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+
+                            <ng-template #noFile>
+                                <p class="text-xs text-gray-500 italic">No attachment uploaded yet.</p>
+                            </ng-template>
+
+                            <p *ngIf="DocumentDetails.get('fileUploadControl')?.touched && DocumentDetails.get('fileUploadControl')?.invalid"
+                                class="text-red-500 text-xs mt-2">
+                                Uploaded File is required.
+                            </p>
+                        </div>
+
+                        <!-- Handover Proof -->
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4 attachResume">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">Handover Proof *</label>
+                                <p-button (click)="openResumeUploadDialog1()" label="Upload Handover Proof"
+                                    icon="pi pi-upload" variant="text" [raised]="true" [disabled]="postType === 'view'"
+                                    styleClass="text-xs p-1" />
+                            </div>
+
+                            <div *ngIf="uploadedResumeUrl1; else noProof"
+                                class="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                <div class="flex-1 flex items-center gap-3">
+                                    <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Handover Proof</p>
+                                        <a [href]="uploadedResumeUrl1" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+                                <button *ngIf="postType !== 'view'" type="button" (click)="removeResume1()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+
+                            <ng-template #noProof>
+                                <p class="text-xs text-gray-500 italic">No attachment uploaded yet.</p>
+                            </ng-template>
+
+                            <p *ngIf="DocumentDetails.get('handoverUploadControl')?.touched && DocumentDetails.get('handoverUploadControl')?.invalid"
+                                class="text-red-500 text-xs mt-2">
+                                Handover Proof is required.
+                            </p>
+                        </div>
+
+                        <!-- Resume Upload Dialog -->
+                        <p-dialog [(visible)]="showResumeUploadDialog" [modal]="true" header="Upload File"
+                            [style]="{ width: '40vw' }" (onHide)="closeResumeUploadDialog()">
+
+                            <ng-template pTemplate="content">
+                                <div class="flex flex-col gap-4">
+                                    <p-fileUpload #FileUpload name="resume[]" customUpload="true"
+                                        (onSelect)="onResumeFileSelect($event)" accept=".pdf,.doc,.docx"
+                                        [multiple]="false" [showCancelButton]="false" [showUploadButton]="false"
+                                        chooseLabel="Select Attachment" class="w-full">
+                                    </p-fileUpload>
+
+                                    @if(selectedResumeFile){
+                                    <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                        <i class="pi pi-file text-xl text-blue-500"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium">{{selectedResumeFile.name}}</span>
+                                            <span
+                                                class="text-xs text-gray-500 ml-2">({{getFileSize(selectedResumeFile.size)}})</span>
+                                        </div>
+                                        <button type="button" (click)="clearResumeSelection()"
+                                            class="text-red-500 hover:text-red-700">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <div class="flex justify-end space-x-3">
+                                    <p-button label="Cancel" (click)="closeResumeUploadDialog()" severity="secondary"
+                                        [disabled]="isUploadingResume" />
+                                    <p-button label="Upload" (click)="uploadResume()" [loading]="isUploadingResume"
+                                        [disabled]="!selectedResumeFile || isUploadingResume" />
+                                </div>
+                            </ng-template>
+                        </p-dialog>
+
+                        <!-- Resume Upload Dialog -->
+                        <p-dialog [(visible)]="showResumeUploadDialog1" [modal]="true" header="Upload Handover Proof"
+                            [style]="{ width: '40vw' }" (onHide)="closeResumeUploadDialog1()">
+
+                            <ng-template pTemplate="content">
+                                <div class="flex flex-col gap-4">
+                                    <p-fileUpload #handoverUpload name="resume[]" customUpload="true"
+                                        (onSelect)="onResumeFileSelect1($event)" accept=".pdf,.doc,.docx"
+                                        [multiple]="false" [showCancelButton]="false" [showUploadButton]="false"
+                                        chooseLabel="Select Attachment" class="w-full">
+                                    </p-fileUpload>
+                                    @if(selectedResumeFile1){
+                                    <div class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                        <i class="pi pi-file text-xl text-blue-500"></i>
+                                        <div class="flex-1">
+                                            <span class="text-sm font-medium">{{selectedResumeFile1.name}}</span>
+                                            <span
+                                                class="text-xs text-gray-500 ml-2">({{getFileSize1(selectedResumeFile1.size)}})</span>
+                                        </div>
+                                        <button type="button" (click)="clearResumeSelection1()"
+                                            class="text-red-500 hover:text-red-700">
+                                            <i class="pi pi-times"></i>
+                                        </button>
+                                    </div>
+                                    }
+                                </div>
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <div class="flex justify-end space-x-3">
+                                    <p-button label="Cancel" (click)="closeResumeUploadDialog1()" severity="secondary"
+                                        [disabled]="isUploadingResume1" />
+                                    <p-button label="Upload" (click)="uploadResume1()" [loading]="isUploadingResume1"
+                                        [disabled]="!selectedResumeFile1 || isUploadingResume1" />
+                                </div>
+                            </ng-template>
+
+                        </p-dialog>
+
+                    </div>
+                </div>
+
+                <div class="col-span-2 flex justify-start mt-4" *ngIf="postType != 'view'">
+                    <button type="button" [disabled]="postType=='view'" (click)="addOrUpdateRow()"
+                        class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition">
+                        <i class="pi pi-plus mr-1"></i>{{ editIndex !== -1 ? 'Update' : 'Add' }}
+                    </button>
+                </div>
+
+            </form>
+
+            <div class="mt-6" *ngIf="tableData && tableData.length > 0" style="margin-top:40px">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Added Documents</h3>
+                <div class="overflow-x-auto border border-gray-300 rounded-lg w-full">
+                    <table class="min-w-[1600px] divide-y divide-gray-200 table-auto">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Document Name</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Is Mandatory</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handover Required</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Uploaded By</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Upload Date</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handover By</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handed Over To</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handover Date</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handover Method</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700"> Clearance Status</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Remarks</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Files</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Handover Proof</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr *ngFor="let row of tableData; let i = index" class="hover:bg-gray-50">
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.documentName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.isMandataory ? 'Yes' : 'No' }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.handoverRequired ? 'Yes' : 'No' }}
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.statusName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.uploadedByName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.uploadDate | date:'dd-MM-yyyy' }}
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.handoverByName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.handoverToName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.handOverDate | date:'dd-MM-yyyy' }}
+                                </td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.handoverMethodName }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.clearanceStatus }}</td>
+                                <td class="px-4 py-2 text-sm text-gray-700">{{ row.remarks }}</td>
+
+                                <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                                    <a [href]="row.fileUploadControl" target="_blank">
+                                        <i class="pi pi-eye mr-1"></i> View
+                                    </a>
+                                </td>
+
+                                <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                                    <a [href]="row.handoverUploadControl" target="_blank">
+                                        <i class="pi pi-eye mr-1"></i> View
+                                    </a>
+                                </td>
+
+                                <td class="px-4 py-2 text-sm">
+                                    <button (click)="editRow(i)" [disabled]="postType=='view'"
+                                        class="text-blue-500 mr-2 hover:underline"><i class="pi pi-pencil"></i></button>
+                                    <button (click)="deleteRow(i)" [disabled]="postType=='view'"
+                                        class="text-red-500 hover:underline"><i class="pi pi-trash"></i></button>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+    <!-- Folder Data SHowing -->
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Document Details and Status</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Document Name</th>
+                        <th>Is Mandatory</th>
+                        <th>Status</th>
+                        <th>Uploaded By</th>
+                        <th>Upload Date</th>
+                        <th>Uploaded File</th>
+                        <th>Handover Required</th>
+                        <th>Handover By</th>
+                        <th>Handed Over To</th>
+                        <th>Handover Date</th>
+                        <th>Handover Method</th>
+                        <th>Handover Proof</th>
+                        <th>Clearance Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td>{{ rowIndex + 1 }}</td>
+                        <td>{{ detail.documentName }}</td>
+                        <td>{{ detail.isMandataory ? 'Yes' : 'No' }}</td>
+                        <td>{{ detail.DocumentStatus }}</td>
+                        <td>{{ detail.uploadedBy }}</td>
+                        <td>{{ detail.uploadDate }}</td>
+                        <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                            <a [href]="detail.uploadFile" target="_blank">
+                                <i class="pi pi-eye mr-1"></i> View
+                            </a>
+                        </td>
+                        <td>{{ detail.handoverRequired ? 'Yes' : 'No' }}</td>
+                        <td>{{ detail.handOverBy }}</td>
+                        <td>{{ detail.handOverTo }}</td>
+                        <td>{{ detail.handOverDate }}</td>
+                        <td>{{ detail.handOVerMethod }}</td>
+                        <td class="px-4 py-2 text-sm text-blue-500 hover:underline">
+                            <a [href]="detail.handOverProof" target="_blank">
+                                <i class="pi pi-eye mr-1"></i> View
+                            </a>
+                        </td>
+                        <td>{{ detail.clearanceStatus || '-' }}</td>
+                        <td>{{ detail.remarks }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="15" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+        </ng-template>
+    </p-dialog>
+
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

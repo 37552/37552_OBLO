@@ -1,0 +1,722 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-4 lg:p-0">
+    <div class="bg-white">
+        <!-- Mobile optimized header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200">
+            <div class="flex items-center justify-between w-full sm:w-auto mb-2 sm:mb-0">
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800 truncate">
+                    <p-breadcrumb 
+                        [model]="breadcrumbItems"  
+                        [styleClass]="'custom-breadcrumb text-xs sm:text-sm'">
+                    </p-breadcrumb>
+                </h2>
+            </div>
+            <div class="flex items-center justify-end sm:space-x-2 w-full sm:w-auto">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button text-sm px-3 py-2" />
+            </div>
+        </div>
+
+        <!-- Responsive table container -->
+        <div class="overflow-x-auto">
+            <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+                [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+                [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+                (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+                (pageSizeChange)="onPageSizeChange($event)">
+            </app-table-template>
+            <ng-template #actionTemplateRef let-item>
+                <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1" (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v cursor-pointer text-sm"></i>
+                </button>
+                <p-popover #op>
+                    <div class="flex flex-col min-w-[120px]">
+                        <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                            class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+                            <i class="pi pi-eye text-xs"></i>
+                            <span>View</span>
+                        </button>
+                        <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                            class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+                            <i class="pi pi-pencil text-xs"></i>
+                            <span>Update</span>
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+        </div>
+    </div>
+
+    <!-- Right side drawer -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true"
+        [style]="{ width: '60%', 'min-width': '300px', 'max-width': '1600px'}" 
+        (onHide)="onDrawerHide()"
+        styleClass="right-drawer">
+        
+        <ng-template pTemplate="header">
+            <div class="w-full flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="text-blue-500" [ngClass]="headerIcon"></i>
+                    <span class="font-semibold text-lg sm:text-xl truncate">{{header}}</span>
+                </div>
+                <!-- <button (click)="visible = false" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="pi pi-times text-gray-600"></i>
+                </button> -->
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="h-full overflow-y-auto p-4 sm:p-6">
+                @if(isFormLoading){
+                <div class="flex flex-col items-center justify-center min-h-[300px]">
+                    <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                        [style]="{ width: '50px', height: '50px' }" />
+                    <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">Loading data...</p>
+                </div>
+                }@else {
+                <form [formGroup]="organisationProfileForm" (ngSubmit)="onSubmit($event)" class="space-y-4 sm:space-y-6">
+                    
+                    <!-- Organisation Category -->
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="pi pi-info-circle text-indigo-600 text-sm"></i>
+                                Organisation Details
+                            </h4>
+                        </div>
+                        <div class="p-4 sm:p-5 space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Organisation Category <span class="text-red-500">*</span>
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <p-select 
+                                        formControlName="orgCategoryId" 
+                                        [options]="orgCategoryDrp" 
+                                        optionLabel="drpOption" 
+                                        optionValue="drpValue"
+                                        [filter]="true" 
+                                        [showClear]="true" 
+                                        placeholder="Select organisation category"
+                                        [class.p-invalid]="isInvalid('orgCategoryId')" 
+                                        class="w-full">
+                                    </p-select>
+                                    @if(isInvalid('orgCategoryId')){
+                                    <small class="text-red-500 text-xs mt-1 block">Organisation Category is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Website URL -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Website URL
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="websiteUrl" 
+                                        [class.p-invalid]="isInvalid('websiteUrl')" 
+                                        class="w-full" 
+                                        placeholder="Enter website URL" />
+                                    @if(isInvalid('websiteUrl')){
+                                    <small class="text-red-500 text-xs mt-1 block">Website URL is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- PAN No -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    PAN No
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="panNo" 
+                                        [class.p-invalid]="isInvalid('panNo')" 
+                                        class="w-full" 
+                                        placeholder="Enter PAN No" />
+                                    @if(isInvalid('panNo')){
+                                    <small class="text-red-500 text-xs mt-1 block">PAN No is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- CIN No -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    CIN No
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="cinNo" 
+                                        [class.p-invalid]="isInvalid('cinNo')" 
+                                        class="w-full" 
+                                        placeholder="Enter CIN No" />
+                                    @if(isInvalid('cinNo')){
+                                    <small class="text-red-500 text-xs mt-1 block">CIN No is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Phone No -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Phone No
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="phoneNo" 
+                                        appOnlyNumber
+                                        [maxLength]="10"
+                                        [class.p-invalid]="isInvalid('phoneNo')" 
+                                        class="w-full" 
+                                        placeholder="Enter 10-digit phone number" />
+                                    @if(isInvalid('phoneNo')){
+                                    <small class="text-red-500 text-xs mt-1 block">Phone No is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Address
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <textarea 
+                                        pInputText
+                                        formControlName="address"  
+                                        [class.p-invalid]="isInvalid('address')" 
+                                        class="w-full" 
+                                        rows="3" 
+                                        placeholder="Enter address">
+                                    </textarea>
+                                    @if(isInvalid('address')){
+                                    <small class="text-red-500 text-xs mt-1 block">Address is required.</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload Section -->
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="pi pi-image text-green-600 text-sm"></i>
+                                Organisation Logo
+                                <span class="text-red-500">*</span>
+                            </h4>
+                        </div>
+                        <div class="p-4 sm:p-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div class="flex-1">
+                                    <p class="text-sm sm:text-base text-gray-700 mb-2">Upload your organisation logo</p>
+                                    <p class="text-xs text-gray-500">Accepted formats: JPG, PNG, GIF (Max 2MB)</p>
+                                </div>
+                                <button 
+                                    type="button"
+                                    (click)="openLogoUploadDialog()" 
+                                    pButton 
+                                    icon="pi pi-upload" 
+                                    label="Upload Logo"
+                                    [disabled]="postType === 'view'"
+                                    class="text-sm w-full sm:w-auto">
+                                </button>
+                            </div>
+
+                            @if(uploadedLogoUrl){
+                            <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <div class="flex-shrink-0">
+                                        <img 
+                                            [src]="uploadedLogoUrl" 
+                                            alt="Logo Preview" 
+                                            class="h-20 w-20 sm:h-24 sm:w-24 rounded-lg shadow border cursor-pointer object-cover"
+                                            (click)="openImagePreview(uploadedLogoUrl!)" />
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm sm:text-base font-medium text-gray-800">Current Logo</p>
+                                        <a [href]="uploadedLogoUrl" 
+                                           target="_blank" 
+                                           class="text-xs text-blue-500 hover:underline inline-flex items-center gap-1 mt-1">
+                                            <i class="pi pi-external-link"></i>
+                                            View Full Size
+                                        </a>
+                                    </div>
+                                    @if(postType !== 'view'){
+                                    <button 
+                                        type="button" 
+                                        (click)="removeLogo()" 
+                                        class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors">
+                                        <i class="pi pi-trash text-sm"></i>
+                                    </button>
+                                    }
+                                </div>
+                            </div>
+                            }@else{
+                            <div class="mt-4 p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                                <i class="pi pi-image text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-500">No logo uploaded yet</p>
+                            </div>
+                            }
+                            
+                            @if(isInvalid('orgLogo')){
+                            <small class="text-red-500 text-xs mt-2 block">Organisation Logo is required.</small>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- KYC Documents Section -->
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="pi pi-file text-purple-600 text-sm"></i>
+                                KYC Documents
+                            </h4>
+                        </div>
+                        <div class="p-4 sm:p-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                                <div class="flex-1">
+                                    <p class="text-sm sm:text-base text-gray-700">Upload KYC documents for verification</p>
+                                    <p class="text-xs text-gray-500">Accepted formats: PDF, DOC, JPG, PNG</p>
+                                </div>
+                                <button 
+                                    type="button"
+                                    (click)="openKycSidebar()" 
+                                    pButton 
+                                    icon="pi pi-plus" 
+                                    label="Add KYC"
+                                    [disabled]="postType === 'view'"
+                                    class="text-sm w-full sm:w-auto">
+                                </button>
+                            </div>
+
+                            @if(kycDocJson && kycDocJson.length > 0){
+                            <div class="space-y-3 max-h-80 overflow-y-auto">
+                                @for(doc of kycDocJson; track $index){
+                                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                                        <!-- Document Preview -->
+                                        @if(doc.docUrl && isImage(doc.docUrl)){
+                                        <div class="flex-shrink-0">
+                                            <img 
+                                                [src]="normalizeImagePath(doc.docUrl)" 
+                                                alt="KYC Document" 
+                                                class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded border cursor-pointer"
+                                                (click)="openImagePreview(normalizeImagePath(doc.docUrl))" />
+                                        </div>
+                                        }@else if(doc.docUrl){
+                                        <div class="flex-shrink-0">
+                                            <div class="h-16 w-16 sm:h-20 sm:w-20 bg-blue-50 rounded border flex items-center justify-center">
+                                                <i class="pi pi-file-pdf text-2xl text-blue-500"></i>
+                                            </div>
+                                        </div>
+                                        }
+                                        
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-800 truncate">
+                                                {{getKycDocLabel(doc.kycDocId)}}
+                                            </p>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Document Number: {{doc.docNumber || 'N/A'}}
+                                            </p>
+                                            <p class="text-xs text-gray-600">
+                                                Supporting Document: {{getKycSupportingDocLabel(doc.kycSupportingDocId)}}
+                                            </p>
+                                            
+                                            @if(doc.docUrl){
+                                            <div class="mt-2">
+                                                @if(isImage(doc.docUrl)){
+                                                <a [href]="normalizeImagePath(doc.docUrl)" 
+                                                   target="_blank" 
+                                                   class="text-xs text-blue-500 hover:underline inline-flex items-center gap-1">
+                                                    <i class="pi pi-external-link"></i>
+                                                    View Document
+                                                </a>
+                                                }@else {
+                                                <a [href]="normalizeImagePath(doc.docUrl)" 
+                                                   target="_blank" 
+                                                   class="text-xs text-blue-500 hover:underline inline-flex items-center gap-1">
+                                                    <i class="pi pi-download"></i>
+                                                    Download Document
+                                                </a>
+                                                }
+                                            </div>
+                                            }
+                                        </div>
+                                        
+                                        @if(postType !== 'view'){
+                                        <button 
+                                            type="button" 
+                                            (click)="removeKycEntry($index)" 
+                                            class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors">
+                                            <i class="pi pi-trash text-sm"></i>
+                                        </button>
+                                        }
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            }@else {
+                            <div class="p-6 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                                <i class="pi pi-file text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-500">No KYC documents added yet</p>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Employment Periods Section -->
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="bg-gradient-to-r from-orange-50 to-yellow-50 px-4 py-3 border-b border-gray-200">
+                            <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <i class="pi pi-calendar text-orange-600 text-sm"></i>
+                                Employment Periods
+                            </h4>
+                        </div>
+                        <div class="p-4 sm:p-5 space-y-4">
+                            <!-- Notice Period -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Notice Period (Days)
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="noticePeriod" 
+                                        appOnlyNumber 
+                                        [min]="1" 
+                                        [maxLength]="2"
+                                        [class.p-invalid]="isInvalid('noticePeriod')" 
+                                        class="w-full" 
+                                        placeholder="Enter notice period in days" />
+                                    @if(isInvalid('noticePeriod')){
+                                    <small class="text-red-500 text-xs mt-1 block">Notice Period is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Probation Period -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Probation Period (Days)
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="probationPeriod" 
+                                        appOnlyNumber 
+                                        [maxLength]="2"
+                                        [class.p-invalid]="isInvalid('probationPeriod')" 
+                                        class="w-full" 
+                                        placeholder="Enter probation period (1-99)" />
+                                    @if(isInvalid('probationPeriod')){
+                                    <small class="text-red-500 text-xs mt-1 block">Probation Period is required.</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Probation Notice -->
+                            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                                    Probation Notice (Days)
+                                </label>
+                                <div class="sm:col-span-8">
+                                    <input 
+                                        type="text" 
+                                        pInputText 
+                                        formControlName="probationNotice" 
+                                        appOnlyNumber 
+                                        [maxLength]="2"
+                                        [class.p-invalid]="isInvalid('probationNotice')" 
+                                        class="w-full" 
+                                        placeholder="Enter probation notice in days" />
+                                    @if(isInvalid('probationNotice')){
+                                    <small class="text-red-500 text-xs mt-1 block">Probation Notice is required.</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add some bottom padding for mobile keyboards -->
+                    <div class="h-8 sm:h-0"></div>
+                </form>
+                }
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="border-t border-gray-200 py-3 px-4">
+                <div class="flex flex-col sm:flex-row justify-end gap-3">
+                    @if(postType === 'add'){
+                    <button 
+                        pButton 
+                        type="button" 
+                        (click)="onClear()"
+                        class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm sm:text-base font-medium w-full sm:w-auto">
+                        Reset
+                    </button>
+                    }
+                    <button 
+                        pButton 
+                        type="submit" 
+                        (click)="onSubmit($event)"
+                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow text-sm sm:text-base font-medium w-full sm:w-auto">
+                        {{ postType === 'add' ? 'Submit' : 'Update' }}
+                    </button>
+                </div>
+            </div>
+            }
+        </ng-template>
+    </p-drawer>
+
+    <!-- KYC Sidebar -->
+    <p-drawer 
+        [(visible)]="showKycSidebar" 
+        position="right" 
+        [modal]="true" 
+        [style]="{ width: '50%', 'min-width': '300px', 'max-width': '900px' }" 
+        (onHide)="closeKycSidebar()"
+        styleClass="kyc-drawer">
+        
+        <ng-template pTemplate="header">
+            <div class="w-full flex items-center justify-between">
+                <span class="font-semibold text-lg">Upload KYC Document</span>
+                <button (click)="closeKycSidebar()" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="pi pi-times text-gray-600"></i>
+                </button>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="h-full overflow-y-auto p-4 sm:p-5 space-y-4">
+                <!-- KYC Document Type -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        KYC Document Type <span class="text-red-500">*</span>
+                    </label>
+                    <p-select 
+                        [(ngModel)]="selectedKycDocument" 
+                        [options]="kycDocuments" 
+                        optionLabel="drpOption" 
+                        optionValue="drpValue"
+                        [filter]="true" 
+                        [showClear]="true" 
+                        placeholder="Choose KYC document"
+                        class="w-full">
+                    </p-select>
+                </div>
+
+                <!-- Supporting Document Type -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Supporting Document Type <span class="text-red-500">*</span>
+                    </label>
+                    <p-select 
+                        [(ngModel)]="selectedKycSupportingDoc" 
+                        [options]="kycSupportingDocs" 
+                        optionLabel="drpOption" 
+                        optionValue="drpValue"
+                        [filter]="true" 
+                        [showClear]="true" 
+                        placeholder="Choose supporting document"
+                        class="w-full">
+                    </p-select>
+                </div>
+
+                <!-- Document Number -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Document Number <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        [(ngModel)]="DocumentNumber"
+                        class="p-inputtext p-component w-full"
+                        placeholder="Enter Document Number" />
+                </div>
+
+                <!-- File Upload -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Upload Document <span class="text-red-500">*</span>
+                    </label>
+                    <p-fileUpload
+                        #kycFileUpload
+                        name="kycDoc"
+                        (onSelect)="onKycFileSelect($event)" 
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        mode="basic" 
+                        chooseLabel="Choose File"
+                        [auto]="false"
+                        [showUploadButton]="false"
+                        [showCancelButton]="false"
+                        class="w-full">
+                    </p-fileUpload>
+                </div>
+
+                <!-- Selected File Preview -->
+                @if(selectedKycFile){
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-file text-xl text-blue-500"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">{{selectedKycFile.name}}</p>
+                                <p class="text-xs text-gray-500">{{getFileSize(selectedKycFile.size)}}</p>
+                            </div>
+                        </div>
+                        <button type="button" (click)="clearKycFileSelection()" 
+                                class="text-red-500 hover:text-red-700 p-1">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    @if(selectedKycFile && kycFilePreviewUrl && isImageFile(selectedKycFile.name)){
+                    <div class="mt-3 p-3 bg-white rounded border">
+                        <p class="text-xs text-gray-600 mb-2">Preview:</p>
+                        <img [src]="kycFilePreviewUrl" alt="Document Preview" 
+                             class="max-h-40 w-full object-contain rounded" />
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="border-t border-gray-200 py-3 px-4">
+                <div class="flex flex-col sm:flex-row justify-end gap-3">
+                    <button 
+                        pButton 
+                        type="button" 
+                        (click)="closeKycSidebar()" 
+                        severity="secondary"
+                        class="w-full sm:w-auto">
+                        Close
+                    </button>
+                    <button 
+                        pButton 
+                        type="button" 
+                        (click)="uploadKycDocument()" 
+                        [disabled]="isUploadingKyc || !selectedKycFile || !selectedKycDocument || !selectedKycSupportingDoc || !DocumentNumber" 
+                        severity="primary"
+                        class="w-full sm:w-auto">
+                        @if(isUploadingKyc){
+                        <i class="pi pi-spin pi-spinner mr-2"></i>
+                        } @else {
+                        <i class="pi pi-plus mr-2"></i>
+                        }
+                        Add Document
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+    <!-- Logo Upload Dialog -->
+    <p-dialog 
+        [(visible)]="showLogoUploadDialog" 
+        [modal]="true" 
+        [style]="{ width: '90vw', 'max-width': '500px' }" 
+        (onHide)="closeLogoUploadDialog()">
+        
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <i class="pi pi-image text-blue-500"></i>
+                <span class="font-semibold text-lg">Upload Organisation Logo</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="space-y-4">
+                <!-- File Upload -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <p-fileUpload 
+                        #logoFileUpload
+                        name="logo[]" 
+                        customUpload="true"
+                        (onSelect)="onLogoFileSelect($event)"
+                        accept="image/*" 
+                        [multiple]="false"
+                        [showCancelButton]="false"
+                        [showUploadButton]="false"
+                        chooseLabel="Select Logo"
+                        class="w-full">
+                    </p-fileUpload>
+                </div>
+
+                <!-- Selected File -->
+                @if(selectedLogoFile){
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="pi pi-image text-xl text-blue-500"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">{{selectedLogoFile.name}}</p>
+                                <p class="text-xs text-gray-500">{{getFileSize(selectedLogoFile.size)}}</p>
+                            </div>
+                        </div>
+                        <button type="button" (click)="clearLogoSelection()" 
+                                class="text-red-500 hover:text-red-700 p-1">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    @if(selectedLogoFile && logoPreviewUrl){
+                    <div class="mt-3 p-3 bg-white rounded border">
+                        <p class="text-xs text-gray-600 mb-2">Preview:</p>
+                        <img [src]="logoPreviewUrl" alt="Logo Preview" 
+                             class="max-h-48 w-full object-contain rounded" />
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex flex-col sm:flex-row justify-end gap-3">
+                <button 
+                    pButton 
+                    type="button" 
+                    (click)="closeLogoUploadDialog()" 
+                    severity="secondary"
+                    [disabled]="isUploadingLogo"
+                    class="w-full sm:w-auto">
+                    Cancel
+                </button>
+                <button 
+                    pButton 
+                    type="button" 
+                    (click)="uploadLogo()" 
+                    [loading]="isUploadingLogo"
+                    [disabled]="!selectedLogoFile || isUploadingLogo"
+                    severity="primary"
+                    class="w-full sm:w-auto">
+                    @if(!isUploadingLogo){
+                    <i class="pi pi-upload mr-2"></i>
+                    }
+                    Upload Logo
+                </button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>
+
+<p-confirmdialog></p-confirmdialog>
+<p-toast position="top-center"></p-toast>

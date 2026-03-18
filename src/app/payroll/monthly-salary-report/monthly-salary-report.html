@@ -1,0 +1,133 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB ================= -->
+    <div class="bg-white overflow-hidden mb-4">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+        </div>
+    </div>
+
+    <div class="p-3">
+        <!-- Filter Section -->
+        <div class="card p-4 shadow-sm mb-4 rounded-lg bg-white">
+            <form [formGroup]="monthlySalaryReportForm">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Organisation -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Organisation <span
+                                class="text-red-500">*</span></label>
+                        <p-select [options]="organisation" optionLabel="drpOption" optionValue="drpValue"
+                            formControlName="orgId" placeholder="Select Organisation" [filter]="true"
+                            filterBy="drpOption" [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': f['orgId'].invalid && f['orgId'].touched }"></p-select>
+                        <small class="text-red-500" *ngIf="f['orgId'].invalid && f['orgId'].touched">
+                            Organisation is required
+                        </small>
+                    </div>
+
+                    <!-- Year -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Year <span class="text-red-500">*</span></label>
+                        <p-select [options]="Year" optionLabel="drpOption" optionValue="drpValue"
+                            formControlName="yearId" placeholder="Select Year" [filter]="true"
+                            [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': f['yearId'].invalid && f['yearId'].touched }"></p-select>
+                        <small class="text-red-500" *ngIf="f['yearId'].invalid && f['yearId'].touched">
+                            Year is required
+                        </small>
+                    </div>
+
+                    <!-- Month -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Month <span class="text-red-500">*</span></label>
+                        <p-select [options]="monthDrp" optionLabel="drpOption" optionValue="drpValue"
+                            formControlName="monthId" placeholder="Select Month" [filter]="true"
+                            [style]="{ width: '100%' }"
+                            [ngClass]="{ 'ng-invalid ng-dirty': f['monthId'].invalid && f['monthId'].touched }"></p-select>
+                        <small class="text-red-500" *ngIf="f['monthId'].invalid && f['monthId'].touched">
+                            Month is required
+                        </small>
+                    </div>
+
+                    <!-- Project -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-semibold text-gray-700">Project</label>
+                        <p-select [options]="projectDataDrp" optionLabel="drpOption" optionValue="drpValue"
+                            formControlName="ProjectDetails" placeholder="Select Project" [filter]="true"
+                            [style]="{ width: '100%' }"></p-select>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-3 mt-4">
+                    <p-button label="Search" icon="pi pi-search" (onClick)="onSearch()" [disabled]="loading"></p-button>
+                    <p-button label="Reset" icon="pi pi-refresh" severity="secondary" (onClick)="onReset()"></p-button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Table Section -->
+        <div class="card p-0 shadow-sm rounded-lg bg-white" *ngIf="showTabledata">
+            <p-table #dt [value]="tblData" [rows]="10" [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]"
+                [loading]="loading" [rowHover]="true" styleClass="p-datatable-sm p-datatable-gridlines"
+                [globalFilterFields]="tableHeaders" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="caption">
+                    <div class="flex justify-between items-center">
+                        <h5 class="m-0 text-lg font-bold">Salary Report List</h5>
+                        <div class="flex gap-2">
+                            <button pButton label="Export" icon="pi pi-file-excel" class="p-button-success p-button-sm"
+                                (click)="exportAsXLSXCustom()"></button>
+                            <span class="p-input-icon-left">
+                                <i class="pi pi-search"></i>
+                                <input pInputText type="text"
+                                    (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                                    placeholder="Global Search" class="p-inputtext-sm" />
+                            </span>
+                        </div>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 50px">S.No</th>
+                        <th *ngFor="let col of tableHeaders">
+                            {{ col | titlecase }}
+                        </th>
+                        <th style="width: 80px" class="text-center">Action</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-data let-i="rowIndex">
+                    <tr>
+                        <td>{{ i + 1 }}</td>
+                        <td *ngFor="let col of tableHeaders">
+                            {{ data[col] }}
+                        </td>
+                        <td class="text-center">
+                            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                pTooltip="Delete" tooltipPosition="top" (onClick)="onDelete(data)"></p-button>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td [attr.colspan]="tableHeaders.length + 2" class="text-center p-4">
+                            No records found.
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+
+        <div *ngIf="noDatafoundCard && !showTabledata" class="alert alert-info mt-3">
+            No data found based on the selected criteria.
+        </div>
+    </div>
+
+    <p-toast></p-toast>
+    <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+</div>

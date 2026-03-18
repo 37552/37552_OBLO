@@ -1,0 +1,272 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-6">
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-8">
+    <div *ngFor="let card of machinesData"
+      class="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border-l-4 flex flex-col cursor-pointer h-[420px]"
+      [style.border-left-color]="card.colour" (click)="openModal(card)">
+
+      <div class="p-4 border-b border-gray-100">
+        <h3 class="font-bold text-gray-700 text-lg m-0 flex justify-between items-center">
+          {{ card.machineType }}
+          <i class="pi pi-info-circle text-gray-400"></i>
+        </h3>
+      </div>
+
+      <div class="flex-grow p-4 bg-white flex items-center justify-center overflow-hidden relative group">
+        <img [alt]="card.machineType" [src]="getMachineImage(card.machineType)" (error)="onImageError($event)"
+          class="w-full h-48 object-contain transition-transform duration-500 group-hover:scale-110" />
+      </div>
+
+      <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+        <span class="text-gray-600 font-medium">Open Tickets</span>
+        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">
+          {{ card.ticketCount }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500 flex items-center justify-between">
+      <div>
+        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Total Requests</div>
+        <div class="text-2xl font-extrabold text-gray-800">{{ stats.totalRequests }}</div>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+        <i class="pi pi-ticket"></i>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors"
+      (click)="onClickCard('closed')">
+      <div>
+        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Closed Requests</div>
+        <div class="text-2xl font-extrabold text-gray-800">{{ stats.closedRequests }}</div>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
+        <i class="pi pi-check-circle"></i>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow p-5 border-l-4 border-red-500 flex items-center justify-between cursor-pointer hover:bg-red-50 transition-colors"
+      (click)="onClickCard('open')">
+      <div>
+        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Open Requests</div>
+        <div class="text-2xl font-extrabold text-gray-800">{{ stats.openRequests }}</div>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
+        <i class="pi pi-exclamation-circle"></i>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow p-5 border-l-4 border-yellow-500 flex items-center justify-between cursor-pointer hover:bg-yellow-50 transition-colors"
+      (click)="onClickCard('unassigned')">
+      <div>
+        <div class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Unassigned</div>
+        <div class="text-2xl font-extrabold text-gray-800">{{ stats.unassignedRequests }}</div>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
+        <i class="pi pi-user-minus"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+    <!-- Service Request Response Time Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="mb-4 border-b border-gray-100 pb-3">
+        <h3 class="text-lg font-bold text-gray-800">Service Request Response Time</h3>
+      </div>
+
+      <div class="flex flex-col items-center justify-center">
+        <div class="relative w-full flex items-center justify-center mb-4" style="height: 280px;">
+          <div class="relative w-full h-full max-w-xs">
+            <p-chart *ngIf="responseTimeData" type="doughnut" [data]="responseTimeData" [options]="chartOptions"
+              styleClass="w-full h-full">
+            </p-chart>
+            <div
+              class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none text-center">
+              <h2 class="text-4xl font-bold text-gray-800 m-0">{{ stats.closedRequests }}</h2>
+              <p class="text-sm text-gray-600 m-0 font-medium">Closed</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Response Time Legend -->
+        <div class="grid grid-cols-2 gap-3 w-full mt-4">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full" style="background-color: #4ade80;"></span>
+            <span class="text-sm text-gray-700">Green: &lt; 7 days</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full" style="background-color: #facc15;"></span>
+            <span class="text-sm text-gray-700">Yellow: 7-15 days</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full" style="background-color: #f97316;"></span>
+            <span class="text-sm text-gray-700">Orange: 16-30 days</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full" style="background-color: #f87171;"></span>
+            <span class="text-sm text-gray-700">Red: &gt; 30 days</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Request Priority Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="mb-4 border-b border-gray-100 pb-3">
+        <h3 class="text-lg font-bold text-gray-800">Request Priority</h3>
+      </div>
+
+      <div class="flex flex-col lg:flex-row items-center justify-center lg:items-start">
+        <div class="relative w-full flex items-center justify-center mb-4 lg:mb-0" style="height: 280px;">
+          <div class="relative w-full h-full max-w-xs">
+            <p-chart *ngIf="priorityData" type="doughnut" [data]="priorityData" [options]="priorityChartOptions"
+              styleClass="w-full h-full">
+            </p-chart>
+          </div>
+        </div>
+        <div class="w-full lg:w-auto lg:ml-6 lg:flex-1">
+          <ul class="space-y-3">
+            <li *ngFor="let label of priorityData?.labels; let i = index"
+              class="flex items-center text-sm text-gray-700 font-medium">
+              <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0"
+                [style.backgroundColor]="priorityData?.datasets?.[0]?.backgroundColor?.[i]">
+              </span>
+              <span class="flex-1">{{ label }}</span>
+              <span class="font-bold text-gray-800 ml-2">{{ priorityData?.datasets?.[0]?.data?.[i] || 0 }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Service Request Response Time Table Section -->
+  <!-- <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="mb-4 border-b border-gray-100 pb-3">
+      <h3 class="text-lg font-bold text-gray-800">Service Request Response Time</h3>
+    </div>
+ 
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <div class="w-full sm:flex-1">
+        <span class="p-input-icon-left w-full block">
+          <i class="pi pi-search"></i>
+          <input pInputText type="text" [(ngModel)]="searchText" (input)="applyFilters()"
+            placeholder="Search Requests..." class="w-full" />
+        </span>
+      </div>
+      <p-button label="+ Create New Request" icon="pi pi-plus" (onClick)="createNewRequest()"
+        styleClass="p-button-primary p-button-sm" severity="success">
+      </p-button>
+    </div> 
+    <div class="overflow-auto">
+      <p-table #dt [value]="filteredTickets" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]"
+        [globalFilterFields]="tableColumns" [tableStyle]="{ 'min-width': '50rem' }" [rowHover]="true"
+        styleClass="p-datatable-sm p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+            <th *ngFor="let col of tableColumns" [pSortableColumn]="col" class="p-3">
+              {{ col | titlecase }} <p-sortIcon [field]="col"></p-sortIcon>
+            </th>
+            <th class="p-3">Priority</th>
+            <th class="p-3">Status</th>
+            <th class="p-3">Customer Ratings</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td *ngFor="let col of tableColumns" class="p-3 text-sm text-gray-700">
+              {{ row[col] }}
+            </td>
+            <td class="p-3">
+              <span [class]="getPriorityClass(row.priority)" class="px-2 py-1 rounded text-xs font-semibold">
+                {{ row.priority }}
+              </span>
+            </td>
+            <td class="p-3">
+              <span [class]="getStatusClass(row.status)" class="px-2 py-1 rounded text-xs font-semibold">
+                {{ row.status }}
+              </span>
+            </td>
+            <td class="p-3">
+              <div *ngIf="row.ratings" class="flex gap-1">
+                <i *ngFor="let s of [].constructor(row.ratings)" class="pi pi-star-fill text-yellow-500"></i>
+              </div>
+              <span *ngIf="!row.ratings" class="text-gray-400 text-sm">-</span>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td [attr.colspan]="tableColumns.length + 3" class="text-center p-4 text-gray-500">
+              No records found.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div> -->
+
+</div>
+
+<p-dialog [(visible)]="isModalOpen" [header]="selectedMachineType + ' Tickets'" [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1200px' }" [draggable]="false" [resizable]="false" [closeOnEscape]="true"
+  styleClass="p-fluid">
+
+  <div class="card">
+    <p-table #dt [value]="filteredRows" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]"
+      [globalFilterFields]="tableColumns" [tableStyle]="{ 'min-width': '50rem' }" [rowHover]="true" dataKey="id"
+      styleClass="p-datatable-sm p-datatable-striped">
+
+      <ng-template pTemplate="caption">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+          <span class="text-sm text-gray-600 font-medium">Total Records: <span class="font-bold text-gray-800">{{
+              filteredRows.length }}</span></span>
+          <span class="p-input-icon-left w-full sm:w-auto">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+              placeholder="Search keyword..." class="w-full" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr class="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+          <ng-container *ngFor="let col of tableColumns">
+            <th *ngIf="shouldShowColumn(col)" [pSortableColumn]="col" class="p-3">
+              {{ col | titlecase }} <p-sortIcon [field]="col"></p-sortIcon>
+            </th>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <ng-container *ngFor="let col of tableColumns">
+            <td *ngIf="shouldShowColumn(col)" class="p-3 text-sm text-gray-700">
+              {{ row[col] }}
+            </td>
+          </ng-container>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="getVisibleColumnsCount()" class="text-center p-4 text-gray-500">
+            No tickets found.
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+</p-dialog>

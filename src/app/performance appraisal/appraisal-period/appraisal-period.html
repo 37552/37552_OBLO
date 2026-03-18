@@ -1,0 +1,259 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-4 lg:p-0">
+  <div class="bg-white">
+    <!-- Mobile optimized header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200">
+      <div class="flex items-center justify-between w-full sm:w-auto mb-2 sm:mb-0">
+        <h2 class="text-sm sm:text-base font-semibold text-gray-800 truncate">
+          <p-breadcrumb 
+            [model]="breadcrumbItems"  
+            [styleClass]="'custom-breadcrumb text-xs sm:text-sm'">
+          </p-breadcrumb>
+        </h2>
+        <!-- Mobile menu button (optional) -->
+        <button class="sm:hidden text-gray-600 ml-2">
+          <i class="pi pi-ellipsis-h"></i>
+        </button>
+      </div>
+      <div class="flex items-center justify-end sm:space-x-2 w-full sm:w-auto">
+        <p-button 
+          (click)="showDialog('add',[])" 
+          label="Add" 
+          icon="pi pi-plus" 
+          variant="text" 
+          [raised]="true"
+          styleClass="orange-button text-sm px-3 py-2" />
+      </div>
+    </div>
+
+    <!-- Responsive table container -->
+    <div class="overflow-x-auto">
+      <app-table-template 
+        [data]="data" 
+        [columns]="columns" 
+        [pageSize]="pageSize" 
+        [totalCount]="totalCount"
+        [isLoading]="isLoading" 
+        [currentPage]="pageNo" 
+        [sortColumn]="sortColumn" 
+        [sortDirection]="sortDirection"
+        [searchText]="searchText" 
+        [actionTemplate]="actionTemplateRef"
+        (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" 
+        (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+
+        <ng-template #actionTemplateRef let-item>
+          <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1" (click)="op.toggle($event)">
+            <i class="pi pi-ellipsis-v cursor-pointer text-sm"></i>
+          </button>
+          <p-popover #op>
+            <div class="flex flex-col min-w-[120px]">
+              <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+                <i class="pi pi-eye text-xs"></i>
+                <span>View</span>
+              </button>
+              <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+                <i class="pi pi-pencil text-xs"></i>
+                <span>Update</span>
+              </button>
+            </div>
+          </p-popover>
+        </ng-template>
+      </app-table-template>
+    </div>
+  </div>
+
+  <!-- Right side drawer with 60% width -->
+  <p-drawer 
+    [(visible)]="visible" 
+    position="right" 
+    [modal]="true"
+    [blockScroll]="true"
+    [showCloseIcon]="false"
+    (onHide)="onDrawerHide()"
+    styleClass="right-drawer"
+    [style]="{
+      'width': '60%',
+      'min-width': '300px',
+      'max-width': '1200px'
+    }">
+    
+    <!-- Drawer header -->
+    <ng-template pTemplate="header">
+      <div class="w-full flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="text-blue-500" [ngClass]="headerIcon"></i>
+          <span class="font-semibold text-lg truncate">{{header}}</span>
+        </div>
+        <button 
+          (click)="visible = false" 
+          class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <i class="pi pi-times text-gray-600"></i>
+        </button>
+      </div>
+    </ng-template>
+
+    <!-- Scrollable content area -->
+    <ng-template pTemplate="content">
+      <div class="h-full overflow-y-auto">
+        @if(isFormLoading){
+        <div class="flex flex-col items-center justify-center min-h-[300px]">
+          <p-progress-spinner strokeWidth="6" fill="transparent" animationDuration=".5s"
+            [style]="{ width: '50px', height: '50px' }" />
+          <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">Loading appraisal period data...</p>
+        </div>
+        }@else {
+        <form [formGroup]="appraisalPeriodForm" (ngSubmit)="onSubmit($event)" class="space-y-4 sm:space-y-6">
+          <!-- Basic Information Section -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-info-circle text-indigo-600 text-sm"></i>
+                Basic Information
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-3 sm:space-y-4">
+              <!-- Organisation Field -->
+              <div class="grid grid-cols-1 gap-3 sm:gap-4 items-start">
+                <label class="text-sm sm:text-lg font-medium text-gray-700">
+                  Organisation <span class="text-red-500">*</span>
+                </label>
+                <div>
+                  <p-select 
+                    formControlName="Organisation" 
+                    [options]="organisations" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true"
+                    [showClear]="true"  
+                    placeholder="Select organisation"
+                    [class.p-invalid]="isInvalid('Organisation')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('Organisation')){
+                  <small class="text-red-500 text-xs mt-1 block">Organisation is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Financial Year Field -->
+              <div class="grid grid-cols-1 gap-3 sm:gap-4 items-start">
+                <label class="text-sm sm:text-lg font-medium text-gray-700">
+                  Financial Year <span class="text-red-500">*</span>
+                </label>
+                <div>
+                  <p-select 
+                    formControlName="FinancialYear" 
+                    [options]="years" 
+                    optionLabel="financialYear" 
+                    optionValue="financialYear"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select financial year"
+                    [class.p-invalid]="isInvalid('FinancialYear')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('FinancialYear')){
+                  <small class="text-red-500 text-xs mt-1 block">Financial Year is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Status Field -->
+              <div class="grid grid-cols-1 gap-3 sm:gap-4 items-start">
+                <label class="text-sm sm:text-lg font-medium text-gray-700">
+                  Quarter <span class="text-red-500">*</span>
+                </label>
+                <div>
+                  <p-select 
+                    formControlName="Quarter" 
+                    [options]="quarters" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true"
+                    [showClear]="true"  
+                    placeholder="Select quarter"
+                    [class.p-invalid]="isInvalid('Quarter')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('Quarter')){
+                  <small class="text-red-500 text-xs mt-1 block">Quarter is required.</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appraisal Period Section -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-calendar text-green-600 text-sm"></i>
+                Appraisal Period
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-3 sm:space-y-4">
+              <!-- Last Appraisal Date -->
+              <div class="grid grid-cols-1 gap-3 sm:gap-4 items-start">
+                <label class="text-sm sm:text-lg font-medium text-gray-700">
+                  Last Appraisal Date <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full">
+                  <div class="p-inputgroup w-full">
+                    <p-datePicker 
+                      formControlName="LastAppraisaldate" 
+                      [class.p-invalid]="isInvalid('LastAppraisaldate')" 
+                      styleClass="w-full"
+                      placeholder="Select last appraisal date"
+                      [showIcon]="true"
+                      dateFormat="dd/mm/yy"
+                      inputStyleClass="w-full text-sm sm:text-base"
+                      >
+                    </p-datePicker>
+                  </div>
+                  @if(isInvalid('LastAppraisaldate')){
+                  <small class="text-red-500 text-xs mt-1 block">Last Appraisal Date is required.</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add some bottom padding for mobile keyboards -->
+          <div class="h-8 sm:h-0"></div>
+        </form>
+        }
+      </div>
+    </ng-template>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="border-t border-gray-200 py-3 px-4">
+        <div class="flex justify-end space-x-3">
+          <button 
+            pButton 
+            type="button" 
+            (click)="visible = false"
+            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm sm:text-base font-medium">
+            Cancel
+          </button>
+          <button 
+            pButton 
+            type="submit" 
+            (click)="onSubmit($event)"
+            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow text-sm sm:text-base font-medium">
+            {{ postType === 'add' ? 'Submit' : 'Update' }}
+          </button>
+        </div>
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast position="top-center"></p-toast>
+</div>

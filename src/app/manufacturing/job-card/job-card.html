@@ -1,0 +1,470 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <div class="bg-white overflow-hidden">
+
+        <!-- Header Section -->
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Job Card</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <!-- Table Template -->
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            (pageChange)="onPageChange($event)" (searchChange)="onSearchChange($event)"
+            (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <!-- JSON Template -->
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+    </div>
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '60%', 'max-width': '100%'}"
+        (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" (ngSubmit)="onSubmit($event)"
+                class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Posting Date -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Posting Date</label>
+                    <input type="date" formControlName="postingDate"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                        [class.border-red-500]="isInvalid('postingDate')" />
+                    @if(isInvalid('postingDate')){
+                    <p class="text-red-500 text-xs mt-1">Posting Date is required.</p>
+                    }
+                </div>
+
+                <!-- Work Order  -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Work Order *</label>
+                    <p-select [options]="workOrderMasterDrp" formControlName="workOrder" optionLabel="drpOPtion"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOPtion" [showClear]="true"
+                        placeholder="Select Work Order" [class.border-red-500]="isInvalid('workOrder')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('workOrder')){
+                    <p class="text-red-500 text-xs mt-1">Work Order is required.</p>
+                    }
+                </div>
+
+                <!-- BOM Number  -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">BOM Number *</label>
+                    <p-select [options]="billMaterialDrp" formControlName="bomNumber" optionLabel="drpOPtion"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOPtion" [showClear]="true"
+                        placeholder="Select BOM Number" [class.border-red-500]="isInvalid('bomNumber')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('bomNumber')){
+                    <p class="text-red-500 text-xs mt-1">BOM Number is required.</p>
+                    }
+                </div>
+
+                <!-- Workstation -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Work station *</label>
+                    <p-select [options]="workStationMasterDrp" formControlName="workstation" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Work Station" [class.border-red-500]="isInvalid('workstation')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('workstation')){
+                    <p class="text-red-500 text-xs mt-1">Work Station is required.</p>
+                    }
+                </div>
+
+                <!-- Operations -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Operations *</label>
+                    <p-select [options]="OperationDrp" formControlName="operations" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Operations" [class.border-red-500]="isInvalid('operations')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('operations')){
+                    <p class="text-red-500 text-xs mt-1">Operations is required.</p>
+                    }
+                </div>
+
+                <!-- Quantity to Manufacture -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantity to Manufacture *</label>
+                    <input type="text" maxlength="18" formControlName="quantityToManufacture"
+                        placeholder="Enter Quantity to Manufacture" (keypress)="allowOnlyNumbers($event)"
+                        [class.border-red-500]="isInvalid('quantityToManufacture')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('quantityToManufacture')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('quantityToManufacture')?.errors?.['required']){
+                        Quantity to Manufacture is required.
+                        } @else if(groupMasterForm1.get('quantityToManufacture')?.errors?.['onlyNumbers']){
+                        Only numeric values are allowed.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Total Completed Quantity -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Completed Quantity *</label>
+                    <input type="text" maxlength="18" formControlName="totalCompletedQty"
+                        placeholder="Enter Total Completed Quantity" (keypress)="allowOnlyNumbers($event)"
+                        [class.border-red-500]="isInvalid('totalCompletedQty')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('totalCompletedQty')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('totalCompletedQty')?.errors?.['required']){
+                        Total Completed Quantity is required.
+                        } @else if(groupMasterForm1.get('totalCompletedQty')?.errors?.['onlyNumbers']){
+                        Only numeric values are allowed.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Expected Start Date -->
+                <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Expected Start Date *</label>
+                <input
+                type="date"
+                formControlName="expectedStartDate"
+                class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                (keydown)="blockTyping($event)"
+                (click)="openCalendar($event)"
+                [class.border-red-500]="isInvalid('expectedStartDate')"/>
+                @if(isInvalid('expectedStartDate')){
+                    <p class="text-red-500 text-xs mt-1">Expected Start Date is required.</p>
+                }
+                </div>
+
+                <!-- Expected End Date -->
+                <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Expected End Date *</label>
+                <input
+                type="date"
+                [min]="minToDate"
+                formControlName="expectedEndDate"
+                class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                (keydown)="blockTyping($event)"
+                (click)="openCalendar($event)"
+                [class.border-red-500]="isInvalid('expectedEndDate')"/>
+                @if(isInvalid('expectedEndDate')){
+                    <p class="text-red-500 text-xs mt-1">Expected End Date is required.</p>
+                }
+                </div>
+
+                <!-- Expected Time Required -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Expected Time Required *</label>
+                    <input type="text" maxlength="3" formControlName="expectedTimeRequired"
+                        placeholder="Enter Expected Time Required" (keypress)="allowOnlyNumbers($event)"
+                        [class.border-red-500]="isInvalid('expectedTimeRequired')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('expectedTimeRequired')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('expectedTimeRequired')?.errors?.['required']){
+                        Expected Time Required is required.
+                        } @else if(groupMasterForm1.get('expectedTimeRequired')?.errors?.['onlyNumbers']){
+                        Only numeric values are allowed.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Status  -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                    <p-select [options]="statusDrp" formControlName="status" optionLabel="drpOPtion"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOPtion" [showClear]="true"
+                        placeholder="Select Status" [class.border-red-500]="isInvalid('status')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('status')){
+                    <p class="text-red-500 text-xs mt-1">Status is required.</p>
+                    }
+                </div>
+
+                <!-- Job Card - Time Logs -->
+                <div class="col-span-full mt-6 border-t pt-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Job Card - Time Logs</h3>
+                
+                    <div [formGroup]="jobTimeLogForm" class="grid grid-cols-1 md:grid-cols-3 gap-4" *ngIf="postType != 'view'">
+                
+                        <!-- Employee Name -->
+                        <div class="form-box">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Employee Name *</label>
+                
+                            <p-select
+                                [options]="applicationMasterDrp"
+                                formControlName="employeeName"
+                                optionLabel="drpOption"
+                                optionValue="drpValue"
+                                [filter]="true"
+                                placeholder="Select Employee Name"
+                                class="custom-p-select w-full"
+                            ></p-select>
+                
+                            <p *ngIf="jobTimeLogForm.get('employeeName')?.touched && jobTimeLogForm.get('employeeName')?.invalid"
+                               class="text-red-500 text-xs">Employee Name is required.</p>
+                        </div>
+                
+                        <!-- From Time -->
+                        <div class="form-box">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From Time *</label>
+                
+                            <p-datepicker
+                                formControlName="fromTime"
+                                [timeOnly]="true"
+                                [showIcon]="true"
+                                icon="pi pi-clock"
+                                inputId="fromTimePicker"
+                                class="custom-timepicker w-full">
+                                <ng-template #inputicon let-clickCallBack="clickCallBack">
+                                    <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
+                                </ng-template>
+                            </p-datepicker>
+                
+                            <p *ngIf="jobTimeLogForm.get('fromTime')?.touched && jobTimeLogForm.get('fromTime')?.invalid"
+                               class="text-red-500 text-xs">From Time is required.</p>
+                        </div>
+                
+                        <!-- To Time -->
+                        <div class="form-box">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">To Time *</label>
+                
+                            <p-datepicker
+                                formControlName="toTime"
+                                [timeOnly]="true"
+                                [showIcon]="true"
+                                icon="pi pi-clock"
+                                inputId="toTimePicker"
+                                class="custom-timepicker w-full">
+                                <ng-template #inputicon let-clickCallBack="clickCallBack">
+                                    <i class="pi pi-clock" (click)="clickCallBack($event)"></i>
+                                </ng-template>
+                            </p-datepicker>
+                
+                           <p *ngIf="jobTimeLogForm.get('toTime')?.touched && jobTimeLogForm.get('toTime')?.hasError('required')"
+                           class="text-red-500 text-xs">To Time is required.</p>
+
+                           <p *ngIf="jobTimeLogForm.get('toTime')?.touched && jobTimeLogForm.get('toTime')?.hasError('timeInvalid')"
+                           class="text-red-500 text-xs">
+                           To Time must be greater than From Time when the date is the same.
+                           </p>
+
+                        </div>
+                
+                        <!-- From Date -->
+                        <div class="form-box">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">From Date *</label>
+                        <input
+                        type="date"
+                        formControlName="fromDate"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                        (keydown)="blockTyping($event)"
+                        (click)="openCalendar($event)"
+                        [class.border-red-500]="isInvalid('fromDate')"/>
+                        <p *ngIf="jobTimeLogForm.get('fromDate')?.touched && jobTimeLogForm.get('fromDate')?.invalid"
+                        class="text-red-500 text-xs">From Date is required.</p>
+                        </div>
+                
+                        <!-- To Date -->
+                        <div class="form-box">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">To Date *</label>
+                        <input
+                        type="date"
+                        formControlName="toDate"
+                        [min]="minToDate1"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1"
+                        (keydown)="blockTyping($event)"
+                        (click)="openCalendar($event)"
+                        [class.border-red-500]="isInvalid('toDate')"/>
+                        <p *ngIf="jobTimeLogForm.get('toDate')?.touched && jobTimeLogForm.get('toDate')?.invalid"
+                        class="text-red-500 text-xs">To Date is required.</p>
+                        </div>
+
+                             <!-- Add Button -->
+                    <div class="col-span-full flex justify-start mt-4">
+                        <button type="button" [disabled]="postType=='view'"
+                                class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition"
+                                (click)="addJobTimeLog()">
+                            <i class="pi pi-plus mr-1"></i> {{ editingIndex !== null ? 'Update' : 'Add' }}
+                        </button>
+                    </div>
+                
+                    </div>
+                
+               
+                </div>
+                
+                <div class="mt-6 col-span-full" *ngIf="jobTimeLogList && jobTimeLogList.length > 0">
+                    <p-table [value]="jobTimeLogList" [paginator]="false" [rows]="10"
+                        class="w-full rounded-lg border border-gray-300 overflow-hidden shadow-lg">
+
+                        <!-- Table Header -->
+                        <ng-template pTemplate="header">
+                            <tr
+                                class="bg-green-100 text-green-900 uppercase text-sm font-semibold tracking-wide border-b border-gray-300">
+                                <th class="py-3 px-4 text-left border-r border-gray-300">Employee</th>
+                                <th class="py-3 px-4 text-left border-r border-gray-300">From Date</th>
+                                <th class="py-3 px-4 text-left border-r border-gray-300">From Time</th>
+                                <th class="py-3 px-4 text-left border-r border-gray-300">To Date</th>
+                                <th class="py-3 px-4 text-left border-r border-gray-300">To Time</th>
+                                <th class="py-3 px-4 text-center">Action</th>
+                            </tr>
+                        </ng-template>
+
+                        <!-- Table Body -->
+                        <ng-template pTemplate="body" let-row let-i="rowIndex">
+                            <tr class="hover:bg-green-50 transition duration-150 border-b border-gray-200">
+                                <td class="py-2 px-4 border-r border-gray-200">{{ row.employeeName }}</td>
+                                <td class="py-2 px-4 border-r border-gray-200">{{ row.fromDate | date:'yyyy-MM-dd' }}
+                                </td>
+                                <td class="py-2 px-4 border-r border-gray-200">{{ row.fromTime }}</td>
+                                <td class="py-2 px-4 border-r border-gray-200">{{ row.toDate | date:'yyyy-MM-dd' }}</td>
+                                <td class="py-2 px-4 border-r border-gray-200">{{ row.toTime }}</td>
+                                <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                    <button type="button" [disabled]="postType=='view'"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                        (click)="editJobTimeLog(i)">
+                                        <i class="pi pi-pencil"></i>
+                                    </button>
+                                    <button type="button" [disabled]="postType=='view'"
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                        (click)="deleteJobTimeLog(i)">
+                                        <i class="pi pi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </ng-template>
+
+                    </p-table>
+                </div>
+
+            </form>
+            }
+        </ng-template>
+
+        <!-- Footer -->
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+    </p-drawer>
+
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '70%', 'max-width': '100%' }"
+        [baseZIndex]="10000">
+
+        <!-- Header -->
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between">
+                <span class="font-bold text-2xl text-gray-800">Job Card - Time Logs </span>
+                <i class="pi pi-list text-blue-500 text-2xl" style="margin-left: 8px;"></i>
+            </div>
+        </ng-template>
+
+        <!-- Content -->
+        <ng-template pTemplate="content">
+            <div class="overflow-x-auto">
+
+                <p-table #dt [value]="groupListArray || []" showGridlines [rows]="5" [paginator]="true"
+                    [responsiveLayout]="'scroll'">
+
+                    <ng-template pTemplate="header">
+                        <tr
+                            class="bg-green-100 text-green-900 uppercase text-sm font-semibold border-b border-gray-300">
+                            <th class="py-3 px-4 border-r border-gray-300 text-left">Name</th>
+                            <th class="py-3 px-4 border-r border-gray-300 text-left">From Date</th>
+                            <th class="py-3 px-4 border-r border-gray-300 text-left">From Time</th>
+                            <th class="py-3 px-4 border-r border-gray-300 text-left">To Date</th>
+                            <th class="py-3 px-4 text-left">To Time</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-item>
+                        <tr class="hover:bg-green-50 transition duration-150 border-b border-gray-200">
+                            <td class="py-2 px-4 border-r border-gray-200">{{ item.Name }}</td>
+                            <td class="py-2 px-4 border-r border-gray-200">{{ item.fromdate | date:'yyyy-MM-dd' }}</td>
+                            <td class="py-2 px-4 border-r border-gray-200">{{ item.fromtime }}</td>
+                            <td class="py-2 px-4 border-r border-gray-200">{{ item.toDate | date:'yyyy-MM-dd' }}</td>
+                            <td class="py-2 px-4">{{ item.toTime }}</td>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+
+            </div>
+        </ng-template>
+
+    </p-dialog>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+</div>

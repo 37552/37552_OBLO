@@ -1,0 +1,1208 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Customer Details
+            </h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+
+        <ng-template #jsonTemplateRef1 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist1(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+
+                <!-- <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div> -->
+
+               <div class="flex flex-col">
+
+                    <!-- <button (click)="showViewBtn && showDialog('view', item); op.hide()" [disabled]="!showViewBtn"
+                        pTooltip="View" class="px-4 py-2 text-left transition
+                             hover:bg-gray-100
+                             disabled:opacity-50
+                             disabled:cursor-not-allowed">
+                        <i class="pi pi-eye"></i>
+                    </button> -->
+
+                    <button (click)="showEditBtn && showDialog('update', item); op.hide()" [disabled]="!showEditBtn"
+                        pTooltip="Update" class="px-4 py-2 text-left transition
+                             hover:bg-gray-100
+                             disabled:opacity-50
+                             disabled:cursor-not-allowed">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+
+                    <button (click)="showDeleteBtn && deleteItem(item); op.hide()" [disabled]="!showDeleteBtn"
+                        pTooltip="Delete" class="px-4 py-2 text-left transition
+                             hover:bg-gray-100
+                             disabled:opacity-50
+                             disabled:cursor-not-allowed">
+                        <i class="pi pi-trash"></i>
+                    </button>
+
+                </div> 
+
+
+            </p-popover>
+        </ng-template>
+
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            [jsonTemplate1]="jsonTemplateRef1" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+
+    </div>
+
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '60%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1">
+
+                <div class="flex gap-1  mb-4">
+                    <button type="button" (click)="setTab('details')" class="px-4 py-1.5 text-sm border rounded-t"
+                        [ngClass]="activeTab==='details'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-gray-100 text-gray-700 border-gray-300'">
+                        Details
+                    </button>
+
+                    <button type="button" (click)="setTab('kyc')" class="px-4 py-1.5 text-sm border rounded-t"
+                        [ngClass]="activeTab==='kyc'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-gray-100 text-gray-700 border-gray-300'">
+                        KYC
+                    </button>
+
+                    <button type="button" (click)="setTab('payment')" class="px-4 py-1.5 text-sm border rounded-t"
+                        [ngClass]="activeTab==='payment'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-gray-100 text-gray-700 border-gray-300'">
+                        Payment Details
+                    </button>
+                </div>
+
+
+                <div *ngIf="activeTab==='details'" class="border border-blue-300 rounded p-4 bg-white">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" maxlength="100" formControlName="name" placeholder="Enter Name"
+                                [class.border-red-500]="isInvalid('name')"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            @if(isInvalid('name')){
+                            <p class="text-red-500 text-xs mt-1">
+                                @if(groupMasterForm1.get('name')?.errors?.['required']){
+                                Name is required.
+                                } @else if(groupMasterForm1.get('name')?.errors?.['invalidValue']){
+                                Only dots or blank spaces are not allowed.
+                                } @else if(groupMasterForm1.get('name')?.errors?.['noAlphaNumeric']){
+                                Must contain at least one letter or number.
+                                }
+                            </p>
+                            }
+
+                        </div>
+
+                        <!-- Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type <span
+                                    class="text-red-500">*</span></label>
+                            <p-select [options]="custTypeDrp" formControlName="detailstype" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Type" [class.border-red-500]="isInvalid('detailstype')"
+                                class="custom-p-select w-full">
+                            </p-select>
+                            @if(isInvalid('detailstype')){
+                            <p class="text-red-500 text-xs mt-1">Type is required.</p>
+                            }
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category </label>
+                            <p-select [options]="custCategoryDrp" formControlName="category" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Category" class="custom-p-select w-full">
+                            </p-select>
+                        </div>
+
+                        <!-- Ownership -->
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ownership Type <span
+                                    class="text-red-500">*</span></label>
+                            <p-select [options]="OwnershipType" formControlName="ownershipType" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Ownership Type" [class.border-red-500]="isInvalid('ownershipType')"
+                                class="custom-p-select w-full">
+                            </p-select>
+                            @if(isInvalid('ownershipType')){
+                            <p class="text-red-500 text-xs mt-1">Ownership Type is required.</p>
+                            }
+                        </div>
+
+                        <!-- Website -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Website </label>
+                            <input type="text" maxlength="100" formControlName="website" placeholder="Enter Website"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            @if(isInvalid('website')){
+                            <p class="text-red-500 text-xs mt-1">
+                                @if(groupMasterForm1.get('website')?.errors?.['invalidValue']){
+                                Only dots or blank spaces are not allowed.
+                                }
+                                @else if(groupMasterForm1.get('website')?.errors?.['noAlphaNumeric']){
+                                Must contain at least one letter or number.
+                                }
+                            </p>
+                            }
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <div *ngIf="activeTab==='kyc'" class="border border-blue-300 rounded-xl p-6 bg-white mt-4 shadow-sm">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+
+                        <div class="md:col-span-2">
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                                <input type="checkbox" formControlName="isIndian" (change)="checkIndian()" />
+                                Is Indian
+                            </label>
+                        </div>
+
+                        <div>
+
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Pan No (INDIAN)
+                            </label>
+
+                            <input type="text" maxlength="10" formControlName="panNo" placeholder="Enter Pan No"
+                                (input)="onPanInput()" [class.border-red-500]="
+                                groupMasterForm1.get('panNo')?.invalid &&
+                                groupMasterForm1.get('panNo')?.touched
+                              " class="w-full rounded-md text-base border-2 border-gray-300
+                                     px-3 py-1 focus:outline-none
+                                     focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <ng-container *ngIf="
+                                     groupMasterForm1.get('panNo')?.invalid &&
+                                     groupMasterForm1.get('panNo')?.touched">
+
+                                <p *ngIf="groupMasterForm1.get('panNo')?.errors?.['required']"
+                                    class="text-red-500 text-xs mt-1">
+                                    PAN No is required.
+                                </p>
+
+                                <p *ngIf="groupMasterForm1.get('panNo')?.errors?.['pattern']"
+                                    class="text-red-500 text-xs mt-1">
+                                    Enter valid PAN No (Example: ABCDE1234F).
+                                </p>
+
+                            </ng-container>
+
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Uin No
+                            </label>
+
+                            <input type="text" maxlength="21" formControlName="uinNo" placeholder="Enter Uin No" class="w-full h-[38px] rounded-md border-2 border-gray-300 px-3 text-sm
+                                     focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Cin No
+                            </label>
+
+                            <input type="text" maxlength="21" formControlName="cinNo" placeholder="Enter Cin No" class="w-full h-[38px] rounded-md border-2 border-gray-300 px-3 text-sm
+                                     focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                        </div>
+
+                        <div class="flex items-center mt-2">
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
+                                <input type="checkbox" formControlName="msme" (change)="checkMsme()">
+                                MSME
+                            </label>
+                        </div>
+
+                        <div *ngIf="groupMasterForm1.get('msme')?.value" class="mt-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                MSME No *
+                            </label>
+
+                            <input type="text" maxlength="12" formControlName="msmeNo" placeholder="Enter MSME No"
+                                class="w-full h-[38px] rounded-md border-2 border-gray-300 px-3 text-sm
+                  focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                [class.border-red-500]="isInvalid('msmeNo')" />
+
+                            <p *ngIf="isInvalid('msmeNo')" class="text-red-500 text-xs mt-1">
+                                MSME No is required.
+                            </p>
+                        </div>
+
+                        <div class="card flex flex-col w-full border border-gray-300 rounded p-4">
+
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-semibold text-gray-700">
+                                    PAN Document
+                                    <span *ngIf="groupMasterForm1.get('isIndian')?.value" class="text-red-500">*</span>
+                                </label>
+
+                                <p-button label="Upload PAN Document" icon="pi pi-upload" variant="text"
+                                    styleClass="text-xs p-1" (click)="openPanUploadDialog()"
+                                    [disabled]="postType === 'view'">
+                                </p-button>
+                            </div>
+
+                            @if (uploadedPanFileUrl) {
+                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                <div class="flex items-center gap-3">
+                                    <i class="pi pi-file text-2xl text-blue-500"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Current PAN Document</p>
+                                        <a [href]="uploadedPanFileUrl" target="_blank"
+                                            class="text-xs text-blue-500 hover:underline">
+                                            View / Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <button type="button" (click)="removePanFile()"
+                                    class="text-red-500 hover:text-red-700 px-2">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+                            } @else {
+                            <p class="text-xs text-gray-500 italic">No Pan Document Uploaded yet.</p>
+                            }
+
+                            @if (isInvalid('panImage')) {
+                            <small class="text-red-500 text-xs mt-2">
+                                PAN Document is required.
+                            </small>
+                            }
+
+                        </div>
+
+                        <p-dialog [(visible)]="showPanUploadDialog" [modal]="true" header="Upload PAN Document"
+                            [style]="{ width: '40vw' }" (onHide)="closePanUploadDialog()">
+
+                            <ng-template pTemplate="content">
+
+                                <p-fileUpload #panFileUpload name="pan[]" customUpload="true"
+                                    (onSelect)="onPanFileSelect($event)" [multiple]="false" [showCancelButton]="false"
+                                    [showUploadButton]="false" chooseLabel="Select File">
+                                </p-fileUpload>
+
+                                @if (selectedPanFile) {
+                                <div class="flex items-center gap-2 p-3 border rounded bg-gray-50 mt-3">
+                                    <i class="pi pi-file text-blue-500"></i>
+                                    <span class="text-sm">{{ selectedPanFile.name }}</span>
+                                    <button type="button" (click)="clearPanSelection()" class="text-red-500 ml-auto">
+                                        <i class="pi pi-times"></i>
+                                    </button>
+                                </div>
+                                }
+                            </ng-template>
+
+                            <ng-template pTemplate="footer">
+                                <p-button label="Cancel" severity="secondary" (click)="closePanUploadDialog()"
+                                    [disabled]="isUploadingPanFile" />
+
+                                <p-button label="Upload" (click)="uploadPanImage()" [loading]="isUploadingPanFile"
+                                    [disabled]="!selectedPanFile || isUploadingPanFile" />
+                            </ng-template>
+
+                        </p-dialog>
+
+
+                    </div>
+                </div>
+
+                <div *ngIf="activeTab==='payment'" class="border border-blue-300 rounded p-4 bg-white mt-4">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bank (Supplier Name)</label>
+                            <input type="text" maxlength="65" formControlName="bankSupplierName"
+                                placeholder="Enter Bank (Supplier Name)"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Bank Name
+                            </label>
+
+                            <p-select [options]="bankNameDrp" formControlName="bankName" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Bank Name" class="custom-p-select w-full"
+                                (onChange)="onBankChange($event)">
+                            </p-select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Branch Name
+                            </label>
+
+                            <p-select [options]="branchNameDrp" formControlName="branchName" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                placeholder="Select Branch Name" class="custom-p-select w-full"
+                                [loading]="isBranchLoading" (onChange)="getIfscData()">
+                            </p-select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                IFSC
+                            </label>
+
+                            <input type="text" formControlName="ifsc" class="w-full rounded-md text-base border-2 border-gray-300
+                                     px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Account No</label>
+                            <input type="text" maxlength="100" formControlName="accountNo" maxlength="17"
+                                placeholder="Enter Account No" [class.border-red-500]="isInvalid('accountNo')"
+                                (keypress)="allowOnlyDigits($event)" (paste)="onPasteDigits($event)"
+                                class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <ng-container
+                                *ngIf="f['accountNo'].invalid && (f['accountNo'].dirty || f['accountNo'].touched)">
+
+                                <p class="text-red-500 text-xs mt-1" *ngIf="f['accountNo'].errors?.['minlength']">
+                                    Account No must be at least 8 characters
+                                </p>
+
+                                <p class="text-red-500 text-xs mt-1" *ngIf="f['accountNo'].errors?.['maxlength']">
+                                    Account No cannot exceed 17 characters
+                                </p>
+
+                            </ng-container>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="border border-blue-300 rounded mt-6 bg-white" style="margin-top: 50px;">
+
+                    <div class="flex justify-between items-center bg-blue-600 text-white px-3 py-2">
+                        <span class="text-sm font-medium">Other Details</span>
+                    </div>
+
+                    <div class="px-3 pt-3">
+
+                        <div class="flex gap-2 mb-4" *ngIf="postType !== 'view'" style="margin-bottom: 30px;">
+
+                            <button type="button" (click)="showContact = false"
+                                class="px-3 py-1 text-sm border rounded-t font-medium"
+                                [class.bg-blue-600]="!showContact" [class.text-white]="!showContact"
+                                [class.text-blue-600]="showContact">
+                                Address
+                            </button>
+
+                            <button *ngIf="addressList.length > 0" type="button" (click)="showContact = true"
+                                class="px-3 py-1 text-sm border rounded-t font-medium" [class.bg-blue-600]="showContact"
+                                [class.text-white]="showContact" [class.text-blue-600]="!showContact">
+                                Contact
+                            </button>
+
+                        </div>
+
+                        <ng-container *ngIf="!showContact && postType !== 'view'">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4" *ngIf="postType !== 'view'">
+                                <!-- Office Address -->
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Office Address <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" maxlength="300" formControlName="officeAddress"
+                                        placeholder="Enter Office Address"
+                                        [class.border-red-500]="isInvalid('officeAddress')"
+                                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    @if(isInvalid('officeAddress')){
+                                    <p class="text-red-500 text-xs mt-1">
+                                        @if(groupMasterForm1.get('officeAddress')?.errors?.['required']){
+                                        Office Address is required.
+                                        } @else if(groupMasterForm1.get('officeAddress')?.errors?.['invalidValue']){
+                                        Only dots or blank spaces are not allowed.
+                                        } @else if(groupMasterForm1.get('officeAddress')?.errors?.['noAlphaNumeric']){
+                                        Must contain at least one letter or number.
+                                        }
+                                    </p>
+                                    }
+
+                                </div>
+
+                                <!-- Country -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Country <span
+                                            class="text-red-500">*</span></label>
+                                    <p-select [options]="countryDrp" formControlName="countryId" optionLabel="drpOption"
+                                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                        placeholder="Select Country" [class.border-red-500]="isInvalid('countryId')"
+                                        class="custom-p-select w-full" (onChange)="onCountryChange($event)">
+                                    </p-select>
+                                    @if(isInvalid('countryId')){
+                                    <p class="text-red-500 text-xs mt-1">Country is required.</p>
+                                    }
+                                </div>
+
+                                <!-- State -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">State <span
+                                            class="text-red-500">*</span></label>
+                                    <p-select [options]="stateDrp" formControlName="stateId" optionLabel="drpOption"
+                                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                        placeholder="Select State" [class.border-red-500]="isInvalid('stateId')"
+                                        class="custom-p-select w-full" (onChange)="onStateChange($event)">
+                                    </p-select>
+                                    @if(isInvalid('stateId')){
+                                    <p class="text-red-500 text-xs mt-1">State is required.</p>
+                                    }
+                                </div>
+
+                                <!-- City -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">City <span
+                                            class="text-red-500">*</span></label>
+                                    <p-select [options]="cityDrp" formControlName="cityId" optionLabel="drpOption"
+                                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                        placeholder="Select City" [class.border-red-500]="isInvalid('cityId')"
+                                        class="custom-p-select w-full">
+                                    </p-select>
+                                    @if(isInvalid('cityId')){
+                                    <p class="text-red-500 text-xs mt-1">City is required.</p>
+                                    }
+                                </div>
+
+                                <!-- Pincode -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Pincode <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" maxlength="6" formControlName="pincode"
+                                        (keypress)="allowOnlyDigits($event)" (paste)="onPasteDigits($event)"
+                                        placeholder="Enter Pincode" [class.border-red-500]="isInvalid('pincode')"
+                                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    @if(isInvalid('pincode')){
+                                    <p class="text-red-500 text-xs mt-1">
+                                        @if(groupMasterForm1.get('pincode')?.errors?.['required']){
+                                        Pincode is required.
+                                        }
+                                        @else if(groupMasterForm1.get('pincode')?.errors?.['pattern']){
+                                        Pincode must be 6 digits and cannot start with 0.
+                                        }
+                                    </p>
+                                    }
+                                </div>
+
+                                <!-- Office Mobile -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Office Mobile
+                                    </label>
+
+                                    <input type="text" maxlength="10" formControlName="officeMobile"
+                                        placeholder="Enter Office Mobile" (keypress)="allowOnlyDigits($event)"
+                                        (paste)="onPasteDigits($event)" [ngClass]="{
+                                    'border-red-500':
+                                      f['officeMobile'].invalid &&
+                                      (f['officeMobile'].dirty || f['officeMobile'].touched)
+                                  }" class="w-full rounded-md border-2 border-gray-300
+                                         px-3 py-1 focus:outline-none focus:border-blue-500
+                                         focus:ring-2 focus:ring-blue-200" />
+
+                                    <ng-container
+                                        *ngIf="f['officeMobile'].invalid && (f['officeMobile'].dirty || f['officeMobile'].touched)">
+                                        <p class="text-red-500 text-xs mt-1"
+                                            *ngIf="f['officeMobile'].errors?.['pattern']">
+                                            Mobile number must be 10 digits and start with 6, 7, 8, or 9.
+                                        </p>
+
+                                    </ng-container>
+                                </div>
+
+
+                                <!-- Office Email -->
+
+                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Office Email
+                                        </label>
+
+                                        <input type="text" maxlength="300" formControlName="officeEmail"
+                                            placeholder="Enter Office Email"
+                                            [class.border-red-500]="isInvalid('officeEmail')" class="w-full rounded-md text-base border-2 border-gray-300
+                                             px-3 py-1 focus:outline-none focus:border-blue-500
+                                             focus:ring-2 focus:ring-blue-200" />
+                                        @if(isInvalid('officeEmail')){
+                                        <p class="text-red-500 text-xs mt-1">
+                                            @if(groupMasterForm1.get('officeEmail')?.errors?.['email']){
+                                            Please enter a valid email address.
+                                            }
+                                            @else if(groupMasterForm1.get('officeEmail')?.errors?.['pattern']){
+                                            Email format is invalid.
+                                            }
+                                        </p>
+                                        }
+                                    </div>
+
+                                    <div class="flex items-center md:justify-start">
+                                        <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                                            <input type="checkbox" formControlName="gst" (change)="checkGST()"
+                                                class="w-4 h-4">
+                                            GST
+                                        </label>
+                                    </div>
+
+                                </div>
+
+                                <div *ngIf="groupMasterForm1.get('gst')?.value"
+                                    class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start md:col-span-2">
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            GST No <span class="text-red-500">*</span>
+                                        </label>
+
+                                        <input type="text" maxlength="15" formControlName="gstNo" (input)="onGstInput()"
+                                            placeholder="Enter GST No" class="w-full h-[38px] rounded-md border-2 border-gray-300 px-3 text-sm
+                      focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" [ngClass]="{
+                 'border-red-500':
+                   groupMasterForm1.get('gstNo')?.invalid &&
+                   groupMasterForm1.get('gstNo')?.touched
+               }" />
+
+                                        <ng-container *ngIf="
+            groupMasterForm1.get('gstNo')?.invalid &&
+            groupMasterForm1.get('gstNo')?.touched">
+
+                                            <p class="text-red-500 text-xs mt-1"
+                                                *ngIf="groupMasterForm1.get('gstNo')?.errors?.['required']">
+                                                GST No is required.
+                                            </p>
+
+                                            <p class="text-red-500 text-xs mt-1" *ngIf="
+                 groupMasterForm1.get('gstNo')?.errors?.['pattern'] &&
+                 groupMasterForm1.get('gstNo')?.value?.length === 15">
+                                                Enter valid GST No.
+                                            </p>
+
+                                        </ng-container>
+                                    </div>
+
+                                    <!-- GST File -->
+                                    <div
+                                        class="flex flex-col w-full border border-gray-200 rounded-lg p-3 bg-gray-50 min-h-[90px]">
+
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-semibold text-gray-700">
+                                                GST File *
+                                            </label>
+
+                                            <p-button (click)="openUploadDialog()" label="Upload GST File"
+                                                icon="pi pi-upload" variant="text" [raised]="true"
+                                                [disabled]="postType === 'view'" styleClass="text-xs p-1">
+                                            </p-button>
+                                        </div>
+
+                                        @if (uploadedGstFileUrl) {
+                                        <div
+                                            class="flex items-center justify-between p-2 bg-white rounded-md border border-gray-200">
+                                            <div class="flex items-center gap-2">
+                                                <i class="pi pi-file text-blue-500"></i>
+                                                <a [href]="uploadedGstFileUrl" target="_blank"
+                                                    class="text-xs text-blue-500 hover:underline">
+                                                    View / Download
+                                                </a>
+                                            </div>
+
+                                            @if (postType !== 'view') {
+                                            <button type="button" (click)="removeGstFile()"
+                                                class="text-red-500 hover:text-red-700 px-2">
+                                                <i class="pi pi-trash text-sm"></i>
+                                            </button>
+                                            }
+                                        </div>
+                                        } @else {
+                                        <p class="text-xs text-gray-400 italic">
+                                            No GST File uploaded yet.
+                                        </p>
+                                        }
+
+                                        @if (isInvalid('gstImage')) {
+                                        <small class="text-red-500 text-xs mt-1" *ngIf="
+              groupMasterForm1.get('gst')?.value &&
+              groupMasterForm1.get('gstImage')?.invalid &&
+              (groupMasterForm1.get('gstImage')?.dirty ||
+               groupMasterForm1.get('gstImage')?.touched)
+            ">
+                                            GST File is required.
+                                        </small>
+                                        }
+
+                                    </div>
+
+                                    <!-- Upload Dialog (unchanged) -->
+                                    <p-dialog [(visible)]="showGstUploadDialog" [modal]="true" header="Upload GST File"
+                                        [style]="{ width: '40vw' }" (onHide)="closeGstUploadDialog()">
+
+                                        <ng-template pTemplate="content">
+                                            <div class="flex flex-col gap-4">
+
+                                                <p-fileUpload #gstFileUpload name="resume[]" customUpload="true"
+                                                    (onSelect)="onGstFileSelect($event)" [multiple]="false"
+                                                    [showCancelButton]="false" [showUploadButton]="false"
+                                                    chooseLabel="Select Gst File" class="w-full">
+                                                </p-fileUpload>
+
+                                                @if(selectedGstFile){
+                                                <div
+                                                    class="flex items-center gap-2 p-3 border border-gray-300 rounded bg-gray-50">
+                                                    <i class="pi pi-file text-xl text-blue-500"></i>
+                                                    <div class="flex-1">
+                                                        <span class="text-sm font-medium">
+                                                            {{selectedGstFile.name}}
+                                                        </span>
+                                                        <span class="text-xs text-gray-500 ml-2">
+                                                            ({{getFileSize(selectedGstFile.size)}})
+                                                        </span>
+                                                    </div>
+                                                    <button type="button" (click)="clearGstSelection()"
+                                                        class="text-red-500 hover:text-red-700">
+                                                        <i class="pi pi-times"></i>
+                                                    </button>
+                                                </div>
+                                                }
+                                            </div>
+                                        </ng-template>
+
+                                        <ng-template pTemplate="footer">
+                                            <div class="flex justify-end space-x-3">
+                                                <p-button label="Cancel" (click)="closeGstUploadDialog()"
+                                                    severity="secondary" [disabled]="isUploadingGstFile" />
+
+                                                <p-button label="Upload" (click)="uploadGstImage()"
+                                                    [loading]="isUploadingGstFile"
+                                                    [disabled]="!selectedGstFile || isUploadingGstFile" />
+                                            </div>
+                                        </ng-template>
+                                    </p-dialog>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="col-span-2 mt-2" *ngIf="postType !== 'view'"
+                                style="margin-top: 30px;margin-bottom: 40px;margin-left: 10px;">
+                                <button type="button" (click)="addOrUpdateAddress()"
+                                    class="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                    <i class="pi pi-plus"></i>
+                                    {{ editAddressIndex !== null ? 'Update' : 'Add' }}
+                                </button>
+                            </div>
+
+                            <p-table [value]="addressList" class="mt-4 mb-6" responsiveLayout="scroll"
+                                styleClass="p-datatable-gridlines" *ngIf="addressList.length">
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th>Office Address</th>
+                                        <th>Country</th>
+                                        <th>State</th>
+                                        <th>City</th>
+                                        <th>Pincode</th>
+                                        <th>Office Mobile</th>
+                                        <th>Office Email</th>
+                                        <th>GST No</th>
+                                        <th>Gst Doc</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                    <tr>
+                                        <td>{{ row.officeAddress }}</td>
+                                        <td>{{ row.countryName }}</td>
+                                        <td>{{ row.stateName }}</td>
+                                        <td>{{ row.cityName }}</td>
+                                        <td>{{ row.pincode }}</td>
+                                        <td>{{ row.officeMobile }}</td>
+                                        <td>{{ row.officeEmail || '-' }}</td>
+                                        <td>{{ row.gstNo }}</td>
+
+                                        <td>
+                                            <ng-container *ngIf="row.gst === 'Yes' && row.gstFileUrl; else noGstFile">
+                                                <a [href]="row.gstFileUrl" target="_blank"
+                                                    class="text-blue-600 text-xs underline">
+                                                    View / Download
+                                                </a>
+                                            </ng-container>
+
+                                            <ng-template #noGstFile>
+                                                <span class="text-gray-400 text-xs">-</span>
+                                            </ng-template>
+                                        </td>
+
+                                        <td *ngIf="postType !== 'view'">
+                                            <div class="flex gap-3">
+                                                <i class="pi pi-pencil text-blue-600 cursor-pointer"
+                                                    (click)="editAddress(row, i)">
+                                                </i>
+
+                                                <i class="pi pi-trash text-red-600 cursor-pointer"
+                                                    (click)="deleteAddress(i)">
+                                                </i>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </ng-template>
+
+                            </p-table>
+
+                        </ng-container>
+
+
+                        <ng-container *ngIf="showContact && postType !== 'view'">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4" *ngIf="postType !== 'view'">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Address <span
+                                            class="text-red-500">*</span></label>
+                                    <p-select [options]="contactAddressDrp" formControlName="contAddress"
+                                        optionLabel="drpOption" optionValue="drpValue" [filter]="true"
+                                        filterBy="officeAddress" [showClear]="true" placeholder="Select Type"
+                                        [class.border-red-500]="isInvalid('contAddress')"
+                                        class="custom-p-select w-full">
+                                    </p-select>
+                                    @if(isInvalid('contAddress')){
+                                    <p class="text-red-500 text-xs mt-1">Address is required.</p>
+                                    }
+                                </div>
+
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Contatc Person <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" maxlength="300" formControlName="contatcPerson"
+                                        placeholder="Enter Contatc Person"
+                                        [class.border-red-500]="isInvalid('contatcPerson')"
+                                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    @if(isInvalid('contatcPerson')){
+                                    <p class="text-red-500 text-xs mt-1">
+                                        @if(groupMasterForm1.get('contatcPerson')?.errors?.['required']){
+                                        Contatc Person is required.
+                                        } @else if(groupMasterForm1.get('contatcPerson')?.errors?.['invalidValue']){
+                                        Only dots or blank spaces are not allowed.
+                                        } @else if(groupMasterForm1.get('contatcPerson')?.errors?.['noAlphaNumeric']){
+                                        Must contain at least one letter or number.
+                                        }
+                                    </p>
+                                    }
+
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Office Phone No
+                                    </label>
+                                    <input type="text" maxlength="10" formControlName="officePhoneNo"
+                                        placeholder="Enter Office Phone No" (keypress)="allowOnlyDigits($event)"
+                                        (paste)="onPasteDigits($event)" class="w-full rounded-md border-2 border-gray-300
+                                         px-3 py-1 focus:outline-none focus:border-blue-500
+                                         focus:ring-2 focus:ring-blue-200" />
+                                    <ng-container
+                                        *ngIf="f['officePhoneNo'].invalid && (f['officePhoneNo'].dirty || f['officePhoneNo'].touched)">
+                                        <p class="text-red-500 text-xs mt-1"
+                                            *ngIf="f['officePhoneNo'].errors?.['pattern']">
+                                            Office Phone No must be 10 digits and start with 6, 7, 8, or 9.
+                                        </p>
+
+                                    </ng-container>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Office Mobile No <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <input type="text" maxlength="10" formControlName="officeMobileNo"
+                                        placeholder="Enter Office Mobile No" (keypress)="allowOnlyDigits($event)"
+                                        (paste)="onPasteDigits($event)" [ngClass]="{
+        'border-red-500':
+          f['officeMobileNo']?.invalid &&
+          (f['officeMobileNo']?.dirty || f['officeMobileNo']?.touched)
+      }" class="w-full rounded-md border-2 border-gray-300
+             px-3 py-1 focus:outline-none focus:border-blue-500
+             focus:ring-2 focus:ring-blue-200" />
+                                    <ng-container *ngIf="
+             f['officeMobileNo']?.invalid &&
+             (f['officeMobileNo']?.dirty || f['officeMobileNo']?.touched)
+           ">
+                                        <p class="text-red-500 text-xs mt-1"
+                                            *ngIf="f['officeMobileNo']?.errors?.['required']">
+                                            Office Mobile No is required.
+                                        </p>
+
+                                        <p class="text-red-500 text-xs mt-1"
+                                            *ngIf="f['officeMobileNo']?.errors?.['pattern']">
+                                            Office Mobile No must be 10 digits and start with 6, 7, 8, or 9.
+                                        </p>
+                                    </ng-container>
+
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Personal Mobile No
+                                    </label>
+                                    <input type="text" maxlength="10" formControlName="personalMobileNo"
+                                        placeholder="Enter Personal Mobile No" (keypress)="allowOnlyDigits($event)"
+                                        (paste)="onPasteDigits($event)" class="w-full rounded-md border-2 border-gray-300
+         px-3 py-1 focus:outline-none focus:border-blue-500
+         focus:ring-2 focus:ring-blue-200" />
+                                    <ng-container
+                                        *ngIf="f['personalMobileNo'].invalid && (f['personalMobileNo'].dirty || f['personalMobileNo'].touched)">
+                                        <p class="text-red-500 text-xs mt-1"
+                                            *ngIf="f['personalMobileNo'].errors?.['pattern']">
+                                            Personal Mobile No must be 10 digits and start with 6, 7, 8, or 9.
+                                        </p>
+
+                                    </ng-container>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Office Email <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <input type="email" maxlength="300" formControlName="contactOfficeMail"
+                                        placeholder="Enter Office Email"
+                                        [class.border-red-500]="isInvalid('contactOfficeMail')" class="w-full rounded-md text-base border-2 border-gray-300
+                                    px-3 py-1 focus:outline-none focus:border-blue-500
+                                    focus:ring-2 focus:ring-blue-200" />
+                                    @if(isInvalid('contactOfficeMail')){
+                                    <p class="text-red-500 text-xs mt-1">
+                                        @if(groupMasterForm1.get('contactOfficeMail')?.errors?.['required']){
+                                        Office Email is required.
+                                        }
+                                        @else if(groupMasterForm1.get('contactOfficeMail')?.errors?.['email']){
+                                        Please enter a valid email address.
+                                        }
+                                        @else if(groupMasterForm1.get('contactOfficeMail')?.errors?.['pattern']){
+                                        Personal Email format is invalid.
+                                        }
+                                    </p>
+                                    }
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Personal Email
+                                    </label>
+                                    <input type="text" maxlength="300" formControlName="personalEmailContact"
+                                        placeholder="Enter Personal Email" class="w-full rounded-md text-base border-2 border-gray-300
+                                         px-3 py-1 focus:outline-none focus:border-blue-500
+                                         focus:ring-2 focus:ring-blue-200" />
+                                    @if(isInvalid('personalEmailContact')){
+                                    <p class="text-red-500 text-xs mt-1">
+                                        @if(groupMasterForm1.get('personalEmailContact')?.errors?.['email']){
+                                        Please enter a valid email address.
+                                        }
+                                        @else if(groupMasterForm1.get('personalEmailContact')?.errors?.['pattern']){
+                                        Personal Email format is invalid.
+                                        }
+                                    </p>
+                                    }
+                                </div>
+
+                            </div>
+
+                            <div class="col-span-2 mt-2" *ngIf="postType !== 'view'"
+                                style="margin-top: 30px;margin-bottom: 40px;margin-left: 10px;">
+                                <button type="button" (click)="addOrUpdateContact()"
+                                    class="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                    <i class="pi pi-plus"></i>
+                                    {{ editContactId !== null ? 'Update' : 'Add' }}
+                                </button>
+                            </div>
+
+                            <p-table [value]="contactList" class="mt-4 mb-6" styleClass="p-datatable-gridlines"
+                                *ngIf="contactList.length" responsiveLayout="scroll">
+                                <ng-template pTemplate="header">
+                                    <tr>
+                                        <th>Address</th>
+                                        <th>Contact Person</th>
+                                        <th>Office Phone</th>
+                                        <th>Office Mobile</th>
+                                        <th>Personal Mobile</th>
+                                        <th>Office Email</th>
+                                        <th>Personal Email</th>
+                                        <th *ngIf="postType !== 'view'">Action</th>
+                                    </tr>
+                                </ng-template>
+
+                                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                    <tr>
+                                        <td>{{ row.contAddress }}</td>
+                                        <td>{{ row.contatcPerson }}</td>
+                                        <td>{{ row.officePhoneNo || '-' }}</td>
+                                        <td>{{ row.officeMobileNo }}</td>
+                                        <td>{{ row.personalMobileNo || '-' }}</td>
+                                        <td>{{ row.contactOfficeMail || '-' }}</td>
+                                        <td>{{ row.personalEmailContact || '-' }}</td>
+
+                                        <td *ngIf="postType !== 'view'">
+                                            <div class="flex gap-3">
+                                                <i class="pi pi-pencil text-blue-600 cursor-pointer"
+                                                    (click)="editContact(row)">
+                                                </i>
+
+                                                <i class="pi pi-trash text-red-600 cursor-pointer"
+                                                    (click)="deleteContact(i)">
+                                                </i>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                </ng-template>
+
+                            </p-table>
+
+                        </ng-container>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+            }
+
+        </ng-template>
+
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+
+    </p-drawer>
+
+
+    <p-dialog [(visible)]="itemDailog" [modal]="true" header="📎 Attachments" [closable]="true"
+        [style]="{ width: '25vw', 'max-width': '80vw' }">
+
+        <div *ngIf="selectedPanImage" class="mb-4 text-center">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                PAN Document
+            </label>
+
+            <a [href]="selectedPanImage" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600
+               rounded-md text-sm hover:bg-blue-100 transition">
+                <i class="pi pi-file-pdf text-red-500 text-lg"></i>
+                View PAN Document
+            </a>
+        </div>
+
+    </p-dialog>
+
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog1" appendTo="body" [position]="'center'"
+        [style]="{ width: '80%', 'max-width': '100%' }" [contentStyle]="{ 'max-height': '60vh', 'overflow-y': 'auto' }">
+
+        <ng-template pTemplate="header">
+            <span class="font-semibold text-xl">
+                Address & Contact Detail
+            </span>
+        </ng-template>
+
+
+        <ng-template pTemplate="content">
+
+            <div class="w-full flex justify-content-end mb-3 pr-2">
+                <span class="p-input-icon-left" style="width: 250px;">
+                    <input pInputText type="text" placeholder="Search Address..." (input)="onAddressSearch($event)"
+                        class="w-full" />
+                </span>
+            </div>
+
+
+            <!-- ADDRESS TABLE -->
+            <p-table #dt [value]="addressList" showGridlines responsiveLayout="scroll"
+                [globalFilterFields]="['country','state','district','officeAdd']">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Country</th>
+                        <th>State</th>
+                        <th>City</th>
+                        <th>Office Address</th>
+                        <th>Pincode</th>
+                        <th>Office Mobile</th>
+                        <th>Office Email</th>
+                        <th>GST No</th>
+                        <th>GST Doc</th>
+                        <th>Contact Details</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-address>
+                    <tr>
+                        <td>{{ address.country || '-' }}</td>
+                        <td>{{ address.state || '-' }}</td>
+                        <td>{{ address.district || '-' }}</td>
+                        <td>{{ address.officeAdd || '-' }}</td>
+                        <td>{{ address.pincode || '-' }}</td>
+                        <td>{{ address.officeMobile || '-' }}</td>
+                        <td>{{ address.officeEmail || '-' }}</td>
+                        <td>{{ address.gstNo || '-' }}</td>
+
+                        <td>
+                            <a *ngIf="address.gstImage" [href]="normalizeImagePath(address.gstImage)" target="_blank"
+                                class="text-blue-600 text-xs underline">
+                                View / Download
+                            </a>
+                            <span *ngIf="!address.gstImage">-</span>
+                        </td>
+
+                        <!-- Nested Contact Table -->
+                        <td>
+                            <p-table [value]="address.contactDetails || []" showGridlines responsiveLayout="scroll"
+                                class="text-sm">
+
+                                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Contact Person</th>
+                        <th>Office Phone No</th>
+                        <th>Office Mobile No</th>
+                        <th>Personal Mobile No</th>
+                        <th>Office Email</th>
+                        <th>Personal Email</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-contact>
+                    <tr>
+                        <td>{{ contact.contactPerson || '-' }}</td>
+                        <td>{{ contact.officePhoneNo || '-' }}</td>
+                        <td>{{ contact.officeMobileNo || '-' }}</td>
+                        <td>{{ contact.personalMobileNo || '-' }}</td>
+                        <td>{{ contact.contOfficeEmail || '-' }}</td>
+                        <td>{{ contact.personalEmail || '-' }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="6" class="text-center text-xs text-gray-500">
+                            No contacts available
+                        </td>
+                    </tr>
+                </ng-template>
+
+            </p-table>
+            </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="10" class="text-center text-sm">
+                    No address details found.
+                </td>
+            </tr>
+        </ng-template>
+
+        </p-table>
+
+        </ng-template>
+    </p-dialog>
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+</div>

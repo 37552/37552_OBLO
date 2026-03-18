@@ -1,0 +1,692 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+    <div class="bg-white overflow-hidden">
+        <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border-b border-gray-200">
+            <div class="mb-3 sm:mb-0">
+                <h2 class="text-base font-semibold text-gray-800">
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add')" label="Add New Opportunity" icon="pi pi-plus"
+                    styleClass="orange-button p-button-warning" [raised]="true">
+                </p-button>
+            </div>
+        </div>
+
+        <!-- Templates for Table -->
+        <ng-template #actionTemplateRef let-item>
+            <div class="flex items-center justify-center">
+                <button type="button" class="p-button-text p-button-rounded p-button-sm cursor-pointer"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-lg"></i>
+                </button>
+                <p-popover #op [style]="{width:'130px'}">
+                    <div class="flex flex-col">
+                        <button class="p-2 text-left hover:bg-gray-100 flex items-center"
+                            (click)="showDialog('view', item); op.hide()">
+                            <i class="pi pi-eye mr-2 text-blue-500"></i> View
+                        </button>
+                        <button class="p-2 text-left hover:bg-gray-100 flex items-center"
+                            (click)="showDialog('update', item); op.hide()" [disabled]="item.canUpdate == '0'">
+                            <i class="pi pi-pencil mr-2 text-green-500"></i> Edit
+                        </button>
+                    </div>
+                </p-popover>
+            </div>
+        </ng-template>
+
+        <ng-template #itemDetailsTemplateRef let-item>
+            <div class="flex items-center justify-center">
+                <button
+                    *ngIf="item.itemDetails && item.itemDetails !== '[]' && item.itemDetails !== null && item.itemDetails.length > 0"
+                    type="button" pButton icon="pi pi-folder-open"
+                    (click)="openDetail(item.itemDetails, 'Item Details')"
+                    class="p-button-rounded p-button-text p-button-info" pTooltip="View Item Details"
+                    tooltipPosition="top">
+                </button>
+                <span *ngIf="!item.itemDetails || item.itemDetails === '[]' || item.itemDetails.length === 0"
+                    class="text-gray-400 text-sm">-</span>
+            </div>
+        </ng-template>
+
+        <ng-template #followUpDetailsTemplateRef let-item>
+            <div class="flex items-center justify-center">
+                <button
+                    *ngIf="item.opportunityFollowup && item.opportunityFollowup !== '[]' && item.opportunityFollowup !== null && item.opportunityFollowup.length > 0"
+                    type="button" pButton icon="pi pi-calendar"
+                    (click)="openDetail(item.opportunityFollowup, 'Follow-up Details')"
+                    class="p-button-rounded p-button-text p-button-success" pTooltip="View Follow-up Details"
+                    tooltipPosition="top">
+                </button>
+                <span
+                    *ngIf="!item.opportunityFollowup || item.opportunityFollowup === '[]' || item.opportunityFollowup.length === 0"
+                    class="text-gray-400 text-sm">-</span>
+            </div>
+        </ng-template>
+
+        <ng-template #stageHistoryTemplateRef let-item>
+            <div class="flex items-center justify-center">
+                <button
+                    *ngIf="item.opportunityStageHistory && item.opportunityStageHistory !== '[]' && item.opportunityStageHistory !== null && item.opportunityStageHistory.length > 0"
+                    type="button" pButton icon="pi pi-chart-line"
+                    (click)="openDetail(item.opportunityStageHistory, 'Stage History')"
+                    class="p-button-rounded p-button-text p-button-warning" pTooltip="View Stage History"
+                    tooltipPosition="top">
+                </button>
+                <span
+                    *ngIf="!item.opportunityStageHistory || item.opportunityStageHistory === '[]' || item.opportunityStageHistory.length === 0"
+                    class="text-gray-400 text-sm">-</span>
+            </div>
+        </ng-template>
+
+        <ng-template #attachmentDetailsTemplateRef let-item>
+            <div class="flex items-center justify-center">
+                <button
+                    *ngIf="item.opportunityDocs && item.opportunityDocs !== '[]' && item.opportunityDocs !== null && item.opportunityDocs.length > 0"
+                    type="button" pButton icon="pi pi-paperclip"
+                    (click)="openDetail(item.opportunityDocs, 'Attachment Details')"
+                    class="p-button-rounded p-button-text p-button-help" pTooltip="View Attachments"
+                    tooltipPosition="top">
+                </button>
+                <span
+                    *ngIf="!item.opportunityDocs || item.opportunityDocs === '[]' || item.opportunityDocs.length === 0"
+                    class="text-gray-400 text-sm">-</span>
+            </div>
+        </ng-template>
+
+        <!-- Table -->
+        <app-table-template [data]="allViewTableData" [columns]="columns" [pageSize]="pageSize"
+            [totalCount]="totalCount" [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            [actionTemplate]="actionTemplateRef" [jsonTemplate]="itemDetailsTemplateRef"
+            [jsonTemplate1]="followUpDetailsTemplateRef" [jsonTemplate2]="stageHistoryTemplateRef"
+            [jsonTemplate3]="attachmentDetailsTemplateRef">
+
+            <ng-template pTemplate="prepend" let-row let-ri="rowIndex">
+                <td class="text-center text-sm text-gray-700">{{ (pageNo - 1) * pageSize + ri + 1 }}</td>
+            </ng-template>
+        </app-table-template>
+    </div>
+
+    <!-- Main Drawer for Add/Update/View -->
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" [dismissible]="false" [style]="getDrawerStyle()"
+        [showCloseIcon]="false" (onHide)="onDrawerHide()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full p-4 border-b border-gray-200">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-2xl">{{ header }}</span>
+                    <i class="text-blue-500" [ngClass]="headerIcon"></i>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button pButton [icon]="isFullScreen ? 'pi pi-window-minimize' : 'pi pi-window-maximize'"
+                        (click)="toggleFullScreen()" class="p-button-rounded p-button-text p-button-plain h-8 w-8">
+                    </button>
+                    <button pButton icon="pi pi-times" (click)="visible = false"
+                        class="p-button-rounded p-button-text p-button-plain h-8 w-8">
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+
+        <!-- Rest of your drawer content remains the same -->
+        <div class="h-full flex flex-col justify-between">
+            <div class="flex-grow overflow-y-auto p-4">
+                <!-- Opportunity Details -->
+                <div class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-info-circle text-indigo-600"></i> Opportunity Details
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showOpportunity')">
+                            <i class="pi" [ngClass]="showOpportunity ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <form *ngIf="showOpportunity" [formGroup]="opportunityDetails"
+                        class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- ... existing form fields ... -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Subject *</label>
+                            <input pInputText formControlName="subject" class="w-full" placeholder="Enter subject"
+                                [readonly]="postType === 'view'">
+                            <small class="text-red-500" *ngIf="isInvalid('subject')">Please enter a subject</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Opportunity Type *</label>
+                            <p-select [options]="opportunityTypeDrop" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" (onChange)="getLeadDrp($event)"
+                                formControlName="opportunityType" placeholder="select Type" class="w-full"
+                                [disabled]=isViewMode()>
+                            </p-select>
+                            <small class="text-red-500" *ngIf="isInvalid('opportunityType')">Please select an
+                                opportunity
+                                type</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Lead</label>
+                            <p-select [options]="leadDrp" optionLabel="drpOption" optionValue="drpValue" [filter]="true"
+                                [showClear]="true" formControlName="lead" appendTo="body" placeholder="select lead"
+                                class="w-full"
+                                [disabled]="postType === 'view' || opportunityDetails.get('opportunityType')?.value == '10000'">
+                            </p-select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Customer Type *</label>
+                            <p-select [options]="customerType" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" formControlName="customerType"
+                                placeholder="select customer type" class="w-full" [disabled]="postType === 'view'">
+                            </p-select>
+                            <small class="text-red-500" *ngIf="isInvalid('customerType')">Please select a customer
+                                type</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Customer * </label>
+                            <p-select [options]="customerTableData" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" [virtualScroll]="true"
+                                [virtualScrollItemSize]="38"
+                                (onChange)="onCustomerChange($event); getAddressAndDetails($event)"
+                                formControlName="customer" placeholder="select customer" class="w-full"
+                                [disabled]="postType === 'view' || postType === 'update'">
+                            </p-select>
+                            @if (isInvalid('customer')) {
+                            <small class="text-red-500" *ngIf="isInvalid('customer')">Please select a customer</small>}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Customer Address *</label>
+                            <p-select [options]="customerAddressDrp" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" formControlName="customerAddress"
+                                placeholder="select customer address" class="w-full" (onChange)="getcontactdetails()"
+                                [disabled]="postType === 'view'">
+                            </p-select>
+                            <small class="text-red-500" *ngIf="isInvalid('customerAddress')">Please select a customer
+                                address</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Contact Details *</label>
+                            <p-select [options]="contactDrp" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" formControlName="contactDetails"
+                                placeholder="select contact details" class="w-full" [disabled]="postType === 'view'">
+                            </p-select>
+                            <small class="text-red-500" *ngIf="isInvalid('contactDetails')">Please enter a contact
+                                details</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Source *</label>
+                            <div class="flex gap-2">
+                                <p-select [options]="sourceTableData" optionLabel="drpOption" optionValue="drpValue"
+                                    [filter]="true" [showClear]="true" appendTo="body" formControlName="source"
+                                    placeholder="select source" class="w-full" [disabled]="postType === 'view'">
+                                </p-select>
+                                <button pButton icon="pi pi-plus" class="p-button-secondary p-button-outlined"
+                                    (click)="openMasterUpdateDialog('tblOpportunitySourceMaster', 'Add Source')"
+                                    *ngIf="!isViewMode()"></button>
+                            </div>
+                            <small class="text-red-500" *ngIf="isInvalid('source')">Please select a source</small>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Expected Date *</label>
+                            <p-datepicker formControlName="expectedDate" class="w-full" inputStyleClass="w-full"
+                                appendTo="body" [showIcon]="true" icon="pi pi-calendar" placeholder="Select date"
+                                [disabled]="postType === 'view'">
+                            </p-datepicker>
+                            @if (isInvalid('expectedDate')) {
+                            <small class="text-red-500 text-xs mt-1 block">Expected Date is required.</small>
+                            }
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Assigned To *</label>
+                            <p-select [options]="assignedToTableData" optionLabel="drpOption" optionValue="drpValue"
+                                [filter]="true" [showClear]="true" appendTo="body" formControlName="assignedTo"
+                                placeholder="select user" class="w-full"
+                                [disabled]="postType === 'view' || postType === 'update'">
+                            </p-select>
+                            @if (isInvalid('assignedTo')) {
+                            <small class="text-red-500 text-xs mt-1 block">Assigned To is required.</small>
+                            }
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Item Details -->
+                <div class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-shopping-bag text-indigo-600"></i> Item Details
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showItems')">
+                            <i class="pi" [ngClass]="showItems ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <div *ngIf="showItems" class="p-4">
+                        <form [formGroup]="itemsDetails"
+                            class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 border-b pb-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Price List *</label>
+                                <p-select [options]="priceListTableData" optionLabel="drpOption" optionValue="drpValue"
+                                    [filter]="true" [showClear]="true" appendTo="body"
+                                    (onChange)="onPriceListChange($event)" formControlName="priceList" class="w-full"
+                                    [disabled]="postType === 'view'">
+                                </p-select>
+                                <small class="text-red-500" *ngIf="isInvalid('priceList')">Please select a price
+                                    list</small>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Total Amount</label>
+                                <input pInputText formControlName="totalAmount" class="w-full bg-gray-100" type="number"
+                                    readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Item *</label>
+                                <p-select [options]="itemListTableDataArray" optionLabel="drpOption"
+                                    optionValue="drpValue" [filter]="true" [showClear]="true" appendTo="body"
+                                    formControlName="item" class="w-full" (onChange)="getUnitPrice($event)"
+                                    [disabled]="postType === 'view'">
+                                </p-select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Quantity *</label>
+                                <input pInputText type="number" formControlName="quantity"
+                                    (change)="totalPriceVal($event)" class="w-full" (input)="calculateTotal()"
+                                    [readonly]="postType === 'view'">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Unit Price</label>
+                                <input pInputText formControlName="unitPrice" class="w-full bg-gray-100" type="number"
+                                    readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Total Price</label>
+                                <input pInputText formControlName="totalPrice" class="w-full bg-gray-100" type="number"
+                                    readonly>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium mb-1">Details</label>
+                                <textarea pInputTextarea rows="2" formControlName="details" class="w-full resize-none"
+                                    [readonly]="postType === 'view'"></textarea>
+                            </div>
+                            <div *ngIf="!isViewMode()" class="md:col-span-3 flex justify-end">
+                                <p-button label="Add Item" icon="pi pi-plus" (click)="AddRow('itemsDetails')"
+                                    styleClass="p-button-sm" severity="primary">
+                                </p-button>
+                            </div>
+                        </form>
+
+                        <!-- Items Table -->
+                        <div *ngIf="itemsDetailsChildData.length > 0" class="mt-4">
+                            <p-table [value]="itemsDetailsChildData" styleClass="p-datatable-sm p-datatable-gridlines"
+                                [tableStyle]="{'min-width': '50rem'}">
+                                <ng-template pTemplate="header">
+                                    <tr class="bg-gray-50 text-sm">
+                                        <th class="w-[50px]">S.No</th>
+                                        <th>Item</th>
+                                        <th>Details</th>
+                                        <th class="text-right">Qty</th>
+                                        <th class="text-right">Unit Price</th>
+                                        <th class="text-right">Total Price</th>
+                                        <th *ngIf="!isViewMode()" class="w-[80px] text-center">Action</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                    <tr class="text-sm">
+                                        <td>{{i + 1}}</td>
+                                        <td>{{getItemName(item.itemId) || item.material || item.itemVal}}</td>
+                                        <td>{{item.itemDetail}}</td>
+                                        <td class="text-right">{{item.quantity || item.itemQty}}</td>
+                                        <td class="text-right">{{(item.unitPrice || item.itemUnitPrice) |
+                                            currency:'INR'}}</td>
+                                        <td class="text-right font-medium">{{(item.totalPrice || item.itemTotalPrice) |
+                                            currency:'INR'}}</td>
+                                        <td *ngIf="!isViewMode()" class="text-center">
+                                            <button pButton icon="pi pi-trash"
+                                                class="p-button-text p-button-danger p-button-sm"
+                                                (click)="deleteChildTableRow(i)">
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="emptymessage">
+                                    <tr>
+                                        <td colspan="7" class="text-center p-4 text-gray-500">No items added yet.</td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage Details -->
+                <div class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-flag text-indigo-600"></i> Stage
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showStage')">
+                            <i class="pi" [ngClass]="showStage ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <div *ngIf="showStage">
+                        <form [formGroup]="stageForm" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Stage *</label>
+                                <div class="flex gap-2">
+                                    <p-select [options]="stageTableData" optionLabel="drpOption" optionValue="drpValue"
+                                        [filter]="true" [showClear]="true" appendTo="body" (onChange)="onChangeStage()"
+                                        formControlName="stage" class="w-full" [disabled]="postType === 'view'">
+                                    </p-select>
+                                    <button pButton icon="pi pi-plus" class="p-button-secondary p-button-outlined"
+                                        (click)="openMasterUpdateDialog('tblLeadStatusMaster', 'Add Stage')"
+                                        *ngIf="!isViewMode()"></button>
+                                </div>
+                                <small class="text-red-500" *ngIf="isInvalid('stage')">Please select a stage</small>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Probability (%)</label>
+                                <div class="flex gap-2">
+                                    <p-select [options]="probTableData" optionLabel="drpOption" optionValue="drpValue"
+                                        [filter]="true" [showClear]="true" appendTo="body" formControlName="probability"
+                                        class="w-full" [disabled]="true">
+                                    </p-select>
+                                    <button pButton icon="pi pi-plus" class="p-button-secondary p-button-outlined"
+                                        (click)="openMasterUpdateDialog('tbldeliveryprogress', 'Add Probability')"
+                                        *ngIf="!isViewMode()"></button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Stage History -->
+                        <div *ngIf="stageTableArray.length" class="p-4 pt-0">
+                            <label class="text-sm font-medium mb-2 block">Stage History</label>
+                            <p-table [value]="stageTableArray" styleClass="p-datatable-sm p-datatable-gridlines"
+                                [tableStyle]="{'min-width':'30rem'}">
+                                <ng-template pTemplate="header">
+                                    <tr class="bg-gray-50 text-sm">
+                                        <th class="w-[60px]">S.No</th>
+                                        <th>Stage</th>
+                                        <th>Stage Date</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                    <tr class="text-sm">
+                                        <td>{{ i + 1 }}</td>
+                                        <td>{{ row.opportunityStage }}</td>
+                                        <td>{{ row.opportunityStageDate | date:'dd-MM-yyyy' }}</td>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="emptymessage">
+                                    <tr>
+                                        <td colspan="3" class="text-center p-4 text-gray-500">No stage history
+                                            available.</td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Follow-up Details -->
+                <div class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-calendar text-indigo-600"></i>
+                            {{ postType === 'update' ? 'Next Follow-up' : 'Follow-up' }}
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showNextFollowUp')">
+                            <i class="pi" [ngClass]="showNextFollowUp ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <div *ngIf="showNextFollowUp">
+                        <form [formGroup]="nextFollowUp" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">
+                                    {{ postType === 'update' ? 'Next Follow-up Date' : 'Follow-up Date' }} *
+                                </label>
+                                <p-datepicker formControlName="nextFollowUpDate" class="w-full" inputStyleClass="w-full"
+                                    [showIcon]="true" icon="pi pi-calendar" appendTo="body"
+                                    [maxDate]="opportunityDetails.get('expectedDate')?.value"
+                                    [disabled]="postType === 'view'">
+                                </p-datepicker>
+                                <small class="text-red-500" *ngIf="isInvalid('nextFollowUpDate')">Please select a
+                                    follow-up
+                                    date</small>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">
+                                    {{ postType === 'update' ? 'Follow-up Meeting Date' : 'Meeting Date' }}
+                                </label>
+                                <p-datepicker formControlName="meetingDate" class="w-full" inputStyleClass="w-full"
+                                    [showIcon]="true" icon="pi pi-calendar" appendTo="body"
+                                    [disabled]="postType === 'view'">
+                                </p-datepicker>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Meeting Mode</label>
+                                <p-select [options]="meetingModeDrop" optionLabel="drpOption" optionValue="drpValue"
+                                    [filter]="true" [showClear]="true" appendTo="body" formControlName="meetingMode"
+                                    placeholder="Select meeting mode" class="w-full" [disabled]="postType === 'view'">
+                                </p-select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Remarks</label>
+                                <input pInputText formControlName="remarks" class="w-full" placeholder="Enter remarks"
+                                    [readonly]="isViewMode()">
+                            </div>
+                            <div *ngIf="postType == 'update'">
+                                <label class="block text-sm font-medium mb-1">Description</label>
+                                <input pInputText formControlName="description" class="w-full"
+                                    placeholder="Enter description" [readonly]="isViewMode()">
+                            </div>
+                            <div class="flex items-end" *ngIf="isUpdateMode()">
+                                <p-button label="Add Follow-up" icon="pi pi-plus" (click)="AddRow('nextFollowUp')"
+                                    styleClass="p-button-sm w-full md:w-auto">
+                                </p-button>
+                            </div>
+                        </form>
+
+                        <!-- Follow-up Table -->
+                        <div *ngIf="followUpArray.length > 0" class="p-4 pt-0">
+                            <p-table [value]="followUpArray" styleClass="p-datatable-sm p-datatable-gridlines"
+                                [tableStyle]="{'min-width': '40rem'}">
+                                <ng-template pTemplate="header">
+                                    <tr class="bg-gray-50 text-sm">
+                                        <th class="w-[40px]">S.No</th>
+                                        <th>Follow up Date</th>
+                                        <th>Description</th>
+                                        <th>Meeting Date</th>
+                                        <th>Meeting Mode</th>
+                                        <th>Remarks</th>
+                                        <th *ngIf="!isViewMode()" class="w-[80px] text-center">Action</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-data let-i="rowIndex">
+                                    <tr class="text-sm">
+                                        <td>{{i + 1}}</td>
+                                        <td>{{data.followupDate | date:'dd-MM-yyyy'}}</td>
+                                        <td>{{data.description}}</td>
+                                        <td>{{data.meetingDate | date:'dd-MM-yyyy'}}</td>
+                                        <td>{{data.meetingMode}}</td>
+                                        <td>{{data.remarks}}</td>
+                                        <td *ngIf="!isViewMode()" class="text-center">
+                                            <button pButton icon="pi pi-trash"
+                                                class="p-button-text p-button-danger p-button-sm"
+                                                (click)="deleteChildTableRow('followUpArray', i)">
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <!-- Notes -->
+                <!-- Notes -->
+                <div class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-pencil text-indigo-600"></i> Notes
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showNotes')">
+                            <i class="pi" [ngClass]="showNotes ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <div *ngIf="showNotes" class="p-4">
+                        <form [formGroup]="notes">
+                            <textarea pInputTextarea rows="4" formControlName="Notes" class="w-full resize-none"
+                                [readonly]="isViewMode()"></textarea>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Attachments (Update Mode Only) -->
+                <div *ngIf="postType == 'update'" class="bg-white shadow rounded-md overflow-hidden mb-4">
+                    <div
+                        class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-paperclip text-indigo-600"></i> Attachments
+                        </h4>
+                        <button class="text-indigo-600" (click)="toggle('showAttachments')">
+                            <i class="pi" [ngClass]="showAttachments ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                        </button>
+                    </div>
+                    <div *ngIf="showAttachments" class="p-4">
+                        <form [formGroup]="attachmentDetail" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Document Type *</label>
+                                <input pInputText formControlName="documentType" class="w-full"
+                                    [readonly]="isViewMode()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Document Details</label>
+                                <input pInputText formControlName="documentDetails" class="w-full"
+                                    [readonly]="isViewMode()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Attachment *</label>
+                                <p-fileUpload #attachmentUpload mode="basic" formControlName="attachment"
+                                    chooseLabel="Choose File" [auto]="false" (onSelect)="onAttachmentSelect($event)"
+                                    accept="*/*" class="inline-block" [disabled]=isViewMode()>
+                                </p-fileUpload>
+                                @if(selectedAttachmentFile && !isViewMode()){
+                                <div class="mt-4 bg-gray-50 p-4 rounded">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <p>{{selectedAttachmentFile.name}}</p>
+                                            <p class="text-sm text-gray-500">
+                                                {{getFileSize(selectedAttachmentFile.size)}}</p>
+                                        </div>
+                                        <button (click)="clearAttachmentSelection()"><i
+                                                class="pi pi-times"></i></button>
+                                    </div>
+                                    @if(attachmentPreviewUrl){
+                                    <img [src]="attachmentPreviewUrl" class="mt-2 max-h-48 w-full object-contain">
+                                    }
+                                </div>
+                                }
+                            </div>
+                        </form>
+                        <div *ngIf="!isViewMode()" class="flex justify-start mt-4 mb-4">
+                            <p-button label="Add Attachment" icon="pi pi-plus" (click)="AddRow('attachmentDetail')"
+                                styleClass="p-button-sm" [disabled]="isUploadingAttachment">
+                            </p-button>
+                        </div>
+
+                        <!-- Attachments Table -->
+                        <div *ngIf="attachmentDetailArray.length > 0">
+                            <p-table [value]="attachmentDetailArray" styleClass="p-datatable-sm p-datatable-gridlines"
+                                [tableStyle]="{'min-width': '50rem'}">
+                                <ng-template pTemplate="header">
+                                    <tr class="bg-gray-50 text-sm">
+                                        <th class="w-[50px]">S.No</th>
+                                        <th>Document Type</th>
+                                        <th>Document Name</th>
+                                        <th>Document Details</th>
+                                        <th *ngIf="!isViewMode()" class="w-[80px] text-center">Action</th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template pTemplate="body" let-data let-i="rowIndex">
+                                    <tr class="text-sm">
+                                        <td>{{i + 1}}</td>
+                                        <td>{{data.documentType}}</td>
+                                        <td>
+                                            <a (click)="openPreview(data.uploadFile)"
+                                                class="text-blue-500 hover:underline cursor-pointer">
+                                                {{getFileName(data.documentName || data.uploadFile)}}
+                                            </a>
+                                        </td>
+                                        <td>{{data.documentDetails}}</td>
+                                        <td *ngIf="!isViewMode()" class="text-center">
+                                            <button pButton icon="pi pi-trash"
+                                                class="p-button-text p-button-danger p-button-sm"
+                                                (click)="deleteChildTableRow('attachmentDetailArray', i)">
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+                            </p-table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex justify-end gap-2 p-4 border-t mt-auto sticky bottom-0 bg-white">
+                <p-button *ngIf="!isViewMode()" label="Reset" severity="secondary" (click)="resetAllForms()">
+                </p-button>
+                <p-button [label]="postType === 'view' ? 'Close' : (postType === 'update' ? 'Update' : 'Submit')"
+                    (click)="postType === 'view' ? closeDrawer() : OnSubmitModal()"
+                    [severity]="postType === 'view' ? 'secondary' : 'primary'"
+                    [icon]="postType === 'update' ? 'pi pi-save' : (postType === 'view' ? 'pi pi-times' : 'pi pi-check')">
+                </p-button>
+            </div>
+        </div>
+    </p-drawer>
+
+    <!-- Data Dialog Template for JSON Details -->
+    <p-dialog [header]="modelHeading" [(visible)]="dataDialogVisible" [modal]="true" [style]="{width: '70vw'}"
+        (onHide)="closeDataDialog()" [maximizable]="true">
+        <div class="overflow-x-auto">
+            <p-table [value]="recordViewData" styleClass="p-datatable-sm p-datatable-gridlines">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 60px;">S.No.</th>
+                        <ng-container *ngFor="let key of recordHeaderViewData">
+                            <th *ngIf="!hiddenViewKeys.includes(key)" [style.min-width]="getColumnWidth(key)">
+                                {{key | titlecase}}
+                            </th>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item let-i="rowIndex">
+                    <tr>
+                        <td>{{i + 1}}</td>
+                        <ng-container *ngFor="let key of recordHeaderViewData">
+                            <td *ngIf="!hiddenViewKeys.includes(key)">
+                                {{ formatDisplayValue(item, key) }}
+                            </td>
+                        </ng-container>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td [attr.colspan]="(recordHeaderViewData.length || 0) + 1" class="text-center p-4">
+                            No data found
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" icon="pi pi-times" (click)="closeDataDialog()"
+                styleClass="p-button-text"></p-button>
+        </ng-template>
+    </p-dialog>
+</div>

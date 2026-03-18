@@ -1,0 +1,23 @@
+
+::ng-deep .p-inputtext {
+    width: 100% !important;
+}
+
+.checkField{
+    display: flex;
+    flex-flow: row-reverse;
+    width: auto;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+.checkField #chk_isInspection, 
+.checkField #chk_shortClose {
+    margin-right: 10px;
+    margin-top: 0;
+    cursor: pointer;
+}
+
+input:disabled {
+    background-color: #eee !important;
+}

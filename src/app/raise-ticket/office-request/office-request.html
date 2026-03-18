@@ -1,0 +1,248 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+    <div class="bg-white rounded-md shadow-sm mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+            <div class="mb-3 sm:mb-0">
+                <h2 class="text-base font-semibold text-gray-800">
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </h2>
+            </div>
+            <div class="flex items-center space-x-2">
+                <p-button label="Add {{FormName}} Request" (click)="showDialog('add', [])" icon="pi pi-plus"
+                    styleClass="orange-button p-button-warning">
+                </p-button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-0">
+        <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onsearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            [actionTemplate]="actionTemplateRef">
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <button (click)="showDialog('view', item); op.hide()" title="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-eye"></i> View
+                        </button>
+                        <button (click)="showDialog('update', item); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-pencil"></i> Edit
+                        </button>
+                        <button (click)="openHistoryDrawer(item); op.hide()" title="Reviewer"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-users"></i> Reviewer
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+        </app-table-template>
+    </div>
+
+    <p-drawer [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" [(visible)]="visible"
+        position="right">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+                        {{ header }}
+                    </span>
+                    <div class="bg-blue-50 p-2 rounded-full shrink-0">
+                        <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="h-full flex flex-col justify-between bg-gray-50/50">
+            <div class="flex-grow overflow-y-auto p-4 space-y-4 transition-all duration-200">
+                <form [formGroup]="priceListForm" (ngSubmit)="onSubmit()">
+
+                    <!-- ================= Employee Details ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showEmployeeSection = !showEmployeeSection">
+
+                            <h3 class="text-sm font-semibold text-gray-700">
+                                Employee & Purpose Details
+                            </h3>
+
+                            <i class="pi text-gray-600"
+                                [ngClass]="showEmployeeSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <!-- Body -->
+                        <div *ngIf="showEmployeeSection" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <p-iftalabel class="w-full">
+                                <input pInputText formControlName="name" class="w-full" />
+                                <label>Name</label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="w-full">
+                                <p-select inputId="Purpose" formControlName="purpose" [options]="travelByDrpAll"
+                                    optionLabel="drpOption" optionValue="drpValue" placeholder="Select Purpose"
+                                    [filter]="true" appendTo="body" styleClass="w-full">
+                                </p-select>
+                                <label>Purpose*</label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="md:col-span-2 w-full"
+                                *ngIf="priceListForm.get('purpose') && priceListForm.get('purpose')!.value == 10010">
+                                <input pInputText formControlName="otherPurpose" class="w-full"
+                                    placeholder="Enter Other Purpose" />
+                                <label>Other Purpose*</label>
+                            </p-iftalabel>
+
+                        </div>
+                    </div>
+
+                    <!-- ================= Date & Amount ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showDateSection = !showDateSection">
+
+                            <h3 class="text-sm font-semibold text-gray-700">
+                                Date & Amount
+                            </h3>
+
+                            <i class="pi text-gray-600"
+                                [ngClass]="showDateSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <div *ngIf="showDateSection" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <p-iftalabel class="w-full">
+                                <p-datepicker inputId="fromDate" formControlName="fromDate" showIcon iconDisplay="input" 
+                                [style]="{'width':'100%'}"
+                                [inputStyle]="{'width':'100%'}" inputStyleClass="w-full">
+                                </p-datepicker>
+                                <label>From Date*</label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="w-full">
+                                <p-datepicker inputId="toDate" formControlName="toDate" showIcon iconDisplay="input"
+                                [style]="{'width':'100%'}"
+                                [inputStyle]="{'width':'100%'}" inputStyleClass="w-full">
+                                </p-datepicker>
+                                <label>To Date*</label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="md:col-span-2 w-full">
+                                <p-inputNumber inputId="Imprest" formControlName="imprest" mode="decimal"
+                                    [useGrouping]="false" styleClass="w-full">
+                                </p-inputNumber>
+                                <label>Imprest*</label>
+                            </p-iftalabel>
+
+                        </div>
+                    </div>
+
+                    <!-- ================= Buttons ================= -->
+                    <div class="flex justify-end gap-2 pt-4 border-t">
+
+                        <p-button type="button" label="Close" icon="pi pi-times" (click)="visible=false"
+                            styleClass="p-button-secondary">
+                        </p-button>
+
+                        <p-button type="button" label="Reset" icon="pi pi-refresh" (click)="onReset()"
+                            styleClass="p-button-secondary">
+                        </p-button>
+
+                        <p-button type="submit" label="Submit" icon="pi pi-check"
+                            styleClass="orange-button p-button-warning">
+                        </p-button>
+
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </p-drawer>
+
+    <!-- Approval History Drawer -->
+    <p-drawer [(visible)]="historyDrawerVisible" position="right" [modal]="true"
+        [style]="{ width: '480px', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeHistoryDrawer()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" title="Approval History">
+                        Approval History
+                    </span>
+                    <div class="bg-emerald-50 p-2 rounded-full shrink-0">
+                        <i class="pi pi-history text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="p-4 space-y-3">
+            <div *ngIf="!approvalHistory || approvalHistory.length === 0"
+                class="p-4 text-center text-sm text-gray-500 border rounded-md bg-gray-50">
+                No history available.
+            </div>
+
+            <div *ngFor="let h of approvalHistory; let i = index" class="border rounded-lg p-3 bg-white shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-semibold text-gray-800">Step {{ i + 1 }}</div>
+                    <span class="px-2 py-1 text-xs rounded-full" [ngClass]="{
+                        'bg-green-100 text-green-700': h.WfStatus === 'Approved' || h.WfStatus === 'In-Review',
+                        'bg-yellow-100 text-yellow-700': h.WfStatus === 'Pending',
+                        'bg-red-100 text-red-700': h.WfStatus === 'Rejected',
+                        'bg-blue-100 text-blue-700': h.WfStatus === 'Forwarded'
+                    }">
+                        {{ h.WfStatus || h.wfStatus || h.status || 'N/A' }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
+                    <div *ngIf="h.employee">
+                        <div class="text-gray-500 text-xs">Employee</div>
+                        <div>{{ h.employee }}</div>
+                    </div>
+                    <div *ngIf="h.role">
+                        <div class="text-gray-500 text-xs">Role</div>
+                        <div>{{ h.role }}</div>
+                    </div>
+                    <div *ngIf="h.workFlow">
+                        <div class="text-gray-500 text-xs">Workflow</div>
+                        <div>{{ h.workFlow }}</div>
+                    </div>
+                    <div *ngIf="h.wflevel">
+                        <div class="text-gray-500 text-xs">Level</div>
+                        <div>{{ h.wflevel }}</div>
+                    </div>
+                    <div *ngIf="h.activity">
+                        <div class="text-gray-500 text-xs">Activity</div>
+                        <div>{{ h.activity }}</div>
+                    </div>
+                    <div *ngIf="h.requestedAmount">
+                        <div class="text-gray-500 text-xs">Requested Amount</div>
+                        <div>{{ h.requestedAmount | number:'1.2-2' }}</div>
+                    </div>
+                    <div *ngIf="h.createdOn" class="sm:col-span-2">
+                        <div class="text-gray-500 text-xs">Created On</div>
+                        <div>{{ h.createdOn | date:'dd-MM-yyyy HH:mm' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </p-drawer>
+
+</div>

@@ -1,0 +1,130 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold">Dashboard</h1>
+            <div class="text-sm text-gray-500 mt-1">Overview · Updated recently</div>
+        </div>
+        <!-- <div class="text-sm text-gray-600">Admin</div> -->
+    </div>
+
+    <!-- Top stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card-stats">
+            <div class="stat-title flex"> <img src="../../assets/truck.png" class="w-5" alt="">&nbsp; Total Fleet</div>
+            <div class="stat-value">{{ totalFleet | number }}</div>
+            <div class="stat-meta text-green-600">+1.2% vs yesterday</div>
+        </div>
+
+        <div class="card-stats">
+            <div class="stat-title flex"> <img src="../../assets/delivery.png" class="w-5" alt="">&nbsp; Active Fleet
+            </div>
+            <div class="stat-value">{{ activeFleet | number }}</div>
+            <div class="stat-meta text-green-600">+1.0% vs yesterday</div>
+        </div>
+
+        <div class="card-stats">
+            <div class="stat-title flex"> <img src="../../assets/delivery-time.png" class="w-5" alt="">&nbsp; Idle Fleet
+            </div>
+            <div class="stat-value">{{ idleFleet | number }}</div>
+            <div class="stat-meta text-green-600">+3.5% vs yesterday</div>
+        </div>
+
+        <div class="card-stats">
+            <div class="stat-title flex"> <img src="../../assets/fleet-management.png" class="w-5" alt="">&nbsp;
+                Maintenance Due
+            </div>
+            <div class="stat-value">{{ maintenanceDue | number }}</div>
+            <div class="stat-meta text-red-500">+2.0% vs prev 7d</div>
+        </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Left column: map + leaderboards -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Ongoing Routes (Map) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-lg font-semibold flex"><img src="../../assets/route.png" class="w-7" alt="">&nbsp;
+                        Ongoing Routes</h2>
+                    <div class="text-sm text-gray-500">Live</div>
+                </div>
+                <div class="mt-3">
+                    <div #mapContainer class="w-full h-72 rounded-lg overflow-hidden border border-gray-100"></div>
+                </div>
+            </div>
+
+            <!-- Driver Leaderboards -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-lg font-semibold flex"> <img src="../../assets/notification.png" class="w-7"
+                            alt="">&nbsp;Driver Leaderboards</h2>
+                    <div class="text-sm text-gray-500">Top performers</div>
+                </div>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-1 gap-3">
+                    <div *ngFor="let d of leaderboard" class="leader-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-semibold">{{ d.driver }}</div>
+                                <div class="text-xs text-gray-500">{{ d.vehicle }}</div>
+                            </div>
+                            <div class="text-xl font-bold text-indigo-600">{{ d.score }}</div>
+                        </div>
+                        <div class="mt-3 text-xs text-gray-600">
+                            Safety: {{ d.safety }} · On Time: {{ d.onTime }} · Inc: {{ d.incidents }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: Driver updates + mileage -->
+        <div class="space-y-4">
+            <!-- Driver Updates -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-lg font-semibold flex"> <img src="../../assets/driving.png" class="w-7"
+                            alt="">&nbsp;
+                        Driver Updates</h2>
+                    <div class="text-sm text-gray-500">Realtime feed</div>
+                </div>
+                <div class="mt-3 space-y-3 max-h-72 overflow-auto pr-2">
+                    <div *ngFor="let u of driverUpdates" class="update-row">
+                        <div class="update-left">
+                            <div class="avatar">{{ u.driver.split(' ')[0][0] }}</div>
+                        </div>
+                        <div class="update-body">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-sm font-semibold">{{ u.driver }} <span
+                                            class="text-xs text-gray-500">— {{ u.vehicle }}</span></div>
+                                    <div class="text-xs text-gray-600">{{ u.detail }}</div>
+                                </div>
+                                <div class="text-xs text-gray-400">{{ u.time }}</div>
+                            </div>
+                            <div class="text-xs mt-1 text-gray-600">Distance: {{ u.distance }} · Status: <span
+                                    [ngClass]="{'text-red-500': u.status==='Incident','text-green-600': u.status==='Start','text-gray-600': u.status==='Info'}">{{
+                                    u.status }}</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Mileage (chart) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-lg font-semibold flex"> <img src="../../assets/instant-messaging.png" class="w-7"
+                            alt="">&nbsp;Total Mileage</h2>
+                    <div class="text-sm text-gray-500">Last 12 days</div>
+                </div>
+                <div class="mt-3">
+                    <div style="height:220px;">
+                        <canvas baseChart [data]="mileageChartData" [options]="mileageChartOptions"
+                            chartType="bar"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

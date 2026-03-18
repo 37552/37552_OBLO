@@ -1,0 +1,33 @@
+:host ::ng-deep {
+  .p-select,
+  .p-datepicker {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .p-select .p-select-label,
+  .p-datepicker .p-inputtext {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .p-select-panel,
+  .p-datepicker-panel {
+    max-width: 100% !important;
+  }
+}
+
+.grid {
+  min-width: 0;
+  
+  > * {
+    min-width: 0;
+  }
+}
+
+:host ::ng-deep {
+  .table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

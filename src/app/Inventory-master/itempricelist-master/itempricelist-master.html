@@ -1,0 +1,224 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-6 lg:p-0">
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        <p-button (click)="showDialog('add',[])" label="Add {{FormName}}" icon="pi pi-plus" variant="text"
+          [raised]="true" styleClass="orange-button" />
+      </div>
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-eye"></i>
+              <span class="text-sm">View</span>
+            </button>
+            <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-pencil"></i>
+              <span class="text-sm">Update</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl sm:text-2xl">{{header}}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[500px] px-4">
+        <p-progress-spinner strokeWidth="6" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '60px', height: '60px' }" />
+        <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">
+          Loading item price list data...
+        </p>
+      </div>
+      }@else {
+      <form [formGroup]="itemPriceListForm" (ngSubmit)="onSubmit($event)"
+        class="space-y-6 sm:space-y-7 pb-24 sm:pb-0 px-2 sm:px-4">
+
+        <!-- Basic Information Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-info-circle text-indigo-600"></i>
+              Basic Information
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Price List -->
+            <div class="sm:col-span-2">
+              <label class="text-sm font-medium text-gray-700 block mb-2">
+                Price List <span class="text-red-500">*</span>
+              </label>
+              <p-select formControlName="priceListId" [options]="priceLists" optionLabel="drpOption"
+                optionValue="drpValue" [filter]="true" [showClear]="true" placeholder="Select price list"
+                [class.p-invalid]="isInvalid('priceListId')" class="w-full">
+              </p-select>
+              @if(isInvalid('priceListId')){
+              <small class="text-red-500 text-xs mt-1 block">Price List is required.</small>
+              }
+            </div>
+
+            <!-- Item Code -->
+            <div class="sm:col-span-1">
+              <label class="text-sm font-medium text-gray-700 block mb-2">
+                Item Code <span class="text-red-500">*</span>
+              </label>
+              <p-select formControlName="itemCodeId" [options]="items" optionLabel="drpOption" optionValue="drpValue"
+                [filter]="true" [showClear]="true" placeholder="Select item" [virtualScroll]="true"
+                [virtualScrollItemSize]="30" [class.p-invalid]="isInvalid('itemCodeId')"
+                (onChange)="onItemChange($event)" class="w-full">
+              </p-select>
+              @if(isInvalid('itemCodeId')){
+              <small class="text-red-500 text-xs mt-1 block">Item Code is required.</small>
+              }
+            </div>
+
+            <!-- Maker Code -->
+            <div class="sm:col-span-1">
+              <label class="text-sm font-medium text-gray-700 block mb-2">
+                Maker Code <span class="text-red-500">*</span>
+              </label>
+              <p-select formControlName="makerCodeId" [options]="makers" optionLabel="drpoption" optionValue="drpvalue"
+                [filter]="true" [showClear]="true" placeholder="Select maker"
+                [class.p-invalid]="isInvalid('makerCodeId')" class="w-full">
+              </p-select>
+              @if(isInvalid('makerCodeId')){
+              <small class="text-red-500 text-xs mt-1 block">Maker Code is required.</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Information Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-lg sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-dollar text-green-600"></i>
+              Pricing Information
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Unit -->
+            <div class="sm:col-span-1">
+              <label class="text-sm font-medium text-gray-700 block mb-2">
+                Unit <span class="text-red-500">*</span>
+              </label>
+              <p-select formControlName="unitId" [options]="units" optionLabel="drpOption" optionValue="drpValue"
+                [filter]="true" [showClear]="true" placeholder="Select unit" [virtualScroll]="true"
+                [virtualScrollItemSize]="30" [class.p-invalid]="isInvalid('unitId')" class="w-full">
+              </p-select>
+              @if(isInvalid('unitId')){
+              <small class="text-red-500 text-xs mt-1 block">Unit is required.</small>
+              }
+            </div>
+
+            <!-- Item Rate -->
+            <div class="sm:col-span-1">
+              <label class="text-sm font-medium text-gray-700 block mb-2">
+                Item Rate <span class="text-red-500">*</span>
+              </label>
+              <input type="text" pInputText formControlName="itemRate" appOnlyDecimal
+                [class.p-invalid]="isInvalid('itemRate')" class="w-full" placeholder="Enter item rate" mode="decimal"
+                [min]="0" />
+              @if(isInvalid('itemRate')){
+              <small class="text-red-500 text-xs mt-1 block">Item Rate is required</small>
+              }
+            </div>
+
+            <div *ngIf="postType !== 'view'" class="sm:col-span-2 flex justify-end">
+              <p-button label="Add Item" icon="pi pi-plus" (click)="addItem()" styleClass="orange-button">
+              </p-button>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          @if(itemJson.length > 0) {
+          <div class="mt-4 border-t border-gray-200">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name
+                    </th>
+                    <th scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maker Name
+                    </th>
+                    <th scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                    <th scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                    <th scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  @for(item of itemJson; track $index) {
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.itemName}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.makerName}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.unitName}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{item.itemRate}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button (click)="deleteItem($index)" class="text-red-600 hover:text-red-900">
+                        <i class="pi pi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+          }
+        </div>
+
+      </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div
+        class="fixed bottom-0 left-0 right-0 sm:static bg-white sm:bg-transparent px-3 sm:px-0 py-3 sm:py-0 border-t sm:border-t-2 border-gray-200 sm:border-gray-300 flex justify-end space-x-3">
+        <button pButton type="submit" (click)="onSubmit($event)" styleClass="orange-button">
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button pButton label="Reset" (click)="onClear()" styleClass="secondary-button">
+        </button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

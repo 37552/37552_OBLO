@@ -1,0 +1,200 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between p-3 sm:p-3 border-b border-gray-200 gap-3">
+      <h2 class="text-base font-semibold text-gray-800">CRM-Settings</h2>
+      <div class="flex flex-wrap items-center space-x-2">
+        <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                  styleClass="orange-button"></p-button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="w-full overflow-auto">
+      <app-table-template
+        [data]="data"
+        [columns]="columns"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [isLoading]="isLoading"
+        [currentPage]="pageNo"
+        [sortColumn]="sortColumn"
+        [sortDirection]="sortDirection"
+        [searchText]="searchText"
+        [actionTemplate]="actionTemplateRef"
+        (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)"
+        (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-table-template>
+    </div>
+
+    <!-- Action Template -->
+    <ng-template #actionTemplateRef let-item>
+      <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+        <i class="pi pi-ellipsis-v cursor-pointer"></i>
+      </button>
+      <p-popover #op>
+        <div class="flex flex-col">
+          <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                  class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+            <i class="pi pi-eye"></i> View
+          </button>
+          <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                  class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+            <i class="pi pi-pencil"></i> Update
+          </button>
+          <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
+                  pTooltip="Delete">
+            <i class="pi pi-trash"></i> Delete
+          </button>
+        </div>
+      </p-popover>
+    </ng-template>
+
+  </div>
+
+  <!-- Drawer -->
+<p-drawer [(visible)]="visible" position="right" [modal]="true" (onHide)="onDrawerHide()"
+    class="sm:w-[60%] w-full !max-w-full" [style]="{ width: '60%', 'max-width': '100%' }">
+
+    <!-- Header -->
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <span class="font-semibold text-2xl">{{ header }}</span>
+            <i class="text-blue-500" [ngClass]="headerIcon"></i>
+        </div>
+    </ng-template>
+
+    <!-- Content -->
+    <ng-template pTemplate="content" [style]="{ padding: '2rem' }">
+        <div *ngIf="isFormLoading" class="flex items-center justify-center min-h-[400px]">
+            <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                [style]="{ width: '50px', height: '50px' }"></p-progress-spinner>
+        </div>
+
+        <div *ngIf="!isFormLoading">
+      
+<p-card
+  [style]="{ 'box-shadow': '0 2px 10px rgba(0,0,0,0.1)' }"
+  class="rounded-lg border border-gray-200 mb-6"
+>
+  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-t-lg">
+    <span class="font-semibold text-lg">CRM Settings</span>
+  </div>
+
+  <form
+    [formGroup]="crmSettingsForm"
+    class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-6 px-4 pb-4"
+  >
+    <!-- Campaign Naming By -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Campaign Naming By*</label>
+      <input
+        type="text"
+        formControlName="campaignNamingBy"
+        placeholder="Enter campaign naming"
+        [class.border-red-500]="isInvalid('campaignNamingBy', crmSettingsForm)"
+        class="w-full border border-gray-300 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      />
+      <p *ngIf="isInvalid('campaignNamingBy', crmSettingsForm)" class="text-red-500 text-xs mt-1">
+        Required field.
+      </p>
+    </div>
+
+    <!-- Close Replied Opportunity After Days -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Close Replied Opportunity After Days*</label>
+      <input
+        type="number"
+        formControlName="closeOpportunityDays"
+        placeholder="Enter days"
+        [class.border-red-500]="isInvalid('closeOpportunityDays', crmSettingsForm)"
+        class="w-full border border-gray-300 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      />
+      <p *ngIf="isInvalid('closeOpportunityDays', crmSettingsForm)" class="text-red-500 text-xs mt-1">
+        Required field.
+      </p>
+    </div>
+
+    <!-- Default Quotation Validity Days -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Default Quotation Validity Days*</label>
+      <input
+        type="number"
+        formControlName="defaultQuotationDays"
+        placeholder="Enter days"
+        [class.border-red-500]="isInvalid('defaultQuotationDays', crmSettingsForm)"
+        class="w-full border border-gray-300 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+      />
+      <p *ngIf="isInvalid('defaultQuotationDays', crmSettingsForm)" class="text-red-500 text-xs mt-1">
+        Required field.
+      </p>
+    </div>
+
+    <!-- Checkbox Section -->
+    <div class="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 mt-2">
+
+      <!-- Auto Creation of Contact (Checkbox) -->
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          formControlName="autoCreationContact"
+          class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+        />
+        <label class="text-sm font-medium text-gray-700">Auto Creation of Contact</label>
+      </div>
+
+      <!-- Allow Lead Duplication Based on Emails -->
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          formControlName="allowLeadDuplication"
+          class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+        />
+        <label class="text-sm font-medium text-gray-700">Allow Lead Duplication Based on Emails</label>
+      </div>
+
+      <!-- Carry Forward Communication and Comments -->
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          formControlName="carryForwardCommunication"
+          class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+        />
+        <label class="text-sm font-medium text-gray-700">Carry Forward Communication and Comments</label>
+      </div>
+
+      <!-- Update Timestamp on New Communication -->
+      <div class="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          formControlName="updateTimestamp"
+          class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+        />
+        <label class="text-sm font-medium text-gray-700">Update Timestamp on New Communication</label>
+      </div>
+
+    </div>
+  </form>
+</p-card>
+
+
+      </div>
+    </ng-template>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+        <div *ngIf="postType !== 'view'" class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+            <button pButton type="submit" (click)="onSubmit($event)"
+                class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+                {{ postType === 'add' ? 'Submit' : 'Update' }}
+            </button>
+            <button *ngIf="postType === 'add'" pButton label="Reset" (click)="onClear()"
+                class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+        </div>
+    </ng-template>
+</p-drawer>
+<p-confirmdialog></p-confirmdialog>
+<p-toast></p-toast>

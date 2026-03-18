@@ -1,0 +1,121 @@
+<div class="bg-white min-h-screen p-4 sm:p-4 lg:p-6">
+    <!-- Modern Breadcrumb -->
+    <p-breadcrumb [model]="[{ label: 'Home', routerLink: '/home' }, { label: menulabel }, { label: formlable }]"
+        class="mb-6 block">
+    </p-breadcrumb>
+
+    <!-- Search Section -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+            <i class="pi pi-search text-blue-600 font-bold"></i>
+            <h2 class="text-xl font-bold text-slate-800">Leave Card Detail</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+            <!-- Employee Selection -->
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">Employee <span class="text-red-500">*</span></label>
+                <p-select [options]="empDrp" [(ngModel)]="selectedEmp" optionLabel="employeeName" [filter]="true"
+                    filterBy="employeeName" placeholder="Select Employee" class="w-full" appendTo="body">
+                </p-select>
+            </div>
+
+            <!-- From Date -->
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">From Date <span
+                        class="text-red-500">*</span></label>
+                <p-datepicker [(ngModel)]="fromDate" dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                    iconDisplay="input" placeholder="yyyy-mm-dd">
+                </p-datepicker>
+            </div>
+
+            <!-- To Date -->
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-slate-600">To Date <span class="text-red-500">*</span></label>
+                <p-datepicker [(ngModel)]="toDate" dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                    iconDisplay="input" placeholder="yyyy-mm-dd">
+                </p-datepicker>
+            </div>
+
+            <!-- Search Button -->
+            <div>
+                <button pButton label="Search" icon="pi pi-search" (click)="checkData()"
+                    class="w-full lg:w-auto px-8 py-2.5 rounded-lg shadow-md transition-all"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div *ngIf="showTabledata" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 animate-fade-in">
+        <!-- Employee Info Summary Card -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div class="flex flex-col">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Employee Name</span>
+                <span class="text-slate-700 font-semibold">{{ eName }}</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Employee Code</span>
+                <span class="text-slate-700 font-semibold">{{ eCode }}</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Department</span>
+                <span class="text-slate-700 font-semibold">{{ eDepartment }}</span>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="pi pi-list text-blue-500"></i>
+                Annual Leave Summary
+            </h3>
+            <button *ngIf="empTableData.length > 0" pButton icon="pi pi-file-excel" label="Export Excel"
+                (click)="exportToExcel()" class="p-button-success p-button-sm p-button-outlined"></button>
+        </div>
+
+        <!-- No Data State -->
+        <div *ngIf="noDatafoundCard"
+            class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+            <i class="pi pi-folder-open text-5xl text-slate-300 mb-2"></i>
+            <p class="text-slate-500 font-medium">No records found for the selected period.</p>
+        </div>
+
+        <!-- Data Table -->
+        <p-table *ngIf="!noDatafoundCard" [value]="empTableData" [paginator]="true" [rows]="12"
+            responsiveLayout="scroll" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+            <ng-template pTemplate="header">
+                <tr class="bg-slate-50 text-slate-700">
+                    <th rowspan="2" class="text-center w-16">S.No</th>
+                    <th rowspan="2">Month</th>
+                    <th colspan="3" class="text-center bg-blue-50 text-blue-700">Opening Balance</th>
+                    <th colspan="3" class="text-center bg-green-50 text-green-700">Availed / Used</th>
+                </tr>
+                <tr class="text-xs uppercase font-bold text-slate-500">
+                    <th class="text-center">CL</th>
+                    <th class="text-center">EL</th>
+                    <th class="text-center">RH</th>
+                    <th class="text-center font-bold">CL</th>
+                    <th class="text-center font-bold">EL</th>
+                    <th class="text-center font-bold">RH</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-data let-i="rowIndex">
+                <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="text-center font-medium">{{ i + 1 }}</td>
+                    <td class="font-semibold text-slate-700">{{ data.month }}</td>
+                    <td class="text-center">{{ data['casual Leave1'] }}</td>
+                    <td class="text-center">{{ data['earned Leave1'] }}</td>
+                    <td class="text-center">{{ data['restricted Holiday1'] }}</td>
+                    <td class="text-center font-bold text-blue-600 bg-blue-50/20">
+                        {{ data['casual Leave'] }}
+                    </td>
+                    <td class="text-center font-bold text-green-600 bg-green-50/20">
+                        {{ data['earned Leave'] }}
+                    </td>
+                    <td class="text-center font-bold text-orange-600 bg-orange-50/20">
+                        {{ data['restricted Holiday'] }}
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

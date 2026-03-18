@@ -1,0 +1,723 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <!-- Header -->
+    <div class="bg-white rounded-md shadow-sm mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+            <div class="mb-3 sm:mb-0">
+                <div class="flex items-center gap-3">
+                    <p-button icon="pi pi-arrow-left" [text]="true" [rounded]="true" (click)="goBack()"
+                        styleClass="p-button-secondary" [title]="'Go Back'">
+                    </p-button>
+                    <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <p-button *ngIf="isView" label="Add Request" icon="pi pi-plus"
+                    styleClass="orange-button p-button-warning" (click)="onAdd()">
+                </p-button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Table Section -->
+    <div *ngIf="isView" class="bg-white rounded-lg border border-gray-200 p-0">
+        <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            (refreshData)="getAllViewData(true)" [actionTemplate]="actionTemplateRef">
+
+            <ng-template #actionTemplateRef let-item let-i="rowIndex">
+                <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-xl"></i>
+                </button>
+
+                <p-popover #op>
+                    <div class="flex flex-col">
+                        <button (click)="getViewDetails(item, 'view'); op.hide()" title="View"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-eye"></i> View
+                        </button>
+                        <button (click)="getViewDetails(item, 'update'); op.hide()" title="Edit"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-pencil"></i> Edit
+                        </button>
+                        <!-- <button *ngIf="item.ticketDetails?.length > 0" (click)="openHistoryModal(item); op.hide()"
+                            title="Booking Details" class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-calendar"></i> Booking Details
+                        </button> -->
+                        <button (click)="openApprovalHistoryModal(item); op.hide()" title="View History"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-history"></i> History
+                        </button>
+                        <button *ngIf="hasReimbDetails(item)" (click)="openApprovalModal(item); op.hide()" type="button"
+                            title="Approve" class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-check-circle"></i> Approve
+                        </button>
+                        <button (click)="AdddataImprest(item); op.hide()" type="button" title="Add Imprest"
+                            [disabled]="shouldDisableImprestButton(item)" class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-plus-circle"></i> Add Imprest
+                        </button>
+                        <button (click)="openImprestModal(item); op.hide()" type="button" title="View Imprest History"
+                            class="px-4 py-2 hover:bg-gray-100 text-left">
+                            <i class="pi pi-wallet"></i> Imprest History
+                        </button>
+                    </div>
+                </p-popover>
+            </ng-template>
+        </app-table-template>
+    </div>
+
+    <!-- Form Section -->
+    <p-drawer *ngIf="!isView" [(visible)]="visible" position="right"
+        [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+                        {{ header }}
+                    </span>
+                    <div class="bg-blue-50 p-2 rounded-full shrink-0">
+                        <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="h-full flex flex-col bg-gray-50/50">
+            <div class="flex-grow overflow-y-auto p-4 space-y-4">
+                <form [formGroup]="priceListForm" (ngSubmit)="OnSubmitModal()">
+
+                    <!-- ================= Basic Information ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showBasicInfoSection = !showBasicInfoSection">
+                            <h3 class="text-sm font-semibold text-gray-700">Basic Information</h3>
+                            <i class="pi text-gray-600"
+                                [ngClass]="showBasicInfoSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <!-- Body -->
+                        <div *ngIf="showBasicInfoSection" class="p-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p-iftalabel class="w-full ">
+                                    <input pInputText formControlName="name" class="w-full" [readonly]="true" />
+                                    <label>Name <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <input pInputText formControlName="purpose" class="w-full" maxlength="100"
+                                        placeholder="Enter Purpose"
+                                        [ngClass]="{'p-invalid': f['purpose'].invalid && (f['purpose'].dirty || f['purpose'].touched)}" />
+                                    <label>Purpose <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full">
+                                    <p-datepicker inputId="fromDate" formControlName="fromDate" showIcon
+                                        iconDisplay="input" appendTo="body" [style]="{'width':'100%'}"
+                                        [inputStyle]="{'width':'100%'}" placeholder="Select From Date"
+                                        [minDate]="minFromDate || currentDate"
+                                        (onSelect)="onFromDateSelect($event)"
+                                        [ngClass]="{'p-invalid': f['fromDate'].invalid && (f['fromDate'].dirty || f['fromDate'].touched)}">
+                                    </p-datepicker>
+                                    <label>From Date <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full">
+                                    <p-datepicker inputId="toDate" formControlName="toDate" showIcon iconDisplay="input"
+                                        appendTo="body" placeholder="Select To Date" [style]="{'width':'100%'}"
+                                        [inputStyle]="{'width':'100%'}" [minDate]="minToDate"
+                                        [ngClass]="{'p-invalid': f['toDate'].invalid && (f['toDate'].dirty || f['toDate'].touched)}">
+                                    </p-datepicker>
+                                    <label>To Date <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <p-inputNumber inputId="imprest" formControlName="imprest" mode="decimal"
+                                        [useGrouping]="false" styleClass="w-full"
+                                        [ngClass]="{'p-invalid': f['imprest'].invalid && (f['imprest'].dirty || f['imprest'].touched)}">
+                                    </p-inputNumber>
+                                    <label>Imprest <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <input pInputText formControlName="Source" class="w-full" maxlength="100"
+                                        placeholder="Enter Source"
+                                        [ngClass]="{'p-invalid': f['Source'].invalid && (f['Source'].dirty || f['Source'].touched)}" />
+                                    <label>Source <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <input pInputText formControlName="destination" class="w-full" maxlength="100"
+                                        placeholder="Enter Destination"
+                                        [ngClass]="{'p-invalid': f['destination'].invalid && (f['destination'].dirty || f['destination'].touched)}" />
+                                    <label>Destination <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <p-select inputId="travelById" formControlName="travelById"
+                                        [options]="travelByDrpAll" optionLabel="drpOption" optionValue="drpValue"
+                                        placeholder="Select Travel Mode" [filter]="true" appendTo="body"
+                                        styleClass="w-full"
+                                        [ngClass]="{'p-invalid': f['travelById'].invalid && (f['travelById'].dirty || f['travelById'].touched)}">
+                                    </p-select>
+                                    <label>Travel Mode <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full ">
+                                    <p-select inputId="timePreferenceId" formControlName="timePreferenceId"
+                                        [options]="timedata" optionLabel="drpOption" optionValue="drpValue"
+                                        placeholder="Select Time Preference" [filter]="true" appendTo="body"
+                                        styleClass="w-full" (onChange)="onTimePreferenceChange($event)"
+                                        [ngClass]="{'p-invalid': f['timePreferenceId'].invalid && (f['timePreferenceId'].dirty || f['timePreferenceId'].touched)}">
+                                    </p-select>
+                                    <label>Time Preference <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full">
+                                    <p-datepicker inputId="preferredTimeslot" formControlName="preferredTimeslot"
+                                        [timeOnly]="true" [showIcon]="true" icon="pi pi-clock"
+                                        [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}" [minDate]="minTime"
+                                        [maxDate]="maxTime" placeholder="Preferred Time" appendTo="body">
+                                    </p-datepicker>
+                                    <label>Preferred Time</label>
+                                </p-iftalabel>
+                            </div>
+
+                            <div class="col-span-full">
+                                <p-iftalabel class="w-full ">
+                                    <textarea pInputTextarea formControlName="remarks" rows="3" maxlength="500"
+                                        class="w-full" placeholder="Enter remarks (max 500 characters)"></textarea>
+                                    <label>Remarks</label>
+                                </p-iftalabel>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= Additional Options ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showOptionsSection = !showOptionsSection">
+                            <h3 class="text-sm font-semibold text-gray-700">Additional Options</h3>
+                            <i class="pi text-gray-600"
+                                [ngClass]="showOptionsSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <!-- Body -->
+                        <div *ngIf="showOptionsSection" class="p-5">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="flex align-items-center">
+                                    <p-checkbox inputId="returnTicket" formControlName="returnTicket" [binary]="true"
+                                        (onChange)="onCheckboxSelect('returnTicket')">
+                                    </p-checkbox>
+                                    <label for="returnTicket" class="ml-2">Return Ticket</label>
+                                </div>
+
+                                <div class="flex align-items-center">
+                                    <p-checkbox inputId="accommodation" formControlName="accommodation" [binary]="true"
+                                        (onChange)="onCheckboxSelect('accommodation')">
+                                    </p-checkbox>
+                                    <label for="accommodation" class="ml-2">Accommodation</label>
+                                </div>
+
+                                <div class="flex align-items-center">
+                                    <p-checkbox inputId="conveyance" formControlName="conveyance" [binary]="true"
+                                        (onChange)="onCheckboxSelect('conveyance')">
+                                    </p-checkbox>
+                                    <label for="conveyance" class="ml-2">Local Conveyance Cab</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Return Ticket Section -->
+                    <div *ngIf="priceListForm.get('returnTicket')?.value"
+                        class="bg-white rounded-lg shadow-sm p-4 space-y-4 mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Return Ticket Details</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p-iftalabel class="w-full">
+                                    <p-datepicker inputId="returnFromDate" formControlName="returnFromDate" showIcon
+                                        iconDisplay="input" appendTo="body" inputStyleClass="w-full"
+                                        placeholder="Choose a date"
+                                        [minDate]="priceListForm.get('fromDate')?.value || currentDate"
+                                        [maxDate]="priceListForm.get('toDate')?.value"
+                                        [ngClass]="{'p-invalid': f['returnFromDate'].invalid && (f['returnFromDate'].dirty || f['returnFromDate'].touched)}">
+                                    </p-datepicker>
+                                    <label>From Date <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+
+                                <p-iftalabel class="w-full">
+                                    <p-datepicker inputId="returnToDate" formControlName="returnToDate" showIcon
+                                        iconDisplay="input" appendTo="body" inputStyleClass="w-full"
+                                        placeholder="Choose a date"
+                                        [minDate]="priceListForm.get('returnFromDate')?.value || priceListForm.get('fromDate')?.value || currentDate"
+                                        [maxDate]="priceListForm.get('toDate')?.value"
+                                        [ngClass]="{'p-invalid': f['returnToDate'].invalid && (f['returnToDate'].dirty || f['returnToDate'].touched)}">
+                                    </p-datepicker>
+                                    <label>To Date <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+                            </div> -->
+
+                            <p-iftalabel class="w-full">
+                                <p-select inputId="timePreferenceIdReturn" formControlName="timePreferenceIdReturn"
+                                    [options]="timedataticket" optionLabel="drpOption" optionValue="drpValue"
+                                    placeholder="Select Time Preference" [filter]="true" appendTo="body"
+                                    styleClass="w-full" (onChange)="onTimePreferenceChangeonticket($event)">
+                                </p-select>
+                                <label>Time Preference (Return)</label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="w-full">
+                                <p-datepicker inputId="preferredTimeslotReturn"
+                                    formControlName="preferredTimeslotReturn" [timeOnly]="true" [showIcon]="true"
+                                    icon="pi pi-clock" inputStyleClass="w-full" placeholder="Preferred Time (Return)"
+                                    [style]="{'width':'100%'}" [inputStyle]="{'width':'100%'}" [minDate]="minTimeReturn"
+                                    [maxDate]="maxTimeReturn" appendTo="body">
+                                </p-datepicker>
+                                <label>Preferred Time (Return)</label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+
+                    <!-- Accommodation Section -->
+                    <div *ngIf="priceListForm.get('accommodation')?.value"
+                        class="bg-white rounded-lg shadow-sm p-4 space-y-4 mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Accommodation Details</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <p-iftalabel class="w-full">
+                                <p-datepicker inputId="Hoteldate" formControlName="Hoteldate" showIcon
+                                    iconDisplay="input" appendTo="body" inputStyleClass="w-full"
+                                    placeholder="Choose a date" [style]="{'width':'100%'}"
+                                    [inputStyle]="{'width':'100%'}"
+                                    [minDate]="priceListForm.get('fromDate')?.value || currentDate"
+                                    [maxDate]="priceListForm.get('toDate')?.value"
+                                    [ngClass]="{'p-invalid': f['Hoteldate'].invalid && (f['Hoteldate'].dirty || f['Hoteldate'].touched)}">
+                                </p-datepicker>
+                                <label>From Date <span class="text-red-500">*</span></label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="w-full">
+                                <p-datepicker inputId="Hoteldateto" formControlName="Hoteldateto" showIcon
+                                    iconDisplay="input" appendTo="body" inputStyleClass="w-full"
+                                    placeholder="Choose a date" [style]="{'width':'100%'}"
+                                    [inputStyle]="{'width':'100%'}"
+                                    [minDate]="priceListForm.get('fromDate')?.value || currentDate"
+                                    [maxDate]="maxHotelToDate"
+                                    [ngClass]="{'p-invalid': f['Hoteldateto'].invalid && (f['Hoteldateto'].dirty || f['Hoteldateto'].touched)}">
+                                </p-datepicker>
+                                <label>To Date <span class="text-red-500">*</span></label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+
+                    <!-- Conveyance Section -->
+                    <div *ngIf="priceListForm.get('conveyance')?.value"
+                        class="bg-white rounded-lg shadow-sm p-4 space-y-4 mb-4">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3">Local Conveyance Details</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <p-iftalabel class="w-full">
+                                <input pInputText formControlName="Localfrom" class="w-full" maxlength="100"
+                                    placeholder="Enter From Location"
+                                    [ngClass]="{'p-invalid': f['Localfrom'].invalid && (f['Localfrom'].dirty || f['Localfrom'].touched)}" />
+                                <label>From Location <span class="text-red-500">*</span></label>
+                            </p-iftalabel>
+
+                            <p-iftalabel class="w-full">
+                                <input pInputText formControlName="Localto" class="w-full" maxlength="100"
+                                    placeholder="Enter To Location"
+                                    [ngClass]="{'p-invalid': f['Localto'].invalid && (f['Localto'].dirty || f['Localto'].touched)}" />
+                                <label>To Location <span class="text-red-500">*</span></label>
+                            </p-iftalabel>
+                        </div>
+                    </div>
+
+                    <!-- ================= Project Details ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showProjectSection = !showProjectSection">
+                            <h3 class="text-sm font-semibold text-gray-700">Project Details</h3>
+                            <i class="pi text-gray-600"
+                                [ngClass]="showProjectSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <!-- Body -->
+                        <div *ngIf="showProjectSection" class="p-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex gap-4">
+                                    <div class="flex align-items-center">
+                                        <p-radioButton inputId="existingProject" name="Project" value="ExistingProject"
+                                            formControlName="Project"
+                                            (onClick)="onProjectSubmitter($event)"></p-radioButton>
+                                        <label for="existingProject" class="ml-2">Existing Project</label>
+                                    </div>
+                                    <div class="flex align-items-center">
+                                        <p-radioButton inputId="newProject" name="Project" value="NewProject"
+                                            formControlName="Project"
+                                            (onClick)="onProjectSubmitter($event)"></p-radioButton>
+                                        <label for="newProject" class="ml-2">New Project</label>
+                                    </div>
+                                </div>
+                                <small class="text-red-500"
+                                    *ngIf="!f['Project'].valid && (f['Project'].dirty || f['Project'].touched)">
+                                    Project Type is required
+                                </small>
+                            </div>
+
+                            <div *ngIf="selectedProjectType === 'ExistingProject'"
+                                class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p-iftalabel class="w-full">
+                                    <p-select inputId="ExistingProject" formControlName="ExistingProject"
+                                        [options]="costcenterdata" optionLabel="drpOption" optionValue="drpValue"
+                                        placeholder="Select Existing Project" [filter]="true" appendTo="body"
+                                        styleClass="w-full"
+                                        [ngClass]="{'p-invalid': f['ExistingProject'].invalid && (f['ExistingProject'].dirty || f['ExistingProject'].touched)}">
+                                    </p-select>
+                                    <label>Existing Project <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+                            </div>
+
+                            <div *ngIf="selectedProjectType === 'NewProject'"
+                                class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p-iftalabel class="w-full">
+                                    <input pInputText formControlName="NewProject" class="w-full"
+                                        placeholder="Enter New Project"
+                                        [ngClass]="{'p-invalid': f['NewProject'].invalid && (f['NewProject'].dirty || f['NewProject'].touched)}" />
+                                    <label>New Project <span class="text-red-500">*</span></label>
+                                </p-iftalabel>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= Expense For ================= -->
+                    <div class="bg-white rounded-lg shadow-sm mb-4">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between p-4 cursor-pointer border-b"
+                            (click)="showExpenseForSection = !showExpenseForSection">
+                            <h3 class="text-sm font-semibold text-gray-700">Expense For</h3>
+                            <i class="pi text-gray-600"
+                                [ngClass]="showExpenseForSection ? 'pi-chevron-down' : 'pi-chevron-right'">
+                            </i>
+                        </div>
+
+                        <!-- Body -->
+                        <div *ngIf="showExpenseForSection" class="p-5 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="flex gap-4">
+                                    <div class="flex align-items-center">
+                                        <p-radioButton inputId="self" name="other" value="Self" formControlName="other"
+                                            (onClick)="onToggleSubmitter($event)"></p-radioButton>
+                                        <label for="self" class="ml-2">Self</label>
+                                    </div>
+                                    <div class="flex align-items-center">
+                                        <p-radioButton inputId="other" name="other" value="Other"
+                                            formControlName="other"
+                                            (onClick)="onToggleSubmitter($event)"></p-radioButton>
+                                        <label for="other" class="ml-2">Other</label>
+                                    </div>
+                                </div>
+                                <small class="text-red-500"
+                                    *ngIf="!f['other'].valid && (f['other'].dirty || f['other'].touched)">
+                                    Submitter Type is required
+                                </small>
+                            </div>
+
+                            <!-- Self Table -->
+                            <div *ngIf="showSelfTable && userInfoData" class="mt-4">
+                                <table class="w-full border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Name (As per Aadhaar)</th>
+                                            <th class="border border-gray-300 p-2 text-left">Email</th>
+                                            <th class="border border-gray-300 p-2 text-left">Gender</th>
+                                            <th class="border border-gray-300 p-2 text-left">Mobile Number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border border-gray-300 p-2">
+                                                <input pInputText formControlName="selfName" class="w-full"
+                                                    [readonly]="isViewMode"
+                                                    [ngClass]="{'p-invalid': f['selfName'].invalid && f['selfName'].touched}" />
+                                            </td>
+                                            <td class="border border-gray-300 p-2">
+                                                <input pInputText type="email" formControlName="selfEmail"
+                                                    class="w-full" [readonly]="isViewMode"
+                                                    [ngClass]="{'p-invalid': f['selfEmail'].invalid && f['selfEmail'].touched}" />
+                                            </td>
+                                            <td class="border border-gray-300 p-2">
+                                                <p-select inputId="selfGender" formControlName="selfGender"
+                                                    [options]="['Male', 'Female', 'Other']" placeholder="Select Gender"
+                                                    styleClass="w-full"
+                                                    [ngClass]="{'p-invalid': f['selfGender'].invalid && f['selfGender'].touched}">
+                                                </p-select>
+                                            </td>
+                                            <td class="border border-gray-300 p-2">
+                                                <input pInputText type="tel" formControlName="selfMobile" class="w-full"
+                                                    [readonly]="isViewMode" (keypress)="allowOnlyNumber($event)"
+                                                    [ngClass]="{'p-invalid': f['selfMobile'].invalid && f['selfMobile'].touched}" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Other Employees -->
+                            <div *ngIf="showOtherEmployeeTable" class="mt-4 space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <p-iftalabel class="w-48">
+                                        <p-select inputId="numOfEmp" formControlName="numOfEmp"
+                                            [options]="noOfEmployeesList" placeholder="Select Number"
+                                            (onChange)="onNoOfEmployeesSelected($event)" styleClass="w-full"
+                                            [ngClass]="{'p-invalid': f['numOfEmp'].invalid && (f['numOfEmp'].dirty || f['numOfEmp'].touched)}">
+                                        </p-select>
+                                        <label>No of Employees <span class="text-red-500">*</span></label>
+                                    </p-iftalabel>
+
+                                    <div class="flex align-items-center">
+                                        <p-checkbox inputId="includeSelf" formControlName="IncludeSelf" [binary]="true"
+                                            (onChange)="onIncludeSelfToggle()">
+                                        </p-checkbox>
+                                        <label for="includeSelf" class="ml-2">Include Self</label>
+                                    </div>
+                                </div>
+
+                                <div *ngIf="otherEmployeesArray.length > 0" class="overflow-x-auto">
+                                    <table class="w-full border-collapse border border-gray-300">
+                                        <thead>
+                                            <tr class="bg-gray-100">
+                                                <th class="border border-gray-300 p-2">S.NO</th>
+                                                <th class="border border-gray-300 p-2">Name (As per Aadhaar)</th>
+                                                <th class="border border-gray-300 p-2">Email</th>
+                                                <th class="border border-gray-300 p-2">Phone Number</th>
+                                                <th class="border border-gray-300 p-2">Gender</th>
+                                                <th class="border border-gray-300 p-2">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody formArrayName="otherEmployees">
+                                            <tr *ngFor="let emp of otherEmployeesArray.controls; let i = index"
+                                                [formGroupName]="i">
+                                                <td class="border border-gray-300 p-2 text-center">{{ i + 1 }}</td>
+                                                <td class="border border-gray-300 p-2">
+                                                    <ng-container
+                                                        *ngIf="emp.get('isSelf')?.value; else employeeDropdown">
+                                                        <input pInputText formControlName="name" class="w-full"
+                                                            [ngClass]="{'p-invalid': emp.get('name')?.invalid && (emp.get('name')?.touched || emp.get('name')?.dirty)}" />
+                                                    </ng-container>
+                                                    <ng-template #employeeDropdown>
+                                                        <p-select formControlName="name"
+                                                            [options]="getAvailableEmployees(i)" optionLabel="drpOption"
+                                                            optionValue="userId" placeholder="Select Name"
+                                                            styleClass="w-full"
+                                                            (onChange)="onEmployeeSelect($event.value, i)"
+                                                            [ngClass]="{'p-invalid': emp.get('name')?.invalid && (emp.get('name')?.touched || emp.get('name')?.dirty)}">
+                                                        </p-select>
+                                                    </ng-template>
+                                                </td>
+                                                <td class="border border-gray-300 p-2">
+                                                    <input pInputText type="email" formControlName="email"
+                                                        class="w-full" placeholder="Enter email"
+                                                        [ngClass]="{'p-invalid': emp.get('email')?.invalid && (emp.get('email')?.touched || emp.get('email')?.dirty)}" />
+                                                </td>
+                                                <td class="border border-gray-300 p-2">
+                                                    <input pInputText type="tel" formControlName="number" class="w-full"
+                                                        placeholder="Enter mobile number"
+                                                        (keypress)="allowOnlyNumber($event)"
+                                                        [ngClass]="{'p-invalid': emp.get('number')?.invalid && (emp.get('number')?.touched || emp.get('number')?.dirty)}" />
+                                                </td>
+                                                <td class="border border-gray-300 p-2">
+                                                    <input pInputText formControlName="gender" class="w-full"
+                                                        placeholder="Enter gender"
+                                                        [ngClass]="{'p-invalid': emp.get('gender')?.invalid && (emp.get('gender')?.touched || emp.get('gender')?.dirty)}" />
+                                                </td>
+                                                <td class="border border-gray-300 p-2 text-center">
+                                                    <p-button icon="pi pi-trash" [text]="true" severity="danger"
+                                                        [disabled]="otherEmployeesArray.length <= 1"
+                                                        (onClick)="deleteEmployeeRow(i)" [title]="'Delete'">
+                                                    </p-button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end gap-2 pt-4 border-t">
+
+                        <p-button type="button" label="Close" icon="pi pi-times" styleClass="p-button-secondary"
+                            (onClick)="gotoView()">
+                        </p-button>
+
+                        <p-button type="button" label="Reset" icon="pi pi-refresh" (click)="onReset()"
+                            styleClass="p-button-secondary">
+                        </p-button>
+
+                        <p-button *ngIf="postType !== 'view'" type="submit"
+                            [label]="postType === 'update' ? 'Update' : 'Submit'" icon="pi pi-check"
+                            styleClass="orange-button p-button-warning">
+                        </p-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </p-drawer>
+
+    <!-- Approval History Drawer -->
+    <p-drawer [(visible)]="historyDrawerVisible" position="right" [modal]="true"
+        [style]="{ width: '480px', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeHistoryDrawer()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full gap-3 min-w-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="font-bold text-xl text-gray-800 truncate" title="Approval History">
+                        Approval History
+                    </span>
+                    <div class="bg-emerald-50 p-2 rounded-full shrink-0">
+                        <i class="pi pi-history text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="p-4 space-y-3">
+            <div *ngIf="!approvalHistory?.length"
+                class="p-4 text-center text-sm text-gray-500 border rounded-md bg-gray-50">
+                No history available.
+            </div>
+
+            <div *ngFor="let h of approvalHistory; let i = index" class="border rounded-lg p-3 bg-white shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-sm font-semibold text-gray-800">Step {{ i + 1 }}</div>
+                    <span class="px-2 py-1 text-xs rounded-full" [ngClass]="{
+                        'bg-green-100 text-green-700': h.WfStatus === 'Approved' || h.WfStatus === 'In-Review',
+                        'bg-yellow-100 text-yellow-700': h.WfStatus === 'Pending',
+                        'bg-red-100 text-red-700': h.WfStatus === 'Rejected',
+                        'bg-blue-100 text-blue-700': h.WfStatus === 'Forwarded'
+                    }">
+                        {{ h.WfStatus || h.wfStatus || h.status || 'N/A' }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
+                    <div *ngIf="h.employee">
+                        <div class="text-gray-500 text-xs">Employee</div>
+                        <div>{{ h.employee }}</div>
+                    </div>
+                    <div *ngIf="h.role">
+                        <div class="text-gray-500 text-xs">Role</div>
+                        <div>{{ h.role }}</div>
+                    </div>
+                    <div *ngIf="h.workFlow">
+                        <div class="text-gray-500 text-xs">Workflow</div>
+                        <div>{{ h.workFlow }}</div>
+                    </div>
+                    <div *ngIf="h.wflevel">
+                        <div class="text-gray-500 text-xs">Level</div>
+                        <div>{{ h.wflevel }}</div>
+                    </div>
+                    <div *ngIf="h.activity">
+                        <div class="text-gray-500 text-xs">Activity</div>
+                        <div>{{ h.activity }}</div>
+                    </div>
+                    <div *ngIf="h.requestedAmount">
+                        <div class="text-gray-500 text-xs">Requested Amount</div>
+                        <div>{{ h.requestedAmount | number:'1.2-2' }}</div>
+                    </div>
+                    <div *ngIf="h.createdOn" class="sm:col-span-2">
+                        <div class="text-gray-500 text-xs">Created On</div>
+                        <div>{{ h.createdOn | date:'dd-MM-yyyy HH:mm' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </p-drawer>
+
+    <!-- Add Imprest Dialog -->
+    <p-dialog [(visible)]="imprestDialogVisible" [modal]="true" [style]="{ width: '600px' }" [draggable]="false"
+        [resizable]="false" (onHide)="closeImprestDialog()">
+        <ng-template pTemplate="header">
+            <div class="flex items-center justify-between w-full">
+                <span class="text-xl font-bold text-gray-800">Add Imprest</span>
+            </div>
+        </ng-template>
+
+        <div class="p-4">
+            <div class="flex flex-col gap-4 mb-4">
+                <div class="flex gap-4">
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="extendedDate" name="actionSelection" value="extendedDate"
+                            [(ngModel)]="selectedAction" />
+                        <label for="extendedDate" class="ml-2">Extended Date</label>
+                    </div>
+                    <div class="flex align-items-center">
+                        <p-radioButton inputId="topUp" name="actionSelection" value="topUp"
+                            [(ngModel)]="selectedAction" />
+                        <label for="topUp" class="ml-2">Top-Up</label>
+                    </div>
+                </div>
+            </div>
+
+            <ng-container *ngIf="selectedAction">
+                <div *ngIf="selectedAction === 'extendedDate'" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            Extended Date <span class="text-red-500">*</span>
+                        </label>
+                        <p-datepicker inputId="extendedDatePicker" [(ngModel)]="extendedDate" [minDate]="minImprestDate"
+                            showIcon iconDisplay="input" appendTo="body" styleClass="w-full"
+                            placeholder="Choose a date" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            Imprest Amount <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber inputId="extendedImprestAmount" [(ngModel)]="extendedImprestAmount"
+                            mode="decimal" [useGrouping]="false" [min]="1" styleClass="w-full"
+                            (keypress)="allowOnlyNumber($event)" (paste)="blockNonNumericPaste($event)" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            Purpose <span class="text-red-500">*</span>
+                        </label>
+                        <input pInputText type="text" [(ngModel)]="Purpose" maxlength="100" class="w-full"
+                            placeholder="Enter purpose" />
+                    </div>
+                </div>
+
+                <div *ngIf="selectedAction === 'topUp'" class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            Imprest Amount <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber inputId="topUpImprestAmount" [(ngModel)]="extendedImprestAmount" mode="decimal"
+                            [useGrouping]="false" [min]="1" styleClass="w-full" (keypress)="allowOnlyNumber($event)"
+                            (paste)="blockNonNumericPaste($event)" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            Purpose <span class="text-red-500">*</span>
+                        </label>
+                        <input pInputText type="text" [(ngModel)]="Purpose" maxlength="100" class="w-full"
+                            placeholder="Enter purpose" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4 pt-4 border-t">
+                    <p-button label="Submit" icon="pi pi-check" (click)="Approvedimprest()"
+                        styleClass="p-button-success"
+                        [disabled]="!selectedAction || !extendedImprestAmount || !Purpose || (selectedAction === 'extendedDate' && !extendedDate)">
+                    </p-button>
+                </div>
+            </ng-container>
+        </div>
+    </p-dialog>
+</div>

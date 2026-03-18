@@ -1,0 +1,180 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB ================= -->
+    <div class="bg-white overflow-hidden mb-4">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+        </div>
+    </div>
+
+    <!-- ================= SEARCH FORM ================= -->
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
+        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-search text-indigo-600"></i> Search Filters
+            </h4>
+        </div>
+
+        <div class="p-5">
+            <form [formGroup]="searchForm" (ngSubmit)="validate()">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Organisation -->
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Organisation <span
+                                class="text-red-500">*</span></label>
+                        <p-select formControlName="orgId" [options]="orgDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Organisation" [filter]="true" [showClear]="true"
+                            class="w-full" (onChange)="getEmpDrp($event)"
+                            [class.p-invalid]="f['orgId'].invalid && (f['orgId'].dirty || f['orgId'].touched)">
+                        </p-select>
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="f['orgId'].invalid && (f['orgId'].dirty || f['orgId'].touched)">
+                            Organisation is required
+                        </small>
+                    </div>
+
+                    <!-- Employee -->
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Employee <span
+                                class="text-red-500">*</span></label>
+                        <p-select formControlName="empId" [options]="empDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Employee" [filter]="true" [showClear]="true"
+                            class="w-full"
+                            [class.p-invalid]="f['empId'].invalid && (f['empId'].dirty || f['empId'].touched)">
+                        </p-select>
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="f['empId'].invalid && (f['empId'].dirty || f['empId'].touched)">
+                            Employee is required
+                        </small>
+                    </div>
+
+                    <!-- Month -->
+                    <div>
+                        <label class="block mb-2 font-medium text-gray-700">Month <span
+                                class="text-red-500">*</span></label>
+                        <p-select formControlName="monthId" [options]="monthDrp" optionLabel="drpOption"
+                            optionValue="drpValue" placeholder="Select Month" [filter]="true" [showClear]="true"
+                            class="w-full"
+                            [class.p-invalid]="f['monthId'].invalid && (f['monthId'].dirty || f['monthId'].touched)">
+                        </p-select>
+                        <small class="text-red-500 block mt-1"
+                            *ngIf="f['monthId'].invalid && (f['monthId'].dirty || f['monthId'].touched)">
+                            Month is required
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <p-button label="Reset" icon="pi pi-refresh" type="button" severity="secondary"
+                        (click)="resetForm()">
+                    </p-button>
+                    <p-button label="Search" icon="pi pi-search" type="submit" styleClass="orange-button"
+                        [loading]="isLoading">
+                    </p-button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= DATA TABLE ================= -->
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm" *ngIf="showTabledata">
+        <div
+            class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-list text-indigo-600"></i> Salary Details
+            </h4>
+
+            <p-button label="Print" icon="pi pi-print" (click)="onOpenPrintModal()"
+                styleClass="p-button-sm p-button-info" *ngIf="!noDatafoundCard">
+            </p-button>
+        </div>
+
+        <div class="p-0">
+            <!-- No Data Found -->
+            <div *ngIf="noDatafoundCard" class="p-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                    <i class="pi pi-exclamation-triangle text-2xl text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-1">Data Not Found</h3>
+                <p class="text-gray-500">No salary slip data available for the selected criteria.</p>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto" *ngIf="!noDatafoundCard">
+                <p-table [value]="tblData" [tableStyle]="{ 'min-width': '60rem' }"
+                    styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th style="min-width: 150px">Month/Year</th>
+                            <th style="min-width: 200px">Employee</th>
+                            <th style="min-width: 150px">Actual Salary</th>
+                            <th style="min-width: 150px">Paid Days</th>
+                            <th style="min-width: 150px">Total Days</th>
+                            <!-- Add other columns dynamically or statically as per requirement -->
+                            <th *ngFor="let col of tableHeaders | slice:5">{{ col }}</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-data>
+                        <tr>
+                            <td>{{ data.month }} / {{ data.year }}</td>
+                            <td class="font-semibold">{{ data.employee }}</td>
+                            <td>{{ data.actualSalary | currency:'INR' }}</td>
+                            <td>{{ data.paidDays }}</td>
+                            <td>{{ data.totalDays }}</td>
+                            <!-- Dynamic columns -->
+                            <td *ngFor="let col of tableHeaders | slice:5">{{ data[col] }}</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= OTP DIALOG ================= -->
+    <p-dialog header="Verify OTP" [(visible)]="otpDialogVisible" [modal]="true" [style]="{ width: '400px' }"
+        [closable]="false" [draggable]="false">
+        <div class="flex flex-col items-center justify-center p-6 gap-4">
+            <i class="pi pi-lock text-4xl text-indigo-600"></i>
+            <p class="text-center text-gray-600">An OTP has been sent to your registered mobile number for salary slip
+                access.</p>
+
+            <div class="w-full flex justify-center mt-2">
+                <p-inputOtp [(ngModel)]="otpValue" [length]="6" [integerOnly]="true"></p-inputOtp>
+            </div>
+
+            <div class="flex justify-center w-full gap-3 mt-4">
+                <p-button label="Verify" icon="pi pi-check" (click)="verifyOtp()" styleClass="orange-button"
+                    [loading]="isLoading"></p-button>
+                <p-button label="Cancel" icon="pi pi-times" (click)="otpDialogVisible = false"
+                    styleClass="p-button-text p-button-secondary"></p-button>
+            </div>
+        </div>
+    </p-dialog>
+
+    <!-- ================= PRINT DIALOG ================= -->
+    <p-dialog header="Print Salary Slip" [(visible)]="printDialogVisible" [modal]="true" [style]="{ width: '80vw' }"
+        [maximizable]="true">
+        <div class="flex flex-col h-full">
+            <div class="flex-grow overflow-auto p-4 bg-gray-50 rounded border border-gray-200"
+                style="min-height: 400px;">
+                <div id="poPrintWrapper" [innerHTML]="printContentSafe" class="bg-white shadow-lg p-8 mx-auto"
+                    style="max-width: 900px;"></div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                <p-button label="Download PDF" icon="pi pi-file-pdf" (click)="downloadProtectedPdf()" severity="danger"
+                    [loading]="isLoading"></p-button>
+                <p-button label="Print" icon="pi pi-print" (click)="printPoData()" severity="info"></p-button>
+                <p-button label="Close" icon="pi pi-times" (click)="printDialogVisible = false"
+                    severity="secondary"></p-button>
+            </div>
+        </div>
+    </p-dialog>
+
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+</div>

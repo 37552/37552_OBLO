@@ -1,0 +1,682 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <div class="bg-white  overflow-hidden">
+
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">Bill of Material</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+
+        <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef"
+            [jsonTemplate1]="jsonTemplateRef1" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+                <i class="pi pi-ellipsis-v cursor-pointer"></i>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+                        class="px-4 py-2 hover:bg-gray-100 text-left">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button (click)="deleteItem(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+                        pTooltip="Delete">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+        <ng-template #jsonTemplateRef1 let-item>
+            <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer"
+                (click)="showGrouplist1(item)">
+                <i class="pi pi-folder-open cursor-pointer"></i>
+            </button>
+        </ng-template>
+
+    </div>
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" class=""
+        [style]="{ width: '80%', 'max-width': '100%'}" (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{header}}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            @if(isFormLoading){
+            <div class="flex items-center justify-center min-h-[400px]">
+                <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+                    [style]="{ width: '50px', height: '50px' }" />
+            </div>
+            }
+            @else {
+            <form [formGroup]="groupMasterForm1" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Production Item *</label>
+                    <p-select [options]="workStationDrp" formControlName="productionItem" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="#6468468468468" class="custom-p-select w-full">
+                    </p-select>
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">BOM Details *</label>
+                    <p-select [options]="workStationDrp" formControlName="bomDetails" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Workstation Name" class="custom-p-select w-full">
+                    </p-select>
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Code *</label>
+                    <p-select [options]="workStationDrp" formControlName="itemCode" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select Workstation Name" class="custom-p-select w-full">
+                    </p-select>
+
+                </div> -->
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name*</label>
+                    <input type="text" maxlength="100" formControlName="itemName" placeholder="Enter Item Name"
+                        [class.border-red-500]="isInvalid('itemName')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('itemName')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('itemName')?.errors?.['required']){
+                        Item Name is required.
+                        } @else if(groupMasterForm1.get('itemName')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('itemName')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Unit of Measurement *</label>
+                    <p-select [options]="UnitMasterDrp" formControlName="unitMeasurement" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true" appendTo="body"
+                        placeholder="Select Unit of Measurement" [class.border-red-500]="isInvalid('unitMeasurement')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('unitMeasurement')){
+                    <p class="text-red-500 text-xs mt-1">Unit of Measurement is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                    <input type="text" maxlength="18" formControlName="Quantity" (keypress)="allowFloat($event)"
+                        placeholder="Enter Quantity" [class.border-red-500]="isInvalid('Quantity')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('Quantity')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('Quantity')?.errors?.['required']){
+                        Quantity is required.
+                        } @else if(groupMasterForm1.get('Quantity')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('Quantity')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rate of Materials Based on *</label>
+                    <p-select [options]="ValuationMDrp" formControlName="rateMaterialsBased" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true" appendTo="body"
+                        placeholder="Select Rate of Materials Based on"
+                        [class.border-red-500]="isInvalid('rateMaterialsBased')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('rateMaterialsBased')){
+                    <p class="text-red-500 text-xs mt-1">Rate of Materials Based on is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Currency *</label>
+                    <p-select [options]="CurrencyMasteDrp" formControlName="Currency" optionLabel="drpOption"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true" appendTo="body"
+                        placeholder="Select Currency" [class.border-red-500]="isInvalid('Currency')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('Currency')){
+                    <p class="text-red-500 text-xs mt-1">Currency is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Transfer Material Against *</label>
+                    <p-select [options]="transferMaterialDrp" formControlName="tansferMaterialAgainst"
+                        optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                        [showClear]="true" placeholder="Select Transfer Material Against" appendTo="body"
+                        [class.border-red-500]="isInvalid('tansferMaterialAgainst')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('tansferMaterialAgainst')){
+                    <p class="text-red-500 text-xs mt-1">Transfer Material Against is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Routing *</label>
+                    <p-select [options]="routingDrp" formControlName="routing" optionLabel="drpOPtion" appendTo="body"
+                        optionValue="drpValue" [filter]="true" filterBy="drpOPtion" [showClear]="true"
+                        placeholder="Select Routing" [class.border-red-500]="isInvalid('routing')"
+                        class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('routing')){
+                    <p class="text-red-500 text-xs mt-1">Routing is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Operations *</label>
+                    <p-select [options]="workStationDrp" formControlName="Operations" optionLabel="drpOption"
+                        appendTo="body" optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                        placeholder="Select 
+                      Operations" [class.border-red-500]="isInvalid('Operations')" class="custom-p-select w-full">
+                    </p-select>
+                    @if(isInvalid('Operations')){
+                    <p class="text-red-500 text-xs mt-1">
+                        Operations is required.</p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Process Lost Quantity *</label>
+                    <input type="text" maxlength="18" formControlName="processLostQuantity"
+                        (keypress)="allowFloat($event)" placeholder="Enter Process Lost Quantity"
+                        [class.border-red-500]="isInvalid('processLostQuantity')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('processLostQuantity')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('processLostQuantity')?.errors?.['required']){
+                        Process Lost Quantity is required.
+                        } @else if(groupMasterForm1.get('processLostQuantity')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('processLostQuantity')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Process Loss *</label>
+                    <input type="text" maxlength="18" formControlName="processLoss" (keypress)="allowFloat($event)"
+                        placeholder="Enter Process Loss" [class.border-red-500]="isInvalid('processLoss')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('processLoss')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('processLoss')?.errors?.['required']){
+                        Process Loss is required.
+                        } @else if(groupMasterForm1.get('processLoss')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('processLoss')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Operating Cost *</label>
+                    <input type="text" maxlength="18" formControlName="operatingCost" (keypress)="allowFloat($event)"
+                        placeholder="Enter Operating Cost" [class.border-red-500]="isInvalid('operatingCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('operatingCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('operatingCost')?.errors?.['required']){
+                        Operating Cost is required.
+                        } @else if(groupMasterForm1.get('operatingCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('operatingCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Raw Material Cost *</label>
+                    <input type="text" maxlength="18" formControlName="rawMaterialCost" (keypress)="allowFloat($event)"
+                        placeholder="Enter Raw Material Cost" [class.border-red-500]="isInvalid('rawMaterialCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('rawMaterialCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('rawMaterialCost')?.errors?.['required']){
+                        Raw Material Cost is required.
+                        } @else if(groupMasterForm1.get('rawMaterialCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('rawMaterialCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scrap Material Cost *</label>
+                    <input type="text" maxlength="18" formControlName="scrapMaterialCost"
+                        (keypress)="allowFloat($event)" placeholder="Enter Raw Material Cost"
+                        [class.border-red-500]="isInvalid('scrapMaterialCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('scrapMaterialCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('scrapMaterialCost')?.errors?.['required']){
+                        Raw Material Cost is required.
+                        } @else if(groupMasterForm1.get('scrapMaterialCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('scrapMaterialCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Cost *</label>
+                    <input type="text" maxlength="18" formControlName="totalCost" (keypress)="allowFloat($event)"
+                        placeholder="Enter Total Cost" [class.border-red-500]="isInvalid('totalCost')"
+                        class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('totalCost')){
+                    <p class="text-red-500 text-xs mt-1">
+                        @if(groupMasterForm1.get('totalCost')?.errors?.['required']){
+                        Total Cost is required.
+                        } @else if(groupMasterForm1.get('totalCost')?.errors?.['invalidValue']){
+                        Only dots or blank spaces are not allowed.
+                        } @else if(groupMasterForm1.get('totalCost')?.errors?.['noAlphaNumeric']){
+                        Must contain at least one letter or number.
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Is Corrective Operation -->
+                <div class="flex flex-col mt-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="isinspectionReq" formControlName="isinspectionReq"
+                            (change)="onCheckboxChange('isinspectionReq', $event)"
+                            class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                        <label class="ml-2 text-sm text-gray-700">
+                            Quality Inspection Required *
+                        </label>
+                    </div>
+                    @if(isInvalid('isinspectionReq')){
+                    <p class="text-red-500 text-xs mt-1">This field is required.</p>
+                    }
+                </div>
+
+                <!-- BOM Material-->
+                <div class="col-span-full mt-6 border-t pt-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">BOM Raw Material</h3>
+
+                    <!-- Scrap Material Sub Form -->
+                    <div [formGroup]="scrapMaterialForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"
+                        *ngIf="postType != 'view'">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                            <p-select [options]="ItemMasterDrp" formControlName="scrapItemName" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                appendTo="body" placeholder="Select Item Name" class="custom-p-select w-full">
+                            </p-select>
+                            <p *ngIf="scrapMaterialForm.get('scrapItemName')?.touched && scrapMaterialForm.get('scrapItemName')?.invalid"
+                                class="text-red-500 text-xs mt-1">Item Name is required.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                            <input type="text" maxlength="18" formControlName="scrapQuantity"
+                                (keypress)="allowFloat($event)" placeholder="Enter Quantity" class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 
+                                       focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p *ngIf="scrapMaterialForm.get('scrapQuantity')?.touched && scrapMaterialForm.get('scrapQuantity')?.invalid"
+                                class="text-red-500 text-xs mt-1">Quantity is required.</p>
+                        </div>
+
+                        <!-- Unit of Measurement -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unit of Measurement *</label>
+                            <p-select [options]="UnitMasterDrp" formControlName="scrapUnit" optionLabel="drpOption"
+                                optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                                appendTo="body" placeholder="Select Unit" class="custom-p-select w-full">
+                            </p-select>
+                            <p *ngIf="scrapMaterialForm.get('scrapUnit')?.touched && scrapMaterialForm.get('scrapUnit')?.invalid"
+                                class="text-red-500 text-xs mt-1">Unit is required.</p>
+                        </div>
+
+                        <!-- Rate -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rate *</label>
+                            <input type="text" maxlength="18" formControlName="scrapRate"
+                                (keypress)="allowFloat($event)" placeholder="Enter Rate" class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 
+                             focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p *ngIf="scrapMaterialForm.get('scrapRate')?.touched && scrapMaterialForm.get('scrapRate')?.invalid"
+                                class="text-red-500 text-xs mt-1">Rate is required.</p>
+                        </div>
+
+                        <!-- Add Button -->
+                        <div class="col-span-2 flex justify-start mt-4">
+                            <button type="button" [disabled]="postType=='view'"
+                                class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition"
+                                (click)="addScrapItem()">
+                                <i class="pi pi-plus mr-1"></i> {{ editingIndex !== null ? 'Update' : 'Add' }}
+                            </button>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Scrap Material Table (Show only if data exists) -->
+                    <div class="mt-6" *ngIf="scrapMaterialList && scrapMaterialList.length > 0">
+                        <p-table [value]="scrapMaterialList" [paginator]="false" [rows]="10"
+                            class="rounded-lg border border-gray-300 overflow-hidden shadow-lg w-full">
+
+                            <!-- Table Header -->
+                            <ng-template pTemplate="header">
+                                <tr
+                                    class="bg-green-100 text-green-900 uppercase text-sm font-semibold tracking-wide border-b border-gray-300">
+                                    <th class="py-3 px-4 text-left border-r border-gray-300">Item Name</th>
+                                    <th class="py-3 px-4 text-right border-r border-gray-300">Quantity</th>
+                                    <th class="py-3 px-4 text-left border-r border-gray-300">Unit</th>
+                                    <th class="py-3 px-4 text-right border-r border-gray-300">Rate</th>
+                                    <th class="py-3 px-4 text-center">Action</th>
+                                </tr>
+                            </ng-template>
+
+                            <!-- Table Body -->
+                            <ng-template pTemplate="body" let-row let-i="rowIndex">
+                                <tr class="hover:bg-green-50 transition duration-150 border-b border-gray-200">
+                                    <td class="py-2 px-4 border-r border-gray-200">{{ row.scrapItemNameLabel }}</td>
+                                    <td class="py-2 px-4 text-right border-r border-gray-200">{{ row.scrapQuantity }}
+                                    </td>
+                                    <td class="py-2 px-4 border-r border-gray-200">{{ row.scrapUnitLabel }}</td>
+                                    <td class="py-2 px-4 text-right border-r border-gray-200">{{ row.scrapRate }}</td>
+                                    <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                        <!-- Edit Button -->
+                                        <button type="button" [disabled]="postType=='view'"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                            (click)="editScrapItem(i)">
+                                            <i class="pi pi-pencil"></i>
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <button type="button" [disabled]="postType=='view'"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                            (click)="deleteScrapItem(i)">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            </ng-template>
+
+                        </p-table>
+                    </div>
+
+                </div>
+
+                <!-- Scrap and Process Loss Section -->
+                <div class="col-span-full mt-6 border-t pt-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Scrap and Process Loss</h3>
+
+                    <!-- Scrap Material Sub Form -->
+                    <div [formGroup]="scrapProcessLossForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"
+                        *ngIf="postType != 'view'">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                            <p-select [options]="ItemMasterDrp" formControlName="processLossItemName"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                appendTo="body" [showClear]="true" placeholder="Select Item Name"
+                                class="custom-p-select w-full">
+                            </p-select>
+                            <p *ngIf="scrapProcessLossForm.get('processLossItemName')?.touched && scrapProcessLossForm.get('processLossItemName')?.invalid"
+                                class="text-red-500 text-xs mt-1">Item Name is required.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                            <input type="text" maxlength="18" formControlName="processLossQuantity"
+                                (keypress)="allowFloat($event)" placeholder="Enter Quantity" class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 
+                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p *ngIf="scrapProcessLossForm.get('processLossQuantity')?.touched && scrapProcessLossForm.get('processLossQuantity')?.invalid"
+                                class="text-red-500 text-xs mt-1">Quantity is required.</p>
+                        </div>
+
+                        <!-- Unit of Measurement -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unit of Measurement *</label>
+                            <p-select [options]="UnitMasterDrp" formControlName="processLossUnit"
+                                optionLabel="drpOption" optionValue="drpValue" [filter]="true" filterBy="drpOption"
+                                appendTo="body" [showClear]="true" placeholder="Select Unit"
+                                class="custom-p-select w-full">
+                            </p-select>
+                            <p *ngIf="scrapProcessLossForm.get('processLossUnit')?.touched && scrapProcessLossForm.get('processLossUnit')?.invalid"
+                                class="text-red-500 text-xs mt-1">Unit is required.</p>
+                        </div>
+
+                        <!-- Rate -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rate *</label>
+                            <input type="text" maxlength="18" formControlName="processLossRate"
+                                (keypress)="allowFloat($event)" placeholder="Enter Rate" class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 
+                                focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                            <p *ngIf="scrapProcessLossForm.get('processLossRate')?.touched && scrapProcessLossForm.get('processLossRate')?.invalid"
+                                class="text-red-500 text-xs mt-1">Rate is required.</p>
+                        </div>
+
+                        <!-- Add Button -->
+                        <div class="col-span-2 flex justify-start mt-4">
+                            <button type="button" [disabled]="postType=='view'"
+                                class="px-4 py-2 bg-[#10b981] hover:bg-green-700 text-white rounded-md shadow transition"
+                                (click)="addProcessLossItem()">
+                                <i class="pi pi-plus mr-1"></i> {{ editingProcessLossIndex !== null ? 'Update' : 'Add'
+                                }}
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Scrap & Process Loss Table -->
+                    <div class="mt-6" *ngIf="scrapProcessLossList && scrapProcessLossList.length > 0">
+                        <p-table [value]="scrapProcessLossList" [paginator]="false" [rows]="10"
+                            class="rounded-lg border border-gray-300 overflow-hidden shadow-lg w-full">
+
+                            <!-- Table Header -->
+                            <ng-template pTemplate="header">
+                                <tr
+                                    class="bg-green-100 text-green-900 uppercase text-sm font-semibold tracking-wide border-b border-gray-300">
+                                    <th class="py-3 px-4 text-left border-r border-gray-300">Item Name</th>
+                                    <th class="py-3 px-4 text-right border-r border-gray-300">Quantity</th>
+                                    <th class="py-3 px-4 text-left border-r border-gray-300">Unit</th>
+                                    <th class="py-3 px-4 text-right border-r border-gray-300">Rate</th>
+                                    <th class="py-3 px-4 text-center">Actions</th>
+                                </tr>
+                            </ng-template>
+
+                            <!-- Table Body -->
+                            <ng-template pTemplate="body" let-item let-i="rowIndex">
+                                <tr class="hover:bg-green-50 transition duration-150 border-b border-gray-200">
+                                    <td class="py-2 px-4 border-r border-gray-200">{{ item.processLossItemNameLabel }}
+                                    </td>
+                                    <td class="py-2 px-4 text-right border-r border-gray-200">{{item.processLossQuantity
+                                        }}</td>
+                                    <td class="py-2 px-4 border-r border-gray-200">{{ item.processLossUnitLabel }}</td>
+                                    <td class="py-2 px-4 text-right border-r border-gray-200">{{ item.processLossRate }}
+                                    </td>
+                                    <td class="py-2 px-4 flex justify-start items-center space-x-2">
+                                        <!-- Edit Button -->
+                                        <button type="button" [disabled]="postType=='view'"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                            (click)="editProcessLossItem(i)">
+                                            <i class="pi pi-pencil"></i>
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <button type="button" [disabled]="postType=='view'"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md shadow-sm transition duration-150"
+                                            (click)="deleteProcessLossItem(i)">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            </ng-template>
+
+                        </p-table>
+                    </div>
+
+                </div>
+
+
+                
+
+            </form>
+            }
+
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            @if(postType !== 'view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit($event)"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">{{
+                    postType === 'add' ? 'Submit' : 'Update' }}</button>
+                @if(postType === 'add'){
+                <button pButton label="Reset" (click)="onClear()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+            </div>
+            }
+        </ng-template>
+
+    </p-drawer>
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog" [style]="{ width: '60%', 'max-width': '100%' }">
+
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">BOM Raw Material</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="text-sm font-medium">S.No</th>
+                        <th class="text-sm font-medium">Item Name</th>
+                        <th class="text-sm font-medium">Quantity</th>
+                        <th class="text-sm font-medium">Unit</th>
+                        <th class="text-sm font-medium">Rate</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td class="text-sm">{{ rowIndex + 1 }}</td>
+                        <td class="text-sm">{{ detail.Item }}</td>
+                        <td class="text-sm">{{ detail.quantity }}</td>
+                        <td class="text-sm">{{ detail.Currency }}</td>
+                        <td class="text-sm">{{ detail.rate }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+        </ng-template>
+
+    </p-dialog>
+
+
+    <p-dialog [modal]="true" [(visible)]="itemDailog1" [style]="{ width: '60%', 'max-width': '100%' }">
+
+        <ng-template pTemplate="header" class="p-[1rem]">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold text-2xl break-words">Scrap and Process Loss</span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <p-table #dt [value]="groupListArray1 || []" showGridlines [rows]="5" [paginator]="true"
+                [responsiveLayout]="'scroll'">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th class="text-sm font-medium">S.No</th>
+                        <th class="text-sm font-medium">Item Name</th>
+                        <th class="text-sm font-medium">Quantity</th>
+                        <th class="text-sm font-medium">Unit</th>
+                        <th class="text-sm font-medium">Rate</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-detail let-rowIndex="rowIndex">
+                    <tr>
+                        <td class="text-sm">{{ rowIndex + 1 }}</td>
+                        <td class="text-sm">{{ detail.Item }}</td>
+                        <td class="text-sm">{{ detail.quantity }}</td>
+                        <td class="text-sm">{{ detail.Currency }}</td>
+                        <td class="text-sm">{{ detail.rate }}</td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="9" class="text-center text-sm font-medium">No details found.</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+        </ng-template>
+
+    </p-dialog>
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+</div>

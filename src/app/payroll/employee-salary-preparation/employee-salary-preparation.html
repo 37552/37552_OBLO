@@ -1,0 +1,262 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- BREADCRUMB -->
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add')" label="Add Salary Preparation" icon="pi pi-plus"
+                    styleClass="orange-button" [raised]="true"></p-button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="p-0">
+
+        <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: drawerSize }"
+            (onHide)="onDrawerHide()">
+
+            <ng-template pTemplate="header">
+                <div class="flex items-center justify-between w-full">
+                    <span class="font-semibold text-xl">Prepare Salary</span>
+                    <button class="p-2 hover:bg-gray-100 rounded-full transition-colors mr-2"
+                        (click)="toggleFullScreen()" pTooltip="{{ drawerSize === '60%' ? 'Maximize' : 'Restore' }}">
+                        <i [class]="drawerSize === '60%' ? 'pi pi-window-maximize' : 'pi pi-window-minimize'"></i>
+                    </button>
+                </div>
+            </ng-template>
+
+            <!-- FILTER SECTION -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+                <div class="bg-blue-50 p-4 border-b border-gray-200 flex items-center gap-2">
+                    <i class="pi pi-filter text-blue-600"></i>
+                    <h3 class="font-semibold text-gray-800">Selection Criteria</h3>
+                </div>
+
+                <form [formGroup]="filterForm" class="p-4 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <!-- Month -->
+                        <div>
+                            <label class="form-label">Month <span class="text-red-500">*</span></label>
+                            <p-select formControlName="monthId" [options]="monthDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select Month" [filter]="true"
+                                class="form-control hover:outline-none focus:outline-none w-full">
+                            </p-select>
+                        </div>
+
+                        <!-- Year -->
+                        <div>
+                            <label class="form-label">Year <span class="text-red-500">*</span></label>
+                            <p-select formControlName="yearId" [options]="yearDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select Year" [filter]="true"
+                                class="form-control w-full">
+                            </p-select>
+                        </div>
+
+                        <!-- Organisation -->
+                        <div>
+                            <label class="form-label">Organisation <span class="text-red-500">*</span></label>
+                            <p-select formControlName="organisationId" [options]="organisation" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select Organisation" [filter]="true"
+                                class="form-control w-full">
+                            </p-select>
+                        </div>
+
+                        <!-- Project -->
+                        <div>
+                            <label class="form-label">Project</label>
+                            <p-select formControlName="projectId" [options]="projectDataDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select Project" [filter]="true"
+                                class="form-control w-full">
+                            </p-select>
+                        </div>
+
+                        <!-- Employee Type -->
+                        <div>
+                            <label class="form-label">Employee Type</label>
+                            <p-select formControlName="empTypeId" [options]="empDrp" optionLabel="drpOption"
+                                optionValue="drpValue" placeholder="Select Type" [filter]="true"
+                                class="form-control w-full" (onChange)="onEmpTypeChange($event)">
+                            </p-select>
+                        </div>
+
+                        <!-- Total Days (Conditional) -->
+                        <div *ngIf="showTotalDays">
+                            <label class="form-label">Total Days</label>
+                            <input pInputText formControlName="totalDays" maxlength="5" class="w-full"
+                                placeholder="Enter Days" />
+                        </div>
+
+                        <!-- Department -->
+                        <div>
+                            <label class="form-label">Department</label>
+                            <p-select formControlName="departmentId" [options]="department" optionLabel="department"
+                                optionValue="id" placeholder="Select Department" [filter]="true"
+                                class="form-control w-full">
+                            </p-select>
+                        </div>
+
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
+                        <p-button label="Generate" icon="pi pi-check" [loading]="loading" styleClass="orange-button"
+                            (click)="onSearch(); visible=false"></p-button>
+                        <p-button label="Reset" icon="pi pi-refresh" severity="secondary"
+                            (click)="onReset()"></p-button>
+                    </div>
+                </form>
+            </div>
+        </p-drawer>
+
+        <!-- TABLE SECTION -->
+        <div *ngIf="showTabledata" class="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+
+            <div *ngIf="noDatafoundCard" class="p-10 text-center text-gray-500">
+                <i class="pi pi-inbox text-5xl text-gray-300 mb-3"></i>
+                <p>No Data Found</p>
+            </div>
+
+            <div *ngIf="!noDatafoundCard && tblData.length > 0">
+                <!-- Toolbar -->
+                <div class="flex justify-between items-center p-3 bg-gray-50 border-b border-gray-200">
+                    <h3 class="font-semibold text-gray-700">
+                        Employee List
+                        <span class="ml-2 px-2 py-0.5 text-xs rounded-full"
+                            [ngClass]="allApproved ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'">
+                            Selected: {{ selectedCount }}
+                        </span>
+                    </h3>
+                    <!-- Total  Employee's -->
+                    <span>Total Employee's : {{ tblData.length }}</span>
+
+
+
+                    <p-button label="Submit" icon="pi pi-check" severity="success"
+                        [disabled]="!allApproved && selectedCount === 0" (click)="onSubmitCall()">
+                    </p-button>
+                </div>
+
+                <div class="overflow-auto">
+                    <p-table [value]="tblData" [rows]="10" [paginator]="true" [loading]="loading"
+                        styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [rowHover]="true">
+
+                        <ng-template pTemplate="header">
+                            <tr class="bg-gray-50">
+                                <th class="w-12 text-center">
+                                    <p-checkbox [binary]="true" [(ngModel)]="selectAllChecked"
+                                        (onChange)="toggleSelectAll($event)"></p-checkbox>
+                                </th>
+                                <th class="min-w-[150px]">Emp Name</th>
+                                <th>Expected Salary</th>
+                                <th>Paid Days</th>
+                                <th>Loan Inst.</th>
+                                <th>Relocation</th>
+                                <th>Travel Allow.</th>
+                                <th>Other Allow.</th>
+                                <th>Other Deduc.</th>
+                                <th>OT Hours</th>
+                                <th>Incentives</th>
+                                <th>Arrear</th>
+                                <th class="min-w-[100px] font-bold">Net Salary</th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-row>
+                            <tr>
+                                <td class="text-center">
+                                    <p-checkbox [binary]="true" [(ngModel)]="row.isChk"></p-checkbox>
+                                </td>
+                                <td>
+                                    <span class="text-blue-600 font-medium cursor-pointer hover:underline"
+                                        (click)="openCalendarModal(row)">
+                                        {{ row.empName }}
+                                    </span>
+                                </td>
+                                <td>{{ row.expectedMonthlySalary | currency:'INR':'symbol':'1.0-0' }}</td>
+                                <td>{{ row.paidDays }}</td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.loanInstallment" disabled
+                                        class="w-20 text-right bg-gray-100" />
+                                </td>
+
+                                <!-- Editable Fields -->
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.relocationAllowance"
+                                        (blur)="onDeductionChange(row, 'relocationAllowance')"
+                                        class="w-24 text-right p-1 text-sm" />
+                                </td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.ta"
+                                        (blur)="onDeductionChange(row, 'ta')" class="w-24 text-right p-1 text-sm" />
+                                </td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.otherAllowance"
+                                        (blur)="onDeductionChange(row, 'otherAllowance')"
+                                        class="w-24 text-right p-1 text-sm" />
+                                </td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.otherDeduction"
+                                        (blur)="onDeductionChange(row, 'otherDeduction')"
+                                        class="w-24 text-right p-1 text-sm" />
+                                </td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.otHours"
+                                        (blur)="onDeductionChange(row, 'otHours')"
+                                        class="w-20 text-right p-1 text-sm" />
+                                </td>
+                                <td>
+                                    <input pInputText type="text" [(ngModel)]="row.incentives" disabled
+                                        class="w-20 text-right bg-gray-100" />
+                                </td>
+                                <td>{{ row.totalArrear }}</td>
+                                <td class="font-bold text-gray-800 bg-blue-50">
+                                    {{ row.monthlySalary | currency:'INR':'symbol':'1.0-2' }}
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CALENDAR MODAL (Placeholder for now) -->
+    <p-dialog header="{{ selectedEmployee?.empName }} - Attendance Calendar" [(visible)]="displayCalendarModal"
+        [modal]="true" [style]="{width: '80vw'}" [maximizable]="true">
+
+        <div class="p-4" *ngIf="loading">
+            <div class="flex justify-center"><i class="pi pi-spin pi-spinner text-4xl"></i></div>
+        </div>
+
+        <div *ngIf="!loading && monthlyData.length > 0; else noCalData">
+            <!-- Simple List View for calendar data as fallback for mwl-calendar -->
+            <div class="grid grid-cols-7 gap-2">
+                <div *ngFor="let item of monthlyData" class="border p-2 rounded text-center"
+                    [ngStyle]="{'background-color': item.backColor, 'color': '#fff'}">
+                    <div class="text-xs font-bold">{{ item.dateLabel | date:'dd MMM' }}</div>
+                    <div class="text-[10px]">{{ item.inOutTime }}</div>
+                    <div class="text-[10px] badge">{{ item.dayStatus }}</div>
+                </div>
+            </div>
+        </div>
+        <ng-template #noCalData>
+            <div *ngIf="!loading" class="text-center p-4">No attendance data found.</div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <p-button label="Close" (click)="displayCalendarModal=false" severity="secondary"></p-button>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Toast & Confirm -->
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
+</div>

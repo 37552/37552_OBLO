@@ -1,0 +1,248 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+
+    <div class="bg-white overflow-hidden shadow-md rounded-lg">
+        <div class="flex items-center justify-between p-4 sm:p-4 border-b border-gray-100 bg-gray-50/50">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+            <div class="flex items-center space-x-2">
+                <!-- Header actions if any -->
+            </div>
+        </div>
+
+        <app-table-template [data]="setData()" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading()" [currentPage]="pageNo" [searchText]="searchText"
+            [actionTemplate]="actionTemplateRef" [jsonTemplate]="jsonTemplateRef" (pageChange)="onPageChange($event)"
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
+        </app-table-template>
+
+        <!-- Action Template -->
+        <ng-template #actionTemplateRef let-item>
+            <div *ngIf="item.status === 'Accept Pending' || item.status === 'Accepted' || item.status === 'Return - Initiated'"
+                class="flex items-center gap-1">
+                <button type="button"
+                    class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-icon-only flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+                    (click)="op.toggle($event)">
+                    <i class="pi pi-ellipsis-v text-lg"></i>
+                </button>
+            </div>
+
+            <p-popover #op>
+                <div class="flex flex-col min-w-[150px]">
+                    <ng-container *ngIf="item.status === 'Accept Pending'">
+                        <button (click)="openRemarksModal(item, '1', 'Accept'); op.hide()"
+                            class="px-4 py-2 hover:bg-green-50 text-left flex items-center gap-2 text-green-700">
+                            <i class="pi pi-check-circle"></i> Accept
+                        </button>
+                        <button (click)="openRemarksModal(item, '3', 'Reject'); op.hide()"
+                            class="px-4 py-2 hover:bg-red-50 text-left flex items-center gap-2 text-red-700">
+                            <i class="pi pi-times-circle"></i> Reject
+                        </button>
+                    </ng-container>
+
+                    <button *ngIf="item.status === 'Accepted'"
+                        (click)="openRemarksModal(item, '5', 'Return'); op.hide()"
+                        class="px-4 py-2 hover:bg-amber-50 text-left flex items-center gap-2 text-amber-700">
+                        <i class="pi pi-replay"></i> Return
+                    </button>
+
+                    <button *ngIf="item.status === 'Return - Initiated'"
+                        (click)="openRemarksModal(item, '1', 'Withdraw'); op.hide()"
+                        class="px-4 py-2 hover:bg-blue-50 text-left flex items-center gap-2 text-blue-700">
+                        <i class="pi pi-undo"></i> Withdraw
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+
+        <!-- Json Template for Accessory Column -->
+        <ng-template #jsonTemplateRef let-item>
+            <button *ngIf="item.accessory && item.accessory > 0" type="button"
+                class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded"
+                (click)="onViewAccessory(item)">
+                <i class="pi pi-eye"></i>
+                <span>View ({{item.accessory}})</span>
+            </button>
+            <span *ngIf="!item.accessory || item.accessory == 0" class="text-gray-400 italic text-xs">No
+                Accessory</span>
+        </ng-template>
+    </div>
+
+    <!-- Accessory Detail Drawer -->
+    <p-drawer [(visible)]="showViewAccessoryModal" position="right" [modal]="true"
+        [style]="{ width: '55%', 'max-width': '100%' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl text-indigo-700">Asset Accessories</span>
+                <i class="pi pi-info-circle text-blue-500 text-2xl"></i>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="content">
+            <div class="flex flex-col gap-6 p-4">
+                <!-- Selected Asset Summary -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden" *ngIf="selectedItem">
+                    <div
+                        class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-tag text-indigo-600"></i> Asset Summary
+                        </h4>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold"
+                            [ngClass]="{'bg-green-100 text-green-800': selectedItem.status === 'Accepted', 'bg-blue-100 text-blue-800': selectedItem.status === 'Accept Pending', 'bg-orange-100 text-orange-800': selectedItem.status === 'Return - Initiated'}">
+                            {{selectedItem.status}}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-5">
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Asset
+                                Name</label>
+                            <div class="text-sm font-semibold text-gray-800">{{selectedItem.asset}}</div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Asset
+                                Type</label>
+                            <div class="text-sm text-gray-700">{{selectedItem['asset Type']}}</div>
+                        </div>
+                        <div class="flex flex-col">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Assigned
+                                Date</label>
+                            <div class="text-sm text-gray-700">{{selectedItem.date | date:'dd-MMM-yyyy'}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accessories Table -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                        <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="pi pi-list text-indigo-600"></i> Accessories List
+                        </h4>
+                    </div>
+
+                </div>
+
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end p-4 border-t border-gray-100 bg-gray-50/30">
+                <p-button label="Close Drawer" severity="secondary" icon="pi pi-times" variant="text"
+                    (click)="closeAccessoryModal()"></p-button>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+    <!-- Remarks & Action Modal -->
+    <p-dialog [(visible)]="showRemarksModal" [header]="pendingAction?.action + ' Remark'" [modal]="true"
+        [style]="{ width: '450px' }" [baseZIndex]="10000" [draggable]="false" [resizable]="false">
+
+        <div class="flex flex-col gap-4 mt-2">
+            <!-- Location Selection for "Return" Action -->
+            <div *ngIf="pendingAction?.key === '5'" class="space-y-4">
+                <div class="flex gap-3 bg-gray-100 p-1 rounded-lg">
+                    <button type="button" (click)="setLocation('same')"
+                        class="flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all"
+                        [ngClass]="selectedLocation === 'same' ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'">
+                        Same Location
+                    </button>
+                    <button type="button" (click)="setLocation('different')"
+                        class="flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all"
+                        [ngClass]="selectedLocation === 'different' ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'">
+                        Different Location
+                    </button>
+                </div>
+
+                <!-- Form for Different Location -->
+                <form [formGroup]="locationForm"
+                    class="flex flex-col gap-4 p-4 border border-blue-100 rounded-lg bg-blue-50/30"
+                    *ngIf="selectedLocation === 'different'">
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Office Location</label>
+                        <p-select [options]="officeLocationData" formControlName="officeLocation"
+                            optionLabel="drpOption" optionValue="drpValue" placeholder="Select Location" [filter]="true"
+                            class="w-full"></p-select>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Courier Number</label>
+                        <input pInputText formControlName="courierNo" placeholder="Enter Courier No" class="w-full" />
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Courier Date</label>
+                        <input pInputText type="date" formControlName="courierDate" class="w-full" />
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs font-bold text-gray-500 uppercase">Receipt Attachment</label>
+                        <div class="flex items-center gap-2">
+                            <button type="button" pButton icon="pi pi-upload" label="Upload"
+                                class="p-button-outlined p-button-sm" (click)="fileupload('AssetReceipt')"></button>
+
+                            <button *ngIf="receiptImage" type="button" pButton icon="pi pi-eye"
+                                class="p-button-rounded p-button-success p-button-text"
+                                (click)="viewAttachment(receiptImage)"></button>
+
+                            <button *ngIf="receiptImage" type="button" pButton icon="pi pi-trash"
+                                class="p-button-rounded p-button-danger p-button-text"
+                                (click)="removeAttachment()"></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Remark Input -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold text-gray-500 uppercase">Remark *</label>
+                <textarea pInputTextarea [(ngModel)]="returnRemark" rows="4" placeholder="Type your remark here..."
+                    class="w-full resize-none"></textarea>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2">
+                <p-button label="Cancel" severity="secondary" (click)="closeModal()" class="p-button-text"></p-button>
+                <p-button [label]="(pendingAction?.action === 'Return' ? 'Return Now' : 'Submit')"
+                    [icon]="(isLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-check')"
+                    [disabled]="!returnRemark.trim() || isLoading()"
+                    [styleClass]="pendingAction?.action === 'Reject' ? 'p-button-danger' : 'p-button-primary'"
+                    (click)="submitReturn()"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- File Upload Dialog -->
+    <p-dialog [(visible)]="showFileUploadModal" header="Upload Receipt" [modal]="true" [style]="{ width: '400px' }"
+        [baseZIndex]="11000">
+
+        <div class="flex flex-col gap-4 p-2">
+            <div
+                class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative">
+                <i class="pi pi-cloud-upload text-4xl text-gray-400 mb-2"></i>
+                <p class="text-sm text-gray-600 font-medium">Click to select file</p>
+                <input type="file" (change)="fileChangeEvent($event)"
+                    class="absolute inset-0 opacity-0 cursor-pointer" />
+            </div>
+
+            <div *ngIf="selectedFileNames.length > 0" class="bg-indigo-50 p-3 rounded-md border border-indigo-100">
+                <p class="text-xs font-bold text-indigo-700 mb-1">Selected File:</p>
+                <ul class="text-xs text-indigo-600 list-disc list-inside">
+                    <li *ngFor="let name of selectedFileNames">{{name}}</li>
+                </ul>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2">
+                <p-button label="Cancel" severity="secondary" (click)="onCloseFileUploadModal()"
+                    class="p-button-text"></p-button>
+                <p-button label="Upload Now" icon="pi pi-upload" [disabled]="filesToUpload.length === 0 || isLoading()"
+                    (click)="uploadFiles()"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

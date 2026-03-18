@@ -1,0 +1,23 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { AttendanceRegularization } from './attendance-regularization';
+
+describe('AttendanceRegularization', () => {
+  let component: AttendanceRegularization;
+  let fixture: ComponentFixture<AttendanceRegularization>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AttendanceRegularization]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(AttendanceRegularization);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

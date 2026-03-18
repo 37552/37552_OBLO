@@ -1,0 +1,145 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-800">
+                <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+            </h2>
+        </div>
+
+        <div class="p-4 sm:p-6 lg:p-8">
+            <div class="max-w-full space-y-6">
+                <!-- Search Card -->
+                <div class="bg-white rounded shadow-md border border-slate-300 overflow-hidden mb-6">
+                    <div class="px-3 py-2 bg-[#307ecc] flex items-center justify-between border-b border-slate-300">
+                        <h2 class="text-[15px] font-normal text-white flex items-center">
+                            <i class="pi pi-search mr-2 text-sm"></i>
+                            Employee Calendar
+                        </h2>
+                        <div class="flex space-x-2 text-white/80 text-xs">
+                            <i class="pi pi-expand cursor-pointer hover:text-white"></i>
+                            <i class="pi pi-chevron-up cursor-pointer hover:text-white"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-[#f9f9f9] rounded-lg">
+                        <div class="flex flex-col gap-2 max-w-md">
+
+                            <label class="text-[13px] text-slate-600 font-medium">
+                                Employee Name <span class="text-red-600 font-medium">*</span>
+                            </label>
+
+                            <div class="flex items-center gap-3">
+
+                                <p-select [options]="empDrp" [(ngModel)]="selectedEmp" optionLabel="employeeName"
+                                    optionValue="id" placeholder="Select an Employee" class="flex-1 w-full"
+                                    [filter]="true" filterBy="employeeName" appendTo="body">
+                                </p-select>
+
+                                @if(!selectedEmp && isSubmitted){
+                                <span class="text-xs text-red-600 font-medium">
+                                    Employee Name is required
+                                </span>
+                                }
+
+                                <button
+                                    class="btn btn-primary bg-[#307ecc] hover:bg-[#2c6fb5] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-md"
+                                    (click)="showData()">
+
+                                    <i class="pi pi-search text-xs"></i>
+                                    Search
+
+                                </button>
+
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Card -->
+                <div *ngIf="showCaldata" class="bg-white rounded shadow-md border border-slate-300 overflow-hidden">
+                    <div class="px-3 py-2 bg-[#307ecc] flex items-center justify-between border-b border-slate-300">
+                        <h2 class="text-[15px] font-normal text-white flex items-center">
+                            <i class="pi pi-list mr-2 text-sm"></i>
+                            List
+                        </h2>
+                        <div class="flex space-x-2 text-white/80 text-xs">
+                            <i class="pi pi-expand cursor-pointer hover:text-white"></i>
+                            <i class="pi pi-chevron-up cursor-pointer hover:text-white"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <!-- Navigation -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <button (click)="goToPreviousMonth()"
+                                    class="bg-[#428bca] hover:bg-[#357ebd] text-white px-4 py-1.5 rounded-l text-sm border-r border-[#357ebd]">Previous</button>
+                                <button (click)="goToToday()"
+                                    class="bg-[#abbac3] hover:bg-[#8b9aa3] text-white px-4 py-1.5 text-sm">Today</button>
+                                <button (click)="goToNextMonth()"
+                                    class="bg-[#428bca] hover:bg-[#357ebd] text-white px-4 py-1.5 rounded-r text-sm">Next</button>
+                            </div>
+                            <div class="text-xl font-medium text-slate-600">
+                                {{ viewDate | date: 'MMMM yyyy' }}
+                            </div>
+                        </div>
+
+                        <div class="relative overflow-x-auto">
+                            <!-- Spinner Overlay -->
+                            <div *ngIf="showSpinner"
+                                class="absolute inset-0 z-10 bg-white/60 flex items-center justify-center">
+                                <p-progressspinner strokeWidth="3" fill="transparent" animationDuration="1s">
+                                </p-progressspinner>
+                            </div>
+
+                            <!-- Custom Calendar Structure to match image -->
+                            <div class="border border-slate-200 rounded overflow-hidden">
+                                <!-- Day Headers -->
+                                <div class="grid grid-cols-7 bg-[#007fff]">
+                                    <div *ngFor="let day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']"
+                                        class="py-2 text-center text-white text-[13px] font-bold border-r border-white/20 last:border-0 uppercase tracking-wide">
+                                        {{day}}
+                                    </div>
+                                </div>
+
+                                <!-- Datepicker with Custom Templates -->
+                                <div class="legacy-calendar-wrapper">
+                                    <p-datepicker [(ngModel)]="viewDate" [inline]="true"
+                                        class="w-full custom-legacy-datepicker" [firstDayOfWeek]="1"
+                                        (onMonthChange)="onMonthChange($event)"
+                                        [style]="{'width': '100%', 'border': 'none', 'padding': '0'}">
+                                        <ng-template pTemplate="date" let-date>
+                                            <div class="flex flex-col w-full h-full min-h-[90px] relative border-b border-r border-slate-200 p-2 group transition-all"
+                                                [ngClass]="{'bg-[#ecf5e8]': date.today}">
+
+                                                <!-- Day Number: Top Right -->
+                                                <span class="text-sm font-normal text-right w-full"
+                                                    [ngClass]="(date.dayOfWeek === 0 || date.dayOfWeek === 6) ? 'text-[#d15b47]' : 'text-[#777]'">
+                                                    {{date.day}}
+                                                </span>
+
+                                                <!-- Status Badge: Bottom Right -->
+                                                <div *ngIf="getDayStatus(date) as status"
+                                                    class="mt-auto flex justify-end">
+                                                    <div class="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm uppercase tracking-tighter"
+                                                        [style.background-color]="status.backColor"
+                                                        [pTooltip]="status.cleanTime" [escape]="false"
+                                                        tooltipPosition="top">
+                                                        {{ status.dayStatus }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </ng-template>
+                                    </p-datepicker>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

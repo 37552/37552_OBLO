@@ -1,0 +1,42 @@
+:host ::ng-deep {
+    .orange-button {
+      background: #f97316 !important;
+      border: none !important;
+      color: white !important;
+      border-radius: 8px !important;
+      padding: 0.5rem 1rem !important;
+      font-weight: 600 !important;
+      transition: all 0.2s ease;
+  
+      &:hover {
+        background: #ea580c !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      }
+  
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .p-datepicker {
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .p-select {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    textarea.p-textarea {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        padding: 0.75rem;
+        
+        &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+    }
+}

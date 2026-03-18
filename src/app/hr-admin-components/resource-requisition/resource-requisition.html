@@ -1,0 +1,606 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="p-3 bg-[#FFFFFF] border-b border-gray-200">
+
+    <!-- Header Row -->
+    <div class="flex items-center justify-between">
+
+      <!-- Left Side: Breadcrumb -->
+      <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb text-sm'">
+      </p-breadcrumb>
+
+      <!-- Right Side: Add Button -->
+      <div>
+        <p-button *ngIf="isSave == 1" (click)="showDialog('add', [])" label="Add {{FormName}}" icon="pi pi-plus"
+          variant="text" styleClass="orange-button">
+        </p-button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white overflow-hidden">
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+      [searchText]="searchText" [actionTemplate]="actionTemplateRef" [tabs]="tabs" [activeTab]="activeTabValue"
+      (tabChange)="onTabChange($event)" (refresh)="getTableData(true)" (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-table-template>
+
+    <ng-template #actionTemplateRef let-item>
+      <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer" (click)="op.toggle($event)">
+        <i class="pi pi-ellipsis-v cursor-pointer"></i>
+      </button>
+      <p-popover #op>
+        <div class="flex flex-col">
+          <button *ngIf="isSave == 1 && item.status?.toUpperCase() !== 'APPROVED'" (click)="showDialog('update', item); op.hide()"
+            pTooltip="Update"
+            class="px-4 py-2 hover:bg-gray-100 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="!canEdit(item)">
+            <i class="pi pi-pencil"></i>
+          </button>
+          <button *ngIf="(isApprove == 1 || isForward == 1) && item.status?.toUpperCase() !== 'APPROVED'" (click)="openApprovalModal(item); op.hide()"
+            class="px-4 py-2 hover:bg-gray-100 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            pTooltip="Status" [disabled]="hasUserAlreadyActed(item)">
+            <i class="pi pi-check-circle"></i>
+          </button>
+          <button *ngIf="item?.approvalDetail && item?.approvalDetail.length"
+            (click)="openApprovalHistoryModal(item); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+            pTooltip="View History">
+            <i class="pi pi-history"></i>
+          </button>
+          <button (click)="printData(item.id); op.hide()" class="px-4 py-2 hover:bg-gray-100 text-left"
+            pTooltip="Print">
+            <i class="pi pi-print"></i>
+          </button>
+          <button *ngIf="isSave == 1" (click)="deleteItem(item); op.hide()"
+            class="px-4 py-2 hover:bg-gray-100 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+            pTooltip="Delete" [disabled]="!canDelete(item)">
+            <i class="pi pi-trash"></i>
+          </button>
+        </div>
+      </p-popover>
+    </ng-template>
+  </div>
+
+  <p-drawer [(visible)]="visible" position="right" [modal]="true" [style]="{ width: '60%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-2xl">{{ header }}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }" />
+      </div>
+      } @else {
+
+      <div class="flex border-b border-gray-200 mb-6">
+        <button (click)="setActiveJobTab('JOBDesc')" [class.border-b-2]="activeJobTab === 'JOBDesc'"
+          [class.border-blue-500]="activeJobTab === 'JOBDesc'" [class.text-blue-600]="activeJobTab === 'JOBDesc'"
+          [class.font-medium]="activeJobTab === 'JOBDesc'" [class.text-gray-500]="activeJobTab !== 'JOBDesc'"
+          [class.hover:text-gray-700]="activeJobTab !== 'JOBDesc'" title="Job Description"
+          class="px-4 py-2 text-sm focus:outline-none transition-colors">
+          JD
+        </button>
+        <button (click)="setActiveJobTab('MRF')" [class.border-b-2]="activeJobTab === 'MRF'"
+          [class.border-blue-500]="activeJobTab === 'MRF'" [class.text-blue-600]="activeJobTab === 'MRF'"
+          [class.font-medium]="activeJobTab === 'MRF'" [class.text-gray-500]="activeJobTab !== 'MRF'"
+          [class.hover:text-gray-700]="activeJobTab !== 'MRF'" title="Manpower Requisition Form"
+          class="px-4 py-2 text-sm focus:outline-none transition-colors">
+          MRF
+        </button>
+      </div>
+      <div [class.hidden]="activeJobTab !== 'JOBDesc'">
+        <form [formGroup]="jobForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Job Type <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="jobData" optionLabel="drpoption" optionValue="drpvalue" formControlName="jobType"
+              [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Job Type"
+              [class.p-invalid]="isInvalid('jobType')" class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('jobType')){
+            <p class="text-red-500 text-xs mt-1">Job Type is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
+            <p-select [options]="qualificationDrp" optionLabel="drpoption" optionValue="drpvalue"
+              formControlName="qualification" [filter]="true" filterBy="drpoption" [showClear]="true"
+              placeholder="Select Qualification" class="custom-p-select w-full">
+            </p-select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Experience (In Years)</label>
+            <p-inputNumber [min]="0" [max]="100" inputId="ExperienceId" formControlName="experience"
+              placeholder="Enter Experience in Years" styleClass="w-full" class="w-full"
+              [inputStyleClass]="'w-full custom-p-select'" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Specific Condition</label>
+            <textarea id="specificId" formControlName="specificCondition" rows="2" maxlength="200"
+              placeholder="Enter Specific Condition"
+              class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm">
+                </textarea>
+          </div>
+        </form>
+      </div>
+
+      <div [class.hidden]="activeJobTab !== 'MRF'">
+        <form [formGroup]="mrfForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div *ngIf="postType === 'update' || postType === 'view'">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Indent Number</label>
+            <input type="text" id="indentEdtNum" formControlName="indentNoControl" readonly class="w-full rounded-md text-base border border-gray-300 bg-gray-100 cursor-not-allowed 
+                px-3 py-1 focus:outline-none text-sm" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Division <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="divisionDrp" optionLabel="drpoption" optionValue="drpvalue" formControlName="division"
+              [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Division" appendTo="body"
+              [class.p-invalid]="isInvalid('division')" class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('division')){
+            <p class="text-red-500 text-xs mt-1">Division is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Department <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="departmentDrp" optionLabel="drpoption" optionValue="drpvalue"
+              formControlName="department" [filter]="true" filterBy="drpoption" [showClear]="true" appendTo="body"
+              placeholder="Select Department" [class.p-invalid]="isInvalid('department')"
+              class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('department')){
+            <p class="text-red-500 text-xs mt-1">Department is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Designation <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="designationDrp" optionLabel="drpoption" optionValue="drpvalue"
+              formControlName="designation" [filter]="true" filterBy="drpoption" [showClear]="true" appendTo="body"
+              placeholder="Select Designation" [class.p-invalid]="isInvalid('designation')"
+              class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('designation')){
+            <p class="text-red-500 text-xs mt-1">Designation is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Profile <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="profileDrp" optionLabel="drpoption" optionValue="drpvalue" formControlName="profile"
+              [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Profile" appendTo="body"
+              [class.p-invalid]="isInvalid('profile')" class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('profile')){
+            <p class="text-red-500 text-xs mt-1">Profile is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+            <p-select [options]="locationDrp" optionLabel="drpoption" optionValue="drpvalue" formControlName="location"
+              [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Location" appendTo="body"
+              [virtualScroll]="true" [virtualScrollItemSize]="38" [class.p-invalid]="isInvalid('location')"
+              class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('location')){
+            <p class="text-red-500 text-xs mt-1">Location is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Reporting To <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="reportingTo" optionLabel="drpoption" optionValue="drpvalue" appendTo="body"
+              [virtualScroll]="true" [virtualScrollItemSize]="38" formControlName="reportingTo" [filter]="true"
+              filterBy="drpoption" [showClear]="true" placeholder="Select Reporting To"
+              [class.p-invalid]="isInvalid('reportingTo')" class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('reportingTo')){
+            <p class="text-red-500 text-xs mt-1">Reporting To is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Replacement <span
+                class="text-red-500">*</span></label>
+            <p-select [options]="replacementDrp" optionLabel="drpoption" optionValue="drpvalue" appendTo="body"
+              formControlName="replacement" (onChange)="onReplacementChange($event)" [filter]="true"
+              filterBy="drpoption" [showClear]="true" placeholder="Select Replacement"
+              [class.p-invalid]="isInvalid('replacement')" class="custom-p-select w-full">
+            </p-select>
+            @if(isInvalid('replacement')){
+            <p class="text-red-500 text-xs mt-1">Replacement is required.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Min CTC (In Lakh)</label>
+            <p-inputNumber inputId="minCtc" formControlName="minCtc" [minFractionDigits]="2" [maxFractionDigits]="2"
+              placeholder="Enter Min CTC" styleClass="w-full" class="w-full"
+              [inputStyleClass]="'w-full custom-p-select'" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Max CTC (In Lakh)</label>
+            <p-inputNumber inputId="maxCtc" formControlName="maxCtc" [minFractionDigits]="2" [maxFractionDigits]="2"
+              placeholder="Enter Max CTC" styleClass="w-full" class="w-full"
+              [inputStyleClass]="'w-full custom-p-select'" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"> JD <span class="text-red-500">*</span></label>
+            <textarea id="jobPurposeID" formControlName="jobDescription" rows="2" maxlength="200"
+              title="job Description" placeholder="Enter Job Description"
+              [class.p-invalid]="isInvalid('jobDescription')"
+              class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm">
+                </textarea>
+            @if(isInvalid('jobDescription')){
+            <p class="text-red-500 text-xs mt-1">
+              @if(mrfForm.get('jobDescription')?.errors?.['required']){
+              Job Description is required.
+              } @else if(mrfForm.get('jobDescription')?.errors?.['invalidValue'])
+              {
+              Only dots or blank spaces are not allowed.
+              } @else if(mrfForm.get('jobDescription')?.errors?.['noAlphaNumeric']){
+              Must contain at least one letter or number.
+              }
+            </p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Remarks</label>
+            <textarea id="descriptionID" formControlName="additionalRemarks" rows="2" maxlength="200"
+              placeholder="Enter Additional Remarks"
+              class="w-full rounded-md text-base border-2 border-gray-300 px-3 py-1 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm">
+                </textarea>
+          </div>
+        </form>
+      </div>
+
+
+      <div class="col-span-2 -mx-3 sm:-mx-3 mt-4 mb-4">
+        <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+            Other Details
+          </h3>
+          <div class="flex items-center space-x-2"></div>
+        </div>
+      </div>
+
+      <div class="flex border-b border-gray-200 mb-6 mt-6">
+        <button (click)="setActiveAssetTab('assets')" [class.border-b-2]="activeAssetTab === 'assets'"
+          [class.border-blue-500]="activeAssetTab === 'assets'" [class.text-blue-600]="activeAssetTab === 'assets'"
+          [class.font-medium]="activeAssetTab === 'assets'" [class.text-gray-500]="activeAssetTab !== 'assets'"
+          [class.hover:text-gray-700]="activeAssetTab !== 'assets'"
+          class="px-4 py-2 text-sm focus:outline-none transition-colors">
+          Assets Required
+        </button>
+        <button (click)="setActiveAssetTab('skills')" [class.border-b-2]="activeAssetTab === 'skills'"
+          [class.border-blue-500]="activeAssetTab === 'skills'" [class.text-blue-600]="activeAssetTab === 'skills'"
+          [class.font-medium]="activeAssetTab === 'skills'" [class.text-gray-500]="activeAssetTab !== 'skills'"
+          [class.hover:text-gray-700]="activeAssetTab !== 'skills'"
+          class="px-4 py-2 text-sm focus:outline-none transition-colors">
+          Skills Required
+        </button>
+        <button *ngIf="replacementSelected" (click)="setActiveAssetTab('replacements')"
+          [class.border-b-2]="activeAssetTab === 'replacements'"
+          [class.border-blue-500]="activeAssetTab === 'replacements'"
+          [class.text-blue-600]="activeAssetTab === 'replacements'"
+          [class.font-medium]="activeAssetTab === 'replacements'"
+          [class.text-gray-500]="activeAssetTab !== 'replacements'"
+          [class.hover:text-gray-700]="activeAssetTab !== 'replacements'"
+          class="px-4 py-2 text-sm focus:outline-none transition-colors">
+          Replacements Required
+        </button>
+      </div>
+
+      <div [class.hidden]="activeAssetTab !== 'assets'">
+        <form [formGroup]="assetsForm">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Assets</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex items-center space-x-2">
+                <p-multiSelect [options]="assetDrp" appendTo="body" formControlName="assets" optionLabel="drpoption"
+                  [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Assets" appendTo="body"
+                  class="custom-p-select w-full">
+                  <ng-template let-selectedItems pTemplate="selectedItems">
+                    <div class="flex flex-wrap gap-2">
+                      <span *ngFor="let item of selectedItems"
+                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        {{ item.drpoption }}
+                      </span>
+                    </div>
+                  </ng-template>
+                </p-multiSelect>
+
+                <p-button (click)="addAssets()" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                  styleClass="orange-button" [disabled]="addDisabled" />
+              </div>
+            </div>
+
+            <p-table *ngIf="assetsList.length > 0" [value]="[1]" showGridlines
+              [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="text-sm font-medium">Assets</th>
+                  <th class="text-sm font-medium">Action</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+                <tr>
+                  <td>
+                    <div class="flex flex-wrap gap-2">
+                      <span *ngFor="let asset of assetsList trackBy: trackByDrp"
+                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        {{ asset.drpoption }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-button severity="danger" icon="pi pi-trash" outlined (onClick)="deleteAssetRow()"
+                      [disabled]="isViewMode">
+                    </p-button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+
+          </div>
+        </form>
+      </div>
+
+      <div [class.hidden]="activeAssetTab !== 'skills'">
+        <form [formGroup]="skillsForm">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex items-center space-x-2">
+                <p-multiSelect [options]="skillsDrp" appendTo="body" formControlName="skills" optionLabel="drpoption"
+                  [filter]="true" filterBy="drpoption" [showClear]="true" placeholder="Select Skills"
+                  class="custom-p-select w-full">
+                  <ng-template let-selectedItems pTemplate="selectedItems">
+                    <div class="flex flex-wrap gap-2">
+                      <span *ngFor="let item of selectedItems"
+                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        {{ item.drpoption }}
+                      </span>
+                    </div>
+                  </ng-template>
+                </p-multiSelect>
+
+                <p-button (click)="addSkills()" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                  styleClass="orange-button" [disabled]="skillsAddDisabled" />
+              </div>
+            </div>
+
+            <p-table *ngIf="skillsList.length > 0" [value]="[1]" showGridlines
+              [tableStyle]="{ 'min-width': '50rem', 'margin-top': '20px' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="text-sm font-medium">Skills</th>
+                  <th class="text-sm font-medium">Action</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body">
+                <tr>
+                  <td>
+                    <div class="flex flex-wrap gap-2">
+                      <span *ngFor="let skill of skillsList"
+                        class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        {{ skill.drpoption }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-button severity="danger" icon="pi pi-trash" outlined (onClick)="deleteSkillsRow()"
+                      [disabled]="isViewMode">
+                    </p-button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+
+          </div>
+        </form>
+      </div>
+
+      <div *ngIf="replacementSelected" [class.hidden]="activeAssetTab !== 'replacements'">
+        <p-table #dt showGridlines [value]="resignedEmpList" [(selection)]="selectedEmployees" dataKey="empCode"
+          (selectionChange)="onSelectionChange($event)" [rowHover]="true" [rows]="10" [paginator]="true"
+          [loading]="isLoading" [rowsPerPageOptions]="[10, 25, 50]"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" [showCurrentPageReport]="true"
+          [globalFilterFields]="['empName', 'empCode', 'designation']">
+
+          <ng-template #caption>
+            <div class="flex justify-end">
+              <input pInputText type="text" [(ngModel)]="searchValue"
+                (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Search" />
+            </div>
+          </ng-template>
+
+          <ng-template #header>
+            <tr>
+              <th style="width:4rem">Action</th>
+              <th pSortableColumn="sno" class="text-sm font-medium">S.No</th>
+              <th pSortableColumn="empName" class="text-sm font-medium">Employee Name</th>
+              <th pSortableColumn="empCode" class="text-sm font-medium">Employee Code</th>
+              <th pSortableColumn="designation" class="text-sm font-medium">Designation</th>
+              <th pSortableColumn="lastWorkingDate" class="text-sm font-medium">Last Working Date</th>
+              <th pSortableColumn="gradePay" class="text-sm font-medium">Grade Pay</th>
+              <th pSortableColumn="ctc" class="text-sm font-medium">CTC</th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-employee let-rowIndex="rowIndex">
+            <tr class="p-selectable-row">
+              <td class="text-sm"><p-tableCheckbox [value]="employee" /></td>
+              <td class="text-sm">{{ rowIndex + 1 }}</td>
+              <td class="text-sm">{{ employee.empName }}</td>
+              <td class="text-sm">{{ employee.empCode }}</td>
+              <td class="text-sm">{{ employee.designation }}</td>
+              <td class="text-sm">{{ employee.lastWorkingDate | date: 'dd-MM-yyyy' }}</td>
+              <td class="text-sm">{{ employee.gradePay }}</td>
+              <td class="text-sm">{{ employee.ctc | number: '1.0-0' }}</td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="8" class="text-center text-sm font-medium">No resigned employees found.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+      </div>
+
+
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+        <button pButton type="submit" (click)="onSubmit($event)"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button pButton label="Reset" (click)="onClear()"
+          class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-drawer [(visible)]="historyDrawerVisible" position="right" [modal]="true"
+    [style]="{ width: '50%', 'max-width': '100%'}" (onHide)="onHistoryDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-md sm:text-xl">Approval History ({{approalHistoryData?.indentNo}})</span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex items-center justify-center min-h-[400px]">
+        <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+          [style]="{ width: '50px', height: '50px' }" />
+      </div>
+      } @else {
+
+      <div class="approval-history-modal" [class.active]="approalHistoryData">
+        <div class="approval-content" style="overflow-y:auto;">
+          <p-timeline *ngIf="approalHistoryData?.approvalDetail?.length" [value]="approalHistoryData.approvalDetail"
+            align="alternate" class="customized-timeline">
+            <ng-template #marker let-item>
+              <span class="flex w-8 h-8 items-center justify-center text-white rounded-full z-10 shadow-sm"
+                [ngStyle]="{ 'background-color': item.WfStatus === 'Pending' ? '#f59e0b' : item.WfStatus === 'Rejected' ? '#ef4444'  : '#22c55e'}">
+                <i
+                  [class]=" item.WfStatus === 'Pending' ? 'pi pi-clock'  : item.WfStatus === 'Rejected'  ? 'pi pi-times'  : 'pi pi-check'"></i>
+              </span>
+            </ng-template>
+
+            <ng-template #content let-item let-i="index">
+              <p-card [header]="item.wflevel"
+                class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="pb-1.5">
+                  <span class="px-2 py-1 rounded-full text-xs sm:text-sm font-semibold text-white inline-block"
+                    [ngClass]="{
+    'bg-yellow-500': item.WfStatus === 'Pending',
+    'bg-orange-500':  item.WfStatus === 'In-Review',
+    'bg-blue-500': item.WfStatus === 'Forwarded',
+    'bg-green-500': item.WfStatus === 'Approved' || item.WfStatus === 'Approved/ Accepted' || item.WfStatus === 'Approved/Accepted',
+    'bg-red-500': item.WfStatus === 'Rejected',
+    'bg-gray-400': !['Pending', 'In-Review', 'Forwarded', 'Approved', 'Approved/ Accepted', 'Approved/Accepted', 'Rejected'].includes(item.WfStatus)
+  }">
+                    {{ item.WfStatus }}
+                  </span>
+
+                </div>
+
+                <div class="details">
+                  <p *ngIf="item.wflevel !== 'Creator'" class="text-sm">
+                    <strong>Role:</strong> {{ item.role || '-' }}
+                  </p>
+                  <ng-container *ngIf="item.WfStatus !== 'Pending'">
+                    <p class="text-sm"><strong>User:</strong> {{ item.approvedBy || '-' }}</p>
+                    <p class="text-sm">
+                      <strong>Timestamp:</strong>
+                      {{ item.createdOn | date : 'dd-MM-yyyy h:mm a' }}
+                    </p>
+                    <p *ngIf="item.wflevel !== 'Creator'" class="text-sm">
+                      <strong>Comments:</strong> {{ item.approvalRemarks || '-' }}
+                    </p>
+                  </ng-container>
+                </div>
+              </p-card>
+            </ng-template>
+
+          </p-timeline>
+          <div *ngIf="!approalHistoryData?.approvalDetail?.length" class="text-center text-gray-500 mt-5">
+            No approval history available.
+          </div>
+        </div>
+      </div>
+
+      }
+    </ng-template>
+  </p-drawer>
+
+
+  <p-dialog [(visible)]="approvalDailog" header="Manpower Requisition Approval ({{ selectedItem?.indentNo }})"
+    [modal]="true" [style]="{ width: 'auto' }">
+    <div class="mb-6">
+      <label class="block font-semibold mb-2 text-base">Remarks*</label>
+      <input type="text" pInputText class="w-full" id="approvalRemarks" [(ngModel)]="remark"
+        [ngClass]="{ 'p-invalid': !isValidremark }" autocomplete="off" />
+      <small *ngIf="!isValidremark" class="p-error block mt-1 text-red-500">
+        Remarks is required
+      </small>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <p-button *ngIf="isApprove == 1" label="Approve" severity="success"
+        (click)="OnSubmitAction('Approve')"></p-button>
+      <p-button *ngIf="isForward == 1" label="Forward" severity="info" (click)="OnSubmitAction('Forward')"></p-button>
+      <p-button *ngIf="isReject == 1" label="Reject" severity="danger" (click)="OnSubmitAction('Reject')"></p-button>
+    </div>
+  </p-dialog>
+
+
+  <p-dialog [(visible)]="printDialog" header="Print Preview" [modal]="true" [maximizable]="true"
+    [style]="{ width: '80rem', maxWidth: '100%' }">
+    <div id="poPrintWrapper" [innerHTML]="printContent"></div>
+    <ng-template pTemplate="footer">
+      <p-button label="Print" icon="pi pi-print" (click)="printContentAction()" [disabled]="!isPrint"></p-button>
+      <p-button label="Close" icon="pi pi-times" (click)="printDialog = false" severity="secondary"></p-button>
+    </ng-template>
+  </p-dialog>
+
+
+
+  <p-confirmDialog></p-confirmDialog>
+  <p-toast></p-toast>
+</div>

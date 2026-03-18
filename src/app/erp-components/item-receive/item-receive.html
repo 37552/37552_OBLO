@@ -1,0 +1,51 @@
+<div class="p-3 sm:p-3 bg-[#FFFFFF]" >
+    <p-breadcrumb 
+      [model]="breadcrumbItems"  
+      [styleClass]="'custom-breadcrumb mb-1 text-sm'">
+    </p-breadcrumb>
+</div>
+
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <div class="bg-white overflow-hidden">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">{{this.FormName}}</h2>
+    </div>
+
+     <p-button icon="pi pi-file-excel" class="mr-2 text-green-600 hover:text-green-700" styleClass="p-button-text"
+          pTooltip="Excel Download" (onClick)="exportAsXLSXCustom()"></p-button>
+
+     <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+            [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+            [searchText]="searchText" [jsonTemplate]="jsonTemplateRef" (pageChange)="onPageChange($event)" 
+            (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+     </app-table-template>
+
+    <ng-template #jsonTemplateRef let-item>
+        <p-select
+        [options]="statusDrp"
+        optionLabel="drpOption"
+        optionValue="drpValue"
+        formControlName="statusId"
+        [filter]="true"
+        filterBy="drpOption"
+        [showClear]="true"
+        placeholder="Select Status"
+        class="custom-p-select w-full"
+        (onChange)="onStatusChange($event,data)"
+        appendTo="body">
+      </p-select>
+    </ng-template>
+
+     <button pButton type="submit" (click)="OnSubmitModal()" style="margin: 12px 20px;"
+    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition">Submit</button>
+
+    </div>
+
+   
+
+ 
+    
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>
+

@@ -1,0 +1,208 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <!-- Header Section -->
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white border-b border-gray-200 p-4">
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Organisation Dropdown -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-gray-700">Organisation</label>
+            <p-select
+              [(ngModel)]="selectedOrgId"
+              [options]="orgList"
+              optionLabel="drpOption"
+              optionValue="drpValue"
+              placeholder="Select Organisation"
+              class="w-full">
+            </p-select>
+          </div>
+
+          <!-- Appraisal Period Dropdown -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-gray-700">Appraisal Period</label>
+            <p-select
+              [(ngModel)]="selectedAppraisalPeriodId"
+              [options]="appraisalPeriodList"
+              optionLabel="drpOption"
+              optionValue="drpValue"
+              placeholder="Select Appraisal Period"
+              class="w-full">
+            </p-select>
+          </div>
+
+          <!-- Department Dropdown -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-gray-700">Department</label>
+            <p-select
+              [(ngModel)]="selectedDeptId"
+              [options]="departmentList"
+              optionLabel="drpOption"
+              optionValue="drpValue"
+              placeholder="Select Department"
+              class="w-full">
+            </p-select>
+          </div>
+        </div>
+
+        <!-- Search Button -->
+        <div class="flex justify-start pt-2">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-search"
+            label="Search"
+            (click)="getFilterData()"
+            [disabled]="isLoading"
+            class="p-button-success">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading || data.length > 0" class="p-4">
+      <app-table-template 
+        [data]="paginatedData" 
+        [columns]="columns"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [isLoading]="isLoading"
+        [currentPage]="pageNo"
+        [sortColumn]="sortColumn"
+        [sortDirection]="sortDirection"
+        [searchText]="searchText"
+        [jsonTemplate]="vendordata"
+        [jsonTemplate1]="makeDetailsTemplate"
+        [jsonTemplate2]="companyDetailsTemplate"
+        [jsonTemplate3]="packageDetailsTemplate"
+        [rowTemplate]="rowTemplateRef" 
+        (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+
+
+           <ng-template #vendordata let-item>
+             <td class="px-6 py-4 whitespace-nowrap">
+               <div class="flex flex-col items-center text-center gap-1">
+                 <ng-container *ngIf="item.selfAssessmentDate; else noSelf">
+                   <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                     <i class="pi pi-check text-green-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs text-gray-500 mt-1">
+                     {{ item.selfAssessmentDate | date:'dd-MMM-yyyy' }}
+                     <br/>
+                     {{ item.empName  }}
+                   </div>
+                 </ng-container>
+           
+                 <ng-template #noSelf>
+                   <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                     <i class="pi pi-times text-red-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs text-gray-500 mt-1">Pending</div>
+                 </ng-template>
+               </div>
+             </td>
+           </ng-template>
+           
+           
+           <ng-template #makeDetailsTemplate let-item>
+             <td class="px-6 py-4 whitespace-nowrap">
+               <div class="flex flex-col items-center text-center gap-1">
+                 <ng-container *ngIf="item.appraiserDate; else noAppraiser">
+                   <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                     <i class="pi pi-check text-green-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs font-medium text-gray-900" *ngIf="item.apraisar">
+                     {{ item.appraiserDate | date:'dd-MMM-yyyy' }}
+                     <br/>
+                     {{ item.apraisar  }}
+                   </div>
+                 </ng-container>
+           
+                 <ng-template #noAppraiser>
+                   <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                     <i class="pi pi-times text-red-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs text-gray-500 mt-1">Pending</div>
+                 </ng-template>
+               </div>
+             </td>
+           </ng-template>
+           
+           
+           <ng-template #companyDetailsTemplate let-item>
+             <td class="px-6 py-4 whitespace-nowrap">
+               <div class="flex flex-col items-center text-center gap-1">
+                 <ng-container *ngIf="item.reviewerDate; else noReviewer">
+                   <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                     <i class="pi pi-check text-green-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs font-medium text-gray-900" *ngIf="item.reviewer">
+                     {{ item.reviewer | date:'dd-MMM-yyyy' }}
+                     <br/>
+                     {{ item.reviewer  }}
+                   </div>
+                 </ng-container>
+           
+                 <ng-template #noReviewer>
+                   <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                     <i class="pi pi-times text-red-600 text-lg"></i>
+                   </div>
+                   <div class="text-xs text-gray-500 mt-1">Pending</div>
+                 </ng-template>
+               </div>
+             </td>
+           </ng-template>
+           
+           
+          <ng-template #rowTemplateRef let-item>
+            <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900">{{ item.empName }}</div>
+                <div class="text-sm text-gray-500">{{ item.empid }}</div>
+              </div>
+            </div>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ item.department }}</div>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ item.designation }}</div>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">
+              {{ item.doj | date:'dd-MMM-yyyy' }}
+            </div>
+          </td>
+        </ng-template>
+
+
+       <ng-template #packageDetailsTemplate let-item>
+         <button
+           pButton
+           icon="pi pi-list"
+           class="p-button-rounded p-button-text p-button-info"
+           pTooltip="View Details"
+           (click)="viewPackageDetails(item)">
+         </button>
+       </ng-template>
+
+      </app-table-template>
+    </div>
+  </div>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

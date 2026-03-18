@@ -1,0 +1,22 @@
+<p-dialog [(visible)]="visible" [modal]="true" header="Upload Image" [style]="{ width: '38vw' }"
+    (onHide)="closeDialog()">
+    <div class="flex flex-col gap-4">
+        <p-fileUpload #pu name="image" customUpload="true" accept="image/*" [multiple]="false"
+            [showUploadButton]="false" [showCancelButton]="false" chooseLabel="Select Image"
+            (onSelect)="onFileSelect($event)">
+        </p-fileUpload>
+        <!-- @if(previewUrl){
+        <div class="flex justify-center">
+            <img [src]="previewUrl" class="max-h-48 rounded shadow" />
+        </div>
+        } -->
+    </div>
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" (onClick)="closeDialog()">
+            </p-button>
+            <p-button label="Upload" [loading]="isUploading" [disabled]="!selectedFile" (onClick)="upload()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>

@@ -1,0 +1,93 @@
+<div class="h-screen bg-[#FFFFFF] w-full flex flex-col md:flex-row font-sans overflow-hidden">
+    <!-- Left side - Login/Reset Form -->
+    <div class="flex-1 flex flex-col items-center p-3 justify-center bg-white md:w-1/2">
+        <div class="max-w-md w-full">
+            <div class="text-[#1976D2] text-5xl mb-4 text-left">
+                <i class="pi" [class]="formIcon()"></i>
+            </div>
+            <h1 class="text-4xl md:text-4xl font-bold text-[#1976D2] mb-2">{{ formTitle() }}</h1>
+            <p class="text-md text-gray-500 mb-8">{{ formSubtitle() }}</p>
+            @if (isLogin()) {
+            <!-- Login Form -->
+            <div class="space-y-3" (keydown.enter)="login()">
+                <!-- Email Input -->
+                <div class="relative w-full">
+                    <i class="pi pi-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" [(ngModel)]="userId" placeholder="User Id" (keydown.enter)="login()"
+                        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <!-- Password Input -->
+                <div class="relative w-full">
+                    <!-- Lock Icon Left -->
+                    <i class="pi pi-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+
+                    <!-- Input Field -->
+                    <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" placeholder="Password"
+                        (keydown.enter)="login()"
+                        class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+                    <!-- Eye Icon INSIDE Input -->
+                    <i class="pi absolute top-1/2 right-[15px] -translate-y-1/2 cursor-pointer text-gray-400"
+                        [ngClass]="showPassword ? 'pi-eye-slash' : 'pi-eye'" (click)="togglePassword()">
+                    </i>
+                </div>
+
+                <!-- Login Button -->
+                <div class="space-y-2">
+                    <app-captcha></app-captcha>
+                    <button (click)="login()"
+                        class="w-full bg-[#1976D2] cursor-pointer text-white py-3 mt-2 px-4 font-bold rounded-lg shadow-lg hover:bg-[#1976D2] transition duration-300">
+                        @if (!isProccess()) {
+                        <span>LOGIN</span>
+                        } @else {
+                        <div
+                            class="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]">
+                        </div>
+                        }
+                    </button>
+                </div>
+                <!-- Forgot Password Link -->
+                <div class="text-center text-blue-600 hover:underline cursor-pointer text-sm font-medium"
+                    (click)="toggleView()">
+                    FORGOT PASSWORD?
+                </div>
+            </div>
+            } @else {
+            <!-- Password Reset Form -->
+            <div class="space-y-6">
+                <!-- Email Input -->
+                <div class="relative w-full">
+                    <i class="pi pi-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="email" [(ngModel)]="resetEmail" placeholder="Email"
+                        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <!-- Reset Button -->
+                <button (click)="resetPassword()"
+                    class="w-full bg-[#1976D2] cursor-pointer text-white py-3 px-4 font-bold rounded-lg shadow-lg hover:bg-[#1976D2] transition duration-300">
+                    SEND RESET LINK
+                </button>
+
+                <!-- Back to Login Link -->
+                <div class="text-center text-blue-600 hover:underline cursor-pointer text-sm font-medium"
+                    (click)="toggleView()">
+                    BACK TO LOGIN
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right side - Image & Logo -->
+    <div class="hidden md:block flex-1 relative md:w-1/2 bg-cover bg-center">
+        <div class="flex items-center justify-center h-full p-10">
+            <img src="../../assets/OBLO_mainlogo_0.png" alt="Logo"
+                class="max-w-full max-h-[80vh] object-contain md:mt-10">
+
+        </div>
+        <!-- Settings Icon -->
+        <div class="absolute top-8 right-8 text-white text-3xl opacity-75">
+            <i class="pi pi-cog"></i>
+        </div>
+    </div>
+</div>

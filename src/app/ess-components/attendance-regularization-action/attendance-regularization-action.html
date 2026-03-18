@@ -1,0 +1,167 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="bg-white min-h-screen p-4 sm:p-6">
+
+    <!-- Header / Breadcrumb -->
+    <div class="flex items-center justify-between p-3 border-b border-gray-200">
+        <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+    </div>
+
+    <!-- Main Content -->
+    <div class="p-4 flex flex-col gap-4">
+
+        <app-table-template [tabs]="tabs" [activeTab]="activeTab" (tabChange)="onTabChange($event)"
+            [data]="displayData" [totalCount]="filteredTotal" [pageSize]="pageSize" [currentPage]="currentPage"
+            (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+            (searchChange)="onSearchChange($event)"
+            [columns]="activeTab === 'pending' ? pendingHeaders : processedHeaders" [isLoading]="isLoading"
+            [headerExtraTemplate]="activeTab === 'pending' ? pendingRowTpl : null" [actionTemplate]="actionTpl"
+            [jsonTemplate]="activeTab === 'pending' ? actionColTpl : statusColTpl"
+            [jsonTemplate1]="activeTab === 'pending' ? remarkColTpl : null">
+        </app-table-template>
+
+    </div>
+
+
+    <ng-template #pendingRowTpl>
+        <div class="flex flex-col sm:flex-row items-end gap-4 p-3 bg-gray-50 border-b border-gray-200">
+
+            <!-- Employee Dropdown -->
+            <div class="flex flex-col gap-2 w-full sm:w-72">
+                <p-select [options]="drpOptions" [(ngModel)]="selectedEmpId" optionLabel="emp Name" optionValue="emp Id"
+                    [filter]="true" filterBy="emp Name" placeholder="--Select Employee--" (onChange)="getPendingData()"
+                    styleClass="w-full">
+                </p-select>
+            </div>
+
+            <!-- Submit Button -->
+            <p-button *ngIf="showTableData && regAttendanceData?.length" label="Submit Attendance" icon="pi pi-check"
+                (click)="submitAttendance()" [disabled]="!enableSubmitBtn" styleClass="p-button-sm p-button-primary">
+            </p-button>
+
+        </div>
+    </ng-template>
+
+    <!-- Action Button -->
+    <ng-template #actionTpl let-item>
+        <div class="flex justify-center">
+            <p-button *ngIf="item?.approvalDetail?.length" icon="pi pi-history" (click)="openApprovalHistoryModal(item)"
+                pTooltip="View Approval History" tooltipPosition="top"
+                styleClass="p-button-rounded p-button-info p-button-text p-button-sm">
+            </p-button>
+
+            <span *ngIf="!item?.approvalDetail?.length" class="text-gray-400">
+                -
+            </span>
+        </div>
+    </ng-template>
+
+    <!-- Pending Action Column -->
+    <ng-template #actionColTpl let-item let-index="index">
+        <select class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            (change)="getRegulaizeRowData($event, item.attendDate, index)">
+
+            <option value="">--Take Action--</option>
+            <option value="1">Approve</option>
+            <option value="3">Reject</option>
+
+        </select>
+    </ng-template>
+
+    <!-- Pending Remark Column -->
+    <ng-template #remarkColTpl let-item let-index="index">
+        <input type="text" [readonly]="item.active == 0" (change)="onChangeRemark($event, item.attendDate, index)"
+            placeholder="Enter remark..."
+            class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed" />
+    </ng-template>
+
+    <!-- Processed Status Column -->
+    <ng-template #statusColTpl let-item>
+        <p-tag [value]="item.status" [severity]="getSeverity(item.statusCode)">
+        </p-tag>
+    </ng-template>
+
+
+    <p-drawer [(visible)]="displayHistory" position="right" [modal]="true"
+        [style]="{ width: '40%', 'max-width': '100%' }" header="Approval History ({{ approalHistoryData?.serialNo }})">
+
+        <div class="flex flex-col gap-6 p-4">
+
+            <div *ngFor="let step of approalHistoryData?.approvalDetail; let last = last" class="relative pl-8 pb-8">
+
+                <!-- Line -->
+                <div *ngIf="!last" class="absolute left-[11px] top-[24px] bottom-0 w-[2px] bg-blue-100">
+                </div>
+
+                <!-- Dot -->
+                <div class="absolute left-0 top-1 w-6 h-6 rounded-full border-2 bg-white flex items-center justify-center z-10"
+                    [ngClass]="{
+                        'border-green-500 text-green-500': step.wflevel === 'Creator',
+                        'border-amber-500 text-amber-500': step.wflevel?.includes('Reviewer'),
+                        'border-blue-500 text-blue-500': step.wflevel === 'Approver' || !step.wflevel?.includes('Reviewer')
+                    }">
+
+                    <i class="pi pi-circle-fill text-[8px]"></i>
+                </div>
+
+                <!-- Card -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 shadow-sm">
+
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-sm font-bold text-gray-800 m-0">
+                            {{ step.wflevel }}
+                        </h4>
+
+                        <p-tag [value]="step.wfStatus || 'Pending'"
+                            [severity]="step.wfStatus === 'Completed' ? 'success' : 'info'">
+                        </p-tag>
+                    </div>
+
+                    <div class="space-y-1 mt-3 text-xs text-gray-600">
+
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-user text-[10px]"></i>
+                            <span class="font-semibold">Employee:</span> {{ step.employee }}
+                        </div>
+
+                        <div *ngIf="step.wflevel !== 'Creator'" class="flex items-center gap-2">
+                            <i class="pi pi-check-circle text-[10px]"></i>
+                            <span class="font-semibold">By:</span> {{ step.approvedBy }}
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <i class="pi pi-briefcase text-[10px]"></i>
+                            <span class="font-semibold">Role:</span> {{ step.role }}
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <i class="pi pi-calendar text-[10px]"></i>
+                            {{ step.createdOn | date: 'dd-MM-yyyy h:mm a' }}
+                        </div>
+
+                        <div *ngIf="step.approvalRemarks"
+                            class="mt-3 p-2 bg-white rounded border border-gray-100 italic text-gray-700">
+                            "{{ step.approvalRemarks }}"
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!approalHistoryData?.approvalDetail?.length"
+                class="flex flex-col items-center justify-center py-12 text-gray-400">
+
+                <i class="pi pi-info-circle text-4xl mb-4"></i>
+                <p>No history records found.</p>
+
+            </div>
+
+        </div>
+
+    </p-drawer>
+
+</div>

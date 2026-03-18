@@ -1,0 +1,114 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+
+    <!-- ================= BREADCRUMB ================= -->
+    <div class="bg-white overflow-hidden">
+        <div class="flex items-center justify-between p-3 border-b border-gray-200">
+            <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+        </div>
+    </div>
+
+    <!-- ================= FILTER CARD ================= -->
+    <div class="bg-white rounded-xl shadow-md p-6 mt-4">
+
+        <form #esicReturnReportForm="ngForm" (ngSubmit)="generateReport(esicReturnReportForm)" class="space-y-6">
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Organisation -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">
+                        Organisation
+                    </label>
+
+                    <p-select name="organisation" #organisation="ngModel" [options]="organisationDrpData"
+                        optionLabel="drpOption" optionValue="drpValue" [(ngModel)]="selectedOrg" required
+                        appendTo="body" placeholder="Select Organisation" class="w-full">
+                    </p-select>
+
+                    <small class="text-red-500"
+                        *ngIf="organisation.invalid && (organisation.dirty || organisation.touched)">
+                        Please select an organisation
+                    </small>
+                </div>
+
+                <!-- Month -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">
+                        Month
+                    </label>
+
+                    <p-select name="month" #month="ngModel" [options]="monthDrpData" optionLabel="drpOption"
+                        optionValue="drpValue" [(ngModel)]="selectedMonth" required appendTo="body"
+                        placeholder="Select Month" class="w-full">
+                    </p-select>
+
+                    <small class="text-red-500" *ngIf="month.invalid && (month.dirty || month.touched)">
+                        Please select a month
+                    </small>
+                </div>
+
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-4 pt-4 border-t border-gray-200">
+
+                <p-button type="button" (click)="resetReport(esicReturnReportForm)" label="Reset" icon="pi pi-refresh"
+                    severity="secondary" [outlined]="true">
+                </p-button>
+
+                <p-button *ngIf="tblData?.length" type="button" (click)="exportAsXLSX()" label="Export to Excel"
+                    icon="pi pi-file-excel" severity="success" [outlined]="true">
+                </p-button>
+
+                <p-button type="submit" label="Generate Report" icon="pi pi-file" [loading]="loading"
+                    styleClass="orange-button" [raised]="true">
+                </p-button>
+
+            </div>
+
+        </form>
+    </div>
+
+    <!-- ================= LOADING ================= -->
+    <div *ngIf="loading" class="flex justify-center items-center py-10">
+        <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <!-- ================= TABLE ================= -->
+    <div *ngIf="!loading && tblData?.length" class="mt-6 bg-white rounded-xl shadow-md p-4">
+
+        <p-table [value]="tblData" [scrollable]="true" scrollHeight="400px" [rowTrackBy]="trackByFn"
+            responsiveLayout="scroll" class="p-datatable-sm">
+
+            <!-- Header -->
+            <ng-template pTemplate="header">
+                <tr>
+                    <th *ngFor="let col of tableHeaders">
+                        {{ col }}
+                    </th>
+                </tr>
+            </ng-template>
+
+            <!-- Body -->
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td *ngFor="let col of tableHeaders">
+                        {{ row[col] }}
+                    </td>
+                </tr>
+            </ng-template>
+
+        </p-table>
+
+    </div>
+
+    <!-- ================= NO DATA ================= -->
+    <div *ngIf="!loading && noDatafoundCard" class="mt-6 bg-white rounded-xl shadow-md p-8 text-center">
+        <i class="pi pi-info-circle text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600 font-medium">
+            No data found for the selected filters.
+        </p>
+    </div>
+
+</div>

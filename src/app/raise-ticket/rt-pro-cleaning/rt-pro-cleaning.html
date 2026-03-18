@@ -1,0 +1,573 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+  <p-confirmDialog></p-confirmDialog>
+  <p-toast></p-toast>
+
+  <div class="bg-white rounded-md shadow-sm mb-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-gray-100">
+      <div class="mb-3 sm:mb-0">
+        <h2 class="text-base font-semibold text-gray-800">
+          <p-breadcrumb [model]="breadcrumbItems"></p-breadcrumb>
+        </h2>
+      </div>
+      <div *ngIf="isCreator" class="flex items-center space-x-2">
+        <p-button label=" New Ticket for {{nameList}}" icon="pi pi-plus" styleClass="orange-button p-button-warning"
+          (click)="showDialog('add', [])">
+        </p-button>
+      </div>
+
+      <div class="flex items-center gap-2 mb-3" *ngIf="!isCreator" role="tablist" aria-label="Ticket status tabs">
+        <button class="px-4 py-2 rounded-md text-sm font-semibold border transition-all duration-150" [ngClass]="{
+        'bg-blue-50 text-blue-700 border-blue-200 shadow-sm': selectedRequest === 'pending',
+        'bg-white text-gray-700 border-gray-200 hover:bg-gray-50': selectedRequest !== 'pending'
+      }" role="tab" [attr.aria-selected]="selectedRequest === 'pending'" (click)="onChangeRequestTab('pending')">
+          Pending Request
+        </button>
+
+        <button class="px-4 py-2 rounded-md text-sm font-semibold border transition-all duration-150" [ngClass]="{
+        'bg-blue-50 text-blue-700 border-blue-200 shadow-sm': selectedRequest !== 'pending',
+        'bg-white text-gray-700 border-gray-200 hover:bg-gray-50': selectedRequest === 'pending'
+      }" role="tab" [attr.aria-selected]="selectedRequest !== 'pending'" (click)="onChangeRequestTab('proceed')">
+          Processed Requests
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="bg-white rounded-lg border border-gray-200 p-0">
+    <app-table-template [data]="viewData" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+      [isLoading]="isLoading" [currentPage]="pageNo" (pageChange)="onPageChange($event)"
+      (searchChange)="onsearchChange($event)" (pageSizeChange)="onPageSizeChange($event)"
+      [actionTemplate]="actionTemplateRef">
+      <ng-template #actionTemplateRef let-item let-i="rowIndex">
+        <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v text-xl"></i>
+        </button>
+
+        <p-popover #op>
+          <div class="flex flex-col">
+            <ng-container *ngIf="selectedRequest === 'pending'">
+              <button (click)="onView(item); op.hide()" title="View" class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-eye"></i>
+              </button>
+              <button *ngIf="isCreator" (click)="onEdit(item); op.hide()" title="Update"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button *ngIf="!isCreator" (click)="openApprovalModal(item); op.hide()" title="Approve"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-check-circle"></i>
+              </button>
+
+              <button (click)="openHistoryModal(item); op.hide()" title="History"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-history"></i>
+              </button>
+            </ng-container>
+
+            <ng-container *ngIf="selectedRequest !== 'pending'">
+              <button (click)="onView(item); op.hide()" title="View" class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-eye"></i>
+              </button>
+              <button (click)="openHistoryModal(item); op.hide()" title="History"
+                class="px-4 py-2 hover:bg-gray-100 text-left">
+                <i class="pi pi-history"></i>
+              </button>
+            </ng-container>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <p-drawer [(visible)]="visible" position="right" [modal]="true"
+    [style]="{ width: '60%', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full gap-3 min-w-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-bold text-xl text-gray-800 truncate" [title]="header">
+            {{ header }}
+          </span>
+          <div class="bg-blue-50 p-2 rounded-full shrink-0">
+            <i [ngClass]="headerIcon" class="text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="h-full flex flex-col justify-between bg-gray-50/50">
+      <div class="flex-grow overflow-y-auto p-4 space-y-4 transition-all duration-200">
+        <form [formGroup]="proCleaningForm" (ngSubmit)="onSubmitTicketForm()">
+          <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+            <div
+              class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+              (click)="toggleOverview()">
+              <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-ticket text-indigo-600"></i>
+                <span>Ticket Details</span>
+              </h4>
+              <i [class]="
+                  showOverview
+                    ? 'pi pi-chevron-up text-indigo-600'
+                    : 'pi pi-chevron-down text-indigo-600'
+                "></i>
+            </div>
+
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5" *ngIf="showOverview">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Category <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="categoryDrp" formControlName="category" optionLabel="drpOption"
+                  optionValue="drpValue" placeholder="Select Category" appendTo="body"
+                  styleClass="w-full p-inputtext-sm" [filter]="true" (onChange)="onCategoryChange($event)" [ngClass]="{
+                    'p-invalid':
+                      proCleaningForm.get('category')?.invalid &&
+                      proCleaningForm.get('category')?.touched
+                  }"></p-select>
+                @if (isInvalid('category')) {
+                <small class="text-red-500 text-xs mt-1 block">Category is required.</small>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Sub Category <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="subCategoryDrp" formControlName="subCategory" optionLabel="drpOption"
+                  optionValue="drpValue" placeholder="Select Sub Category" appendTo="body"
+                  styleClass="w-full p-inputtext-sm" [filter]="true" (onChange)="onSubCategoryChange($event)" [ngClass]="{
+                    'p-invalid':
+                      proCleaningForm.get('subCategory')?.invalid &&
+                      proCleaningForm.get('subCategory')?.touched
+                  }"></p-select>
+                @if (isInvalid('subCategory')) {
+                <small class="text-red-500 text-xs mt-1 block">Sub Category is required.</small>
+                }
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-gray-600">
+                  Request Type <span class="text-red-500">*</span>
+                </label>
+                <p-select [options]="requestTypeDrp" formControlName="requestType" optionLabel="drpOption"
+                  optionValue="drpValue" placeholder="Select Request Type" appendTo="body"
+                  styleClass="w-full p-inputtext-sm" [filter]="true" (onChange)="onRequestTypeChange($event)" [ngClass]="{
+                    'p-invalid':
+                      proCleaningForm.get('requestType')?.invalid &&
+                      proCleaningForm.get('requestType')?.touched
+                  }"></p-select>
+                @if (isInvalid('requestType')) {
+                <small class="text-red-500 text-xs mt-1 block">Request Type is required.</small>
+                }
+              </div>
+
+              <div class="md:col-span-2 flex flex-col gap-1   rounded-md p-2">
+                <label class="text-xs font-semibold text-gray-600">
+                  Remarks <span class="text-red-500">*</span>
+                </label>
+
+                <textarea pInputTextarea formControlName="remarks" rows="3"
+                  class="w-full p-inputtext-sm resize-none border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter your remarks here..." [ngClass]="{
+                                                'p-invalid':
+                                                  proCleaningForm.get('remarks')?.invalid &&
+                                                  proCleaningForm.get('remarks')?.touched
+                                              }">
+                               </textarea>
+
+                @if (isInvalid('remarks')) {
+                <small class="text-red-500 text-xs mt-1 block">Remarks is required.</small>
+                }
+              </div>
+
+            </div>
+          </div>
+        </form>
+
+        <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+          <div
+            class="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
+            (click)="toggleItems()">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-shopping-cart text-green-600"></i>
+              <span>Item Details</span>
+              <span class="text-xs font-normal text-gray-500">({{ itemDetailsArray.length }} items)</span>
+            </h4>
+            <i [class]="
+                showItems
+                  ? 'pi pi-chevron-up text-green-600'
+                  : 'pi pi-chevron-down text-green-600'
+              "></i>
+          </div>
+
+          <div class="p-5 space-y-4" *ngIf="showItems">
+            <form [formGroup]="itemForm">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    Item <span class="text-red-500">*</span>
+                  </label>
+                  <p-select [options]="itemDrp" formControlName="item" optionLabel="drpOption" optionValue="drpValue"
+                    placeholder="Select Item" appendTo="body" styleClass="w-full p-inputtext-sm" [filter]="true"
+                    [ngClass]="{
+                      'p-invalid':
+                        itemForm.get('item')?.invalid &&
+                        itemForm.get('item')?.touched
+                    }"></p-select>
+                  @if (isItemFormInvalid('item')) {
+                  <small class="text-red-500 text-xs mt-1 block">Item is required.</small>
+                  }
+                </div>
+
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    UOM <span class="text-red-500">*</span>
+                  </label>
+                  <p-select [options]="uomDrp" formControlName="uom" optionLabel="drpOption" optionValue="drpValue"
+                    placeholder="Select UOM" appendTo="body" styleClass="w-full p-inputtext-sm" [filter]="true"
+                    [ngClass]="{
+                      'p-invalid':
+                        itemForm.get('uom')?.invalid &&
+                        itemForm.get('uom')?.touched
+                    }"></p-select>
+                  @if (isItemFormInvalid('uom')) {
+                  <small class="text-red-500 text-xs mt-1 block">UOM is required.</small>
+                  }
+                </div>
+
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    Quantity <span class="text-red-500">*</span>
+                  </label>
+                  <p-inputNumber formControlName="quantity" mode="decimal" [min]="0.01" [maxFractionDigits]="2"
+                    placeholder="Enter Quantity" styleClass="w-full p-inputtext-sm" [ngClass]="{
+                      'p-invalid':
+                        itemForm.get('quantity')?.invalid &&
+                        itemForm.get('quantity')?.touched
+                    }"></p-inputNumber>
+                  @if (isItemFormInvalid('quantity')) {
+                  <small class="text-red-500 text-xs mt-1 block">Quantity is required.</small>
+                  }
+                </div>
+
+                <div class="flex items-end gap-2">
+                  <p-button type="button" [label]="selectedItemEdit ? 'Update' : 'Add'" icon="pi pi-plus"
+                    styleClass="p-button-sm p-button-primary" (click)="addItem()"
+                    [disabled]="postType === 'view'"></p-button>
+                  @if (selectedItemEdit) {
+                  <p-button type="button" label="Clear" icon="pi pi-times" severity="secondary"
+                    styleClass="p-button-sm p-button-outlined" (click)="clearItemForm()"></p-button>
+                  }
+                </div>
+              </div>
+            </form>
+
+            @if (itemDetailsArray.length > 0) {
+            <div class="mt-4 border border-gray-200 rounded-lg overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">S.No</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Item</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">UOM</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
+                      <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700" *ngIf="postType !== 'view'">
+                        Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    @for (item of itemDetailsArray; track $index) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-2 text-gray-900">{{ $index + 1 }}</td>
+                      <td class="px-4 py-2 text-gray-900">{{ item.item }}</td>
+                      <td class="px-4 py-2 text-gray-900">{{ item.uom }}</td>
+                      <td class="px-4 py-2 text-gray-900">{{ item.quantity }}</td>
+                      <td class="px-4 py-2 text-center" *ngIf="postType !== 'view'">
+                        <div class="flex items-center justify-center gap-2">
+                          <button type="button" (click)="editItem(item, $index)"
+                            class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                            <i class="pi pi-pencil text-sm"></i>
+                          </button>
+                          <button type="button" (click)="deleteItem($index)" class="text-red-600 hover:text-red-800 p-1"
+                            title="Delete">
+                            <i class="pi pi-trash text-sm"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            } @else {
+            <div class="mt-4 p-8 text-center border border-gray-200 rounded-lg bg-gray-50">
+              <i class="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
+              <p class="text-sm text-gray-500">No items added yet. Please add items to proceed.</p>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 p-4 border-t bg-white z-10">
+        <p-button *ngIf="postType === 'add'" type="button" label="Reset" severity="secondary" icon="pi pi-refresh"
+          styleClass="p-button-outlined p-button-sm"
+          (click)="proCleaningForm.reset(); itemForm.reset(); itemDetailsArray = []"></p-button>
+
+        <p-button type="button" label="Close" severity="secondary" styleClass="p-button-outlined p-button-sm"
+          (click)="onDrawerHide()"></p-button>
+
+        <p-button *ngIf="postType !== 'view'" type="submit"
+          [label]="postType === 'update' ? 'Update Ticket' : 'Submit Ticket'" icon="pi pi-check"
+          styleClass="p-button-sm p-button-primary" (click)="onSubmitTicketForm()"></p-button>
+      </div>
+    </div>
+  </p-drawer>
+
+  <!-- History Drawer -->
+  <p-drawer [(visible)]="historyDrawerVisible" position="right" [modal]="true"
+    [style]="{ width: '480px', 'max-width': '100%', 'overflow-y': 'auto' }" (onHide)="closeHistoryDrawer()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full gap-3 min-w-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-bold text-xl text-gray-800 truncate" title="Approval History">
+            Approval History
+          </span>
+          <div class="bg-emerald-50 p-2 rounded-full shrink-0">
+            <i class="pi pi-history text-emerald-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <div class="p-4 space-y-3">
+      <div *ngIf="!approvalHistory?.length" class="p-4 text-center text-sm text-gray-500 border rounded-md bg-gray-50">
+        No history available.
+      </div>
+
+      <div *ngFor="let h of approvalHistory; let i = index" class="border rounded-lg p-3 bg-white shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold text-gray-800">Step {{ i + 1 }}</div>
+          <span class="px-2 py-1 text-xs rounded-full" [ngClass]="{
+              'bg-green-100 text-green-700': h.wfStatusId == 1,
+              'bg-yellow-100 text-yellow-700': h.wfStatusId == 2,
+              'bg-red-100 text-red-700': h.wfStatusId == 3,
+              'bg-blue-100 text-blue-700': h.wfStatusId == 6
+            }">
+            {{ h.wfStatus || h.status || 'N/A' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
+          <div>
+            <div class="text-gray-500 text-xs">Employee</div>
+            <div>{{ h.employee || h.approvedBy || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Role</div>
+            <div>{{ h.role || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Workflow</div>
+            <div>{{ h.workFlow || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Level</div>
+            <div>{{ h.wflevel || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Activity</div>
+            <div>{{ h.activity || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Status</div>
+            <div>{{ h.status || '-' }}</div>
+          </div>
+          <div class="sm:col-span-2">
+            <div class="text-gray-500 text-xs">Remarks</div>
+            <div>{{ h.approvalRemarks || h.remarks || '-' }}</div>
+          </div>
+          <div>
+            <div class="text-gray-500 text-xs">Date</div>
+            <div>{{ h.createdOn | date: 'short' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </p-drawer>
+
+  <p-dialog [(visible)]="approvalDialogVisible" [modal]="true" [draggable]="false" [resizable]="false"
+    [breakpoints]="{ '960px': '90vw', '640px': '100vw' }" [style]="{ width: '70vw', 'max-width': '1000px' }"
+    (onHide)="onApprovalDialogHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between w-full gap-3 min-w-0">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="font-bold text-xl text-gray-800 truncate" title="Take Action">
+            Take Action
+          </span>
+          <div class="bg-blue-50 p-2 rounded-full shrink-0">
+            <i class="pi pi-check-circle text-blue-600 text-xl"></i>
+          </div>
+        </div>
+        <button type="button" (click)="onApprovalDialogHide()"
+          class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
+          <i class="pi pi-times text-xl"></i>
+        </button>
+      </div>
+    </ng-template>
+
+    <div class="flex flex-col gap-4 bg-gray-50/50">
+      <div class="flex-grow overflow-y-auto p-4 space-y-4">
+        <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-gray-600">Category:</label>
+              <div class="text-sm text-gray-900 py-2 px-3 bg-gray-50 rounded border border-gray-200">
+                {{ selectedRow?.subCategory || '-' }}
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-gray-600">Sub Category:</label>
+              <div class="text-sm text-gray-900 py-2 px-3 bg-gray-50 rounded border border-gray-200">
+                {{ selectedRow?.subSubCategory || '-' }}
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-gray-600">Remarks:</label>
+              <div class="text-sm text-gray-900 py-2 px-3 bg-gray-50 rounded border border-gray-200">
+                {{ selectedRow?.remarks || '-' }}
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-gray-600">Enter Remarks:</label>
+              <input pInputText type="text" id="approvalRemarks" class="w-full p-inputtext-sm"
+                [(ngModel)]="approvalRemarksText" (input)="onChangeFinalRemark($event)" [ngClass]="{
+                  'border-red-400 ring-1 ring-red-400': approvalRemarksInvalid,
+                  'border-gray-300': !approvalRemarksInvalid
+                }" placeholder="Enter remarks" />
+              @if (approvalRemarksInvalid) {
+              <small class="text-red-500 text-xs mt-1 block">Please enter remarks.</small>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-shopping-cart text-blue-600"></i>
+              <span>Item Details</span>
+            </h4>
+          </div>
+
+          <div class="p-5">
+            <form [formGroup]="itemFormApproval">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">Item</label>
+                  <input pInputText type="text" class="w-full p-inputtext-sm" formControlName="item"
+                    [readonly]="true" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">UOM</label>
+                  <input pInputText type="text" class="w-full p-inputtext-sm" formControlName="uom" [readonly]="true" />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-600">
+                    Quantity <span class="text-red-500">*</span>
+                  </label>
+                  <p-inputNumber formControlName="quantity" mode="decimal" [min]="0.01" [maxFractionDigits]="2"
+                    placeholder="Enter Quantity" styleClass="w-full p-inputtext-sm" [ngClass]="{
+                      'p-invalid': itemFormApproval.get('quantity')?.invalid && 
+                      (itemFormApproval.get('quantity')?.dirty || itemFormApproval.get('quantity')?.touched)
+                    }"></p-inputNumber>
+                  @if (itemFormApproval.get('quantity')?.invalid &&
+                  (itemFormApproval.get('quantity')?.dirty || itemFormApproval.get('quantity')?.touched)) {
+                  <small class="text-red-500 text-xs mt-1 block">Quantity required</small>
+                  }
+                </div>
+              </div>
+
+              @if (selectedItemEditApproval) {
+              <div class="flex items-center gap-2 mb-4">
+                <p-button type="button" label="Update" icon="pi pi-check" styleClass="p-button-sm p-button-primary"
+                  (click)="updateRowApproval()"></p-button>
+                <p-button type="button" label="Cancel" severity="secondary" styleClass="p-button-sm p-button-outlined"
+                  (click)="onClearApproval()"></p-button>
+              </div>
+              }
+            </form>
+
+            @if (approvalItemDetailJson.length > 0) {
+            <div class="border border-gray-200 rounded-lg overflow-hidden mt-4">
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Item</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">UOM</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
+                      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Available Stock</th>
+                      <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    @for (item of approvalItemDetailJson; track $index) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-2 text-gray-900">{{ item.item || '-' }}</td>
+                      <td class="px-4 py-2 text-gray-900">{{ item.uom || '-' }}</td>
+                      <td class="px-4 py-2 text-gray-900">{{ item.quantity || '-' }}</td>
+                      <td class="px-4 py-2 text-gray-900">
+                        <button type="button" (click)="openAvailableStockModal('1', item)"
+                          class="text-blue-600 hover:text-blue-800 p-1" title="View Available Stock">
+                          <i class="pi pi-eye text-sm"></i>
+                        </button>
+                      </td>
+                      <td class="px-4 py-2 text-center">
+                        <button type="button" (click)="editRowApproval(item, $index)"
+                          class="text-blue-600 hover:text-blue-800 p-1" title="Edit">
+                          <i class="pi pi-pencil text-sm"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            } @else {
+            <div class="mt-4 p-8 text-center border border-gray-200 rounded-lg bg-gray-50">
+              <i class="pi pi-inbox text-4xl text-gray-400 mb-2"></i>
+              <p class="text-sm text-gray-500">No items found.</p>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 p-4 border-t bg-white z-10">
+        <p-button *ngIf="isApprove === 1" type="button" label="Approve" icon="pi pi-check"
+          styleClass="p-button-sm p-button-primary" (click)="OnSubmitAction('Approve')"
+          [disabled]="isLoading"></p-button>
+        <p-button *ngIf="isForward === 1" type="button" label="Forward" icon="pi pi-forward"
+          styleClass="p-button-sm p-button-primary" (click)="OnSubmitAction('Forward')"
+          [disabled]="isLoading"></p-button>
+        <p-button *ngIf="isReject === 1" type="button" label="Reject" icon="pi pi-times" severity="danger"
+          styleClass="p-button-sm" (click)="OnSubmitAction('Reject')" [disabled]="isLoading"></p-button>
+        <p-button *ngIf="isReturn === 1" type="button" label="Return" icon="pi pi-replay" severity="secondary"
+          styleClass="p-button-sm" (click)="OnSubmitAction('Return')" [disabled]="isLoading"></p-button>
+        <p-button type="button" label="Cancel" severity="secondary" styleClass="p-button-outlined p-button-sm"
+          (click)="onApprovalDialogHide()"></p-button>
+      </div>
+    </div>
+  </p-dialog>
+</div>

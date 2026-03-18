@@ -1,0 +1,1005 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-4 lg:p-0">
+
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        <p-button
+          (click)="showDialog('add',[])"
+          label="Add"
+          icon="pi pi-plus"
+          variant="text"
+          [raised]="true"
+          styleClass="orange-button" />
+      </div>
+    </div>
+
+    <app-table-template
+      [data]="data"
+      [columns]="columns"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [isLoading]="isLoading"
+      [currentPage]="pageNo"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      [searchText]="searchText"
+      [actionTemplate]="actionTemplateRef"
+      [jsonTemplate]="vendordata"
+      [jsonTemplate1]="makeDetailsTemplate"
+      [jsonTemplate2]="companyDetailsTemplate"
+      [jsonTemplate3]="GstDetailsTemplate"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)"
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #vendordata let-item>
+        <button
+          type="button"
+          pButton
+          icon="pi pi-id-card"
+          (click)="viewVendorDetails(item)"
+          class="p-button-rounded p-button-text p-button-info"
+          pTooltip="View Vendor Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #makeDetailsTemplate let-item>
+        <button
+          type="button"
+          pButton
+          icon="pi pi-box"
+          (click)="viewMakeDetails(item)"
+          class="p-button-rounded p-button-text p-button-info"
+          pTooltip="View Make Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #companyDetailsTemplate let-item>
+        <button
+          type="button"
+          pButton
+          icon="pi pi-building"
+          (click)="viewCompanyDetails(item)"
+          class="p-button-rounded p-button-text p-button-secondary"
+          pTooltip="View Company Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #GstDetailsTemplate let-item>
+        <button
+          type="button"
+          pButton
+          icon="pi pi-wallet"
+          (click)="GSTDetails(item)"
+          class="p-button-rounded p-button-text p-button-secondary"
+          pTooltip="View GST Details"
+          tooltipPosition="top">
+        </button>
+      </ng-template>
+
+      <ng-template #actionTemplateRef let-item>
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-600 cursor-pointer"
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button
+              (click)="showDialog('view', item); op.hide()"
+              pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-eye"></i>
+              <span class="text-sm">View</span>
+            </button>
+            <button
+              (click)="showDialog('update', item); op.hide()"
+              pTooltip="Update"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-pencil"></i>
+              <span class="text-sm">Update</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+
+    </app-table-template>
+
+  </div>
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '70%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl sm:text-2xl">{{header}}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[500px] px-4">
+        <p-progress-spinner
+          strokeWidth="6"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '60px', height: '60px' }" />
+        <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">
+          Loading material data...
+        </p>
+      </div>
+      }@else {
+      <form
+        [formGroup]="materialForm"
+        (ngSubmit)="onSubmit($event)"
+        class="space-y-6 sm:space-y-7 pb-24 sm:pb-0 px-2 sm:px-4">
+
+        <!-- Basic Information Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-info-circle text-indigo-600"></i>
+              Basic Information
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Item Name -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Item Name <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="itemName"
+                  [class.p-invalid]="isInvalid('itemName')"
+                  class="w-full"
+                  placeholder="Enter item name" />
+                @if(isInvalid('itemName')){
+                <small class="text-red-500 text-xs mt-1 block">Item Name is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Item Type -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Item Type <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="itemTypeId"
+                  [options]="itemTypes"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select item type"
+                  [class.p-invalid]="isInvalid('itemTypeId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('itemTypeId')){
+                <small class="text-red-500 text-xs mt-1 block">Item Type is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- HSN Code -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                HSN Code <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="HSNCode"
+                  [class.p-invalid]="isInvalid('HSNCode')"
+                  class="w-full"
+                  placeholder="Enter HSN code" />
+                @if(isInvalid('HSNCode')){
+                <small class="text-red-500 text-xs mt-1 block">HSN Code is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Short Description -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Short Description <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="shortDesc"
+                  [class.p-invalid]="isInvalid('shortDesc')"
+                  class="w-full"
+                  placeholder="Enter short description" />
+                @if(isInvalid('shortDesc')){
+                <small class="text-red-500 text-xs mt-1 block">Short Description is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Long Description -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Long Description <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <textarea
+                  pInputText
+                  formControlName="longDesc"
+                  [class.p-invalid]="isInvalid('longDesc')"
+                  class="w-full"
+                  rows="3"
+                  placeholder="Enter detailed description"></textarea>
+                @if(isInvalid('longDesc')){
+                <small class="text-red-500 text-xs mt-1 block">Long Description is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-lg sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-tags text-purple-600"></i>
+              Classification
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Category <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="itemCategoryId"
+                  [options]="itemCategories"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select category"
+                  [class.p-invalid]="isInvalid('itemCategoryId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('itemCategoryId')){
+                <small class="text-red-500 text-xs mt-1 block">Category is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Group -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Group <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="itemGroupId"
+                  [options]="itemGroups"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select group"
+                  [class.p-invalid]="isInvalid('itemGroupId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('itemGroupId')){
+                <small class="text-red-500 text-xs mt-1 block">Group is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Subgroup -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Subgroup <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="itemSubgroupId"
+                  [options]="itemSubgroups"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select subgroup"
+                  [class.p-invalid]="isInvalid('itemSubgroupId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('itemSubgroupId')){
+                <small class="text-red-500 text-xs mt-1 block">Subgroup is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Item Nature -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Item Nature <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="itemNatureId"
+                  [options]="itemNatures"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select item nature"
+                  [class.p-invalid]="isInvalid('itemNatureId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('itemNatureId')){
+                <small class="text-red-500 text-xs mt-1 block">Item Nature is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Specifications Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-box text-green-600"></i>
+              Specifications
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Unit -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Unit <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select
+                  formControlName="unitId"
+                  [options]="units"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select unit"
+                  [class.p-invalid]="isInvalid('unitId')"
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('unitId')){
+                <small class="text-red-500 text-xs mt-1 block">Unit is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Size -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Size <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="size"
+                  appOnlyNumber
+                  maxlength="2"
+                  [class.p-invalid]="isInvalid('size')"
+                  class="w-full"
+                  placeholder="Enter size" />
+                @if(isInvalid('size')){
+                <small class="text-red-500 text-xs mt-1 block">Size is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping & Logistics Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-amber-50 to-orange-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-truck text-amber-600"></i>
+              Shipping & Logistics
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Shipment Terms -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Shipment Terms <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="shipTerms"
+                  appOnlyNumber
+                  [class.p-invalid]="isInvalid('shipTerms')"
+                  class="w-full"
+                  placeholder="Enter shipment terms" />
+                @if(isInvalid('shipTerms')){
+                <small class="text-red-500 text-xs mt-1 block">Shipment Terms is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Freight -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Freight <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input
+                  type="text"
+                  pInputText
+                  formControlName="freight"
+                  appOnlyNumber
+                  [class.p-invalid]="isInvalid('freight')"
+                  class="w-full"
+                  placeholder="Enter freight details" />
+                @if(isInvalid('freight')){
+                <small class="text-red-500 text-xs mt-1 block">Freight is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4">
+                Remarks <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <textarea
+                  pInputText
+                  formControlName="remarks"
+                  [class.p-invalid]="isInvalid('remarks')"
+                  class="w-full"
+                  rows="2"
+                  placeholder="Enter remarks"></textarea>
+                @if(isInvalid('remarks')){
+                <small class="text-red-500 text-xs mt-1 block">Remarks is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Associated Companies Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-sky-50 to-indigo-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-briefcase text-sky-600"></i>
+              Associated Companies
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5">
+            <p-multiSelect
+              [options]="companies"
+              optionLabel="drpOption"
+              optionValue="drpValue"
+              [(ngModel)]="selectedCompanies"
+              [ngModelOptions]="{standalone: true}"
+              placeholder="Select companies"
+              [disabled]="postType === 'view'"
+              [maxSelectedLabels]="3"
+              class="w-full">
+            </p-multiSelect>
+          </div>
+        </div>
+
+        <!-- Makes Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-building text-cyan-600"></i>
+                Makes
+              </h4>
+              <button
+                type="button"
+                pButton
+                icon="pi pi-plus"
+                label="Add Make"
+                (click)="addMake()"
+                class="self-start sm:self-auto p-button-sm p-button-outlined p-button-info"
+                [disabled]="postType === 'view'">
+              </button>
+            </div>
+          </div>
+          <div class="p-4 sm:p-5">
+            @if(selectedMakes.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No makes added yet. Click "Add Make" to get started.</p>
+            </div>
+            }@else{
+            <div class="space-y-3">
+              <div
+                *ngFor="let make of selectedMakes; let i = index"
+                class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-cyan-300 transition-colors">
+                <span
+                  class="w-8 h-8 flex items-center justify-center bg-cyan-100 text-cyan-700 rounded-full text-sm font-semibold">
+                  {{i + 1}}
+                </span>
+                <p-select
+                  [(ngModel)]="make.makeId"
+                  [ngModelOptions]="{standalone: true}"
+                  [options]="makes"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select make"
+                  class="w-full sm:flex-1"
+                  [disabled]="postType === 'view'">
+                </p-select>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="make.code"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Code"
+                  class="w-full sm:w-32"
+                  [readonly]="postType === 'view'">
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="make.size"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Size"
+                  appOnlyNumber
+                  maxlength="2"
+                  class="w-full sm:w-32"
+                  [readonly]="postType === 'view'">
+                <button
+                  type="button"
+                  pButton
+                  icon="pi pi-trash"
+                  (click)="removeMake(i)"
+                  class="self-end sm:self-auto p-button-sm p-button-danger p-button-text"
+                  [disabled]="postType === 'view'">
+                </button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Vendors Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-violet-50 to-purple-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-users text-violet-600"></i>
+                Vendors
+              </h4>
+              <button
+                type="button"
+                pButton
+                icon="pi pi-plus"
+                label="Add Vendor"
+                (click)="addVendor()"
+                class="self-start sm:self-auto p-button-sm p-button-outlined p-button-help"
+                [disabled]="postType === 'view'">
+              </button>
+            </div>
+          </div>
+          <div class="p-4 sm:p-5">
+            @if(selectedVendors.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No vendors added yet. Click "Add Vendor" to get started.</p>
+            </div>
+            }@else{
+            <div class="space-y-3">
+              <div
+                *ngFor="let vendor of selectedVendors; let i = index"
+                class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-violet-300 transition-colors">
+                <span
+                  class="w-8 h-8 flex items-center justify-center bg-violet-100 text-violet-700 rounded-full text-sm font-semibold">
+                  {{i + 1}}
+                </span>
+                <p-select
+                  [(ngModel)]="vendor.vendorTypeId"
+                  [ngModelOptions]="{standalone: true}"
+                  [options]="vendorTypes"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [showClear]="true"
+                  placeholder="Select vendor type"
+                  class="w-full sm:flex-1"
+                  [disabled]="postType === 'view'">
+                </p-select>
+                <p-select
+                  [(ngModel)]="vendor.vendorId"
+                  [ngModelOptions]="{standalone: true}"
+                  [options]="vendors"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  [filter]="true"
+                  filterBy="drpOption"
+                  [showClear]="true"
+                  placeholder="Select vendor"
+                  class="w-full sm:flex-1"
+                  [disabled]="postType === 'view'"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="30"
+                  [loading]="vendorsLoading">
+                </p-select>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="vendor.partNumber"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Part Number"
+                  class="w-full sm:w-40"
+                  [readonly]="postType === 'view'">
+                <button
+                  type="button"
+                  pButton
+                  icon="pi pi-trash"
+                  (click)="removeVendor(i)"
+                  class="self-end sm:self-auto p-button-sm p-button-danger p-button-text"
+                  [disabled]="postType === 'view'">
+                </button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Tax Slabs Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-rose-50 to-red-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-percentage text-rose-600"></i>
+                Tax Slabs
+              </h4>
+              <button
+                type="button"
+                pButton
+                icon="pi pi-plus"
+                label="Add Tax Slab"
+                (click)="addTaxSlab()"
+                class="self-start sm:self-auto p-button-sm p-button-outlined p-button-danger"
+                [disabled]="postType === 'view'">
+              </button>
+            </div>
+          </div>
+          <div class="p-4 sm:p-5">
+            @if(selectedTaxSlabs.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No tax slabs added yet. Click "Add Tax Slab" to get started.</p>
+            </div>
+            }@else{
+            <div class="space-y-3">
+              <div
+                *ngFor="let tax of selectedTaxSlabs; let i = index"
+                class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-rose-300 transition-colors">
+                <span
+                  class="w-8 h-8 flex items-center justify-center bg-rose-100 text-rose-700 rounded-full text-sm font-semibold">
+                  {{i + 1}}
+                </span>
+                <p-select
+                  [(ngModel)]="tax.taxSlabId"
+                  [ngModelOptions]="{standalone: true}"
+                  [options]="taxSlabs"
+                  optionLabel="drpOption"
+                  optionValue="drpValue"
+                  placeholder="Select tax slab"
+                  [filter]="true"
+                  [showClear]="true"
+                  class="w-full sm:flex-1"
+                  [disabled]="postType === 'view'">
+                </p-select>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="tax.remarks"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Remarks"
+                  class="w-full sm:flex-1"
+                  [readonly]="postType === 'view'">
+                <button
+                  type="button"
+                  pButton
+                  icon="pi pi-trash"
+                  (click)="removeTaxSlab(i)"
+                  class="self-end sm:self-auto p-button-sm p-button-danger p-button-text"
+                  [disabled]="postType === 'view'">
+                </button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="fixed bottom-0 left-0 right-0 sm:static bg-white sm:bg-transparent px-3 sm:px-0 py-3 sm:py-0 border-t sm:border-t-2 border-gray-200 sm:border-gray-300 flex justify-end space-x-3">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-4 sm:px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition text-sm sm:text-base">
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-4 sm:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition text-sm sm:text-base">
+        </button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <!-- JSON details dialog -->
+  <p-dialog
+    [(visible)]="jsonDetailsVisible"
+    header="Item Details"
+    [modal]="true"
+    [style]="{ width: '95vw', maxWidth: '70vw' }"
+    [baseZIndex]="10000"
+    (onHide)="closeJsonDetails()">
+    <ng-template pTemplate="content">
+      @if(selectedItemDetails){
+      <div class="space-y-6 text-xs sm:text-sm">
+        @if(jsonSectionType === 'vendor'){
+        <!-- Vendor Details Section -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-violet-50 to-purple-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-users text-violet-600"></i>
+              Vendor Details
+            </h4>
+          </div>
+          <div class="p-3 sm:p-5">
+            @if(selectedItemDetails.vendorDetails.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No vendor details available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs sm:text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Vendor Type
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Vendor
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Part Number
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr
+                    *ngFor="let vendor of selectedItemDetails.vendorDetails; let i = index"
+                    class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{i + 1}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{vendor.vendorType || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{vendor.vendor || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{vendor.partNumber || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if(jsonSectionType === 'make'){
+        <!-- Make Details Section -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-cyan-50 to-blue-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-building text-cyan-600"></i>
+              Make Details
+            </h4>
+          </div>
+          <div class="p-3 sm:p-5">
+            @if(selectedItemDetails.makeDetails.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No make details available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs sm:text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Make
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Size
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr
+                    *ngFor="let make of selectedItemDetails.makeDetails; let i = index"
+                    class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{i + 1}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{make.make || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{make.code || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{make.size || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if(jsonSectionType === 'company'){
+        <!-- Company Details Section -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-sky-50 to-indigo-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-briefcase text-sky-600"></i>
+              Company Details
+            </h4>
+          </div>
+          <div class="p-3 sm:p-5">
+            @if(selectedItemDetails.companyDetails.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No company details available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs sm:text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      #
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Address
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      CIN
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr
+                    *ngFor="let company of selectedItemDetails.companyDetails; let i = index"
+                    class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{i + 1}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{company.company || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{company.code || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900 max-w-xs">{{company['Company Address'] || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{company.cin || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        @if(jsonSectionType === 'GST'){
+        <!-- GST Details Section -->
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-sky-50 to-indigo-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-briefcase text-sky-600"></i>
+              GST Details
+            </h4>
+          </div>
+          <div class="p-3 sm:p-5">
+            @if(selectedItemDetails.taxDetails.length === 0){
+            <div class="text-center py-6 sm:py-8 text-gray-500">
+              <i class="pi pi-inbox text-3xl sm:text-4xl mb-3 block text-gray-300"></i>
+              <p class="text-xs sm:text-sm">No company details available</p>
+            </div>
+            }@else{
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs sm:text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      S.No
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Tax Rate
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Tax
+                    </th>
+                    <th class="px-3 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Remarks
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr
+                    *ngFor="let tax of selectedItemDetails.taxDetails; let i = index"
+                    class="hover:bg-gray-50">
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{i + 1}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{tax.taxRate || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900">{{tax.tax || 'N/A'}}</td>
+                    <td class="px-3 sm:px-4 py-2 sm:py-3 text-gray-900 max-w-xs">{{tax['remarks'] || 'N/A'}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <div class="flex justify-end space-x-3 pt-3 sm:pt-4 border-t border-gray-300 mt-4">
+        <button
+          pButton
+          label="Close"
+          icon="pi pi-times"
+          (click)="closeJsonDetails()"
+          class="px-4 sm:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition text-sm sm:text-base">
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,140 @@
+<div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-semibold text-gray-800">Demo</h2>
+            <div class="flex items-center space-x-2">
+                <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                    styleClass="orange-button" />
+            </div>
+        </div>
+        <app-table-template [data]="contacts" [columns]="contactColumns" [isLoading]="isLoading"
+            [actionTemplate]="actionTemplateRef">
+
+        </app-table-template>
+        <ng-template #actionTemplateRef let-item>
+            <button type="button"
+                class="text-gray-400 hover:text-gray-600 transition-colors duration-200 cursor-pointer"
+                (click)="op.toggle($event)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                        d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+            </button>
+            <p-popover #op>
+                <div class="flex flex-col">
+                    <button pTooltip="View" tooltipPosition="left" (click)="showDialog('view',item)"
+                        class="px-4 py-2 hover:bg-gray-100 text-left cursor-pointer" (click)=" op.hide()">
+                        <i class="pi pi-eye"></i>
+                    </button>
+                    <button pTooltip="Edit" tooltipPosition="left" (click)="showDialog('update',item)"
+                        class="px-4 py-2 hover:bg-gray-100 text-left cursor-pointer" (click)="op.hide()">
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                    <button pTooltip="Delete" tooltipPosition="left"
+                        class="px-4 py-2 hover:bg-gray-100 text-left cursor-pointer" (click)=" op.hide()">
+                        <i class="pi pi-trash"></i>
+                    </button>
+                </div>
+            </p-popover>
+        </ng-template>
+    </div>
+
+    <p-drawer [header]="header" [(visible)]="visible" position="right" [modal]="true"
+        [style]="{ width: '50rem', 'max-width': '95%' }" (onHide)="onDrawerHide()">
+
+        <ng-template pTemplate="content">
+            <form [formGroup]="demoForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Initials -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Initials*</label>
+                    <input type="text" formControlName="initials" placeholder="Enter Initials"
+                        [class.border-red-500]="isInvalid('initials')"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                    @if(isInvalid('initials')){
+                    <p class="text-red-500 text-xs mt-1">Initials are required.</p>
+                    }
+                </div>
+
+                <!-- Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name*</label>
+                    <input type="text" formControlName="name" placeholder="Enter Full Name"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        [class.border-red-500]="isInvalid('name')" />
+                    @if(isInvalid('name')){
+                    <p class="text-red-500 text-xs mt-1">Name is required.</p>
+                    }
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email*</label>
+                    <input type="email" formControlName="email" placeholder="Enter Email"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        [class.border-red-500]="isInvalid('email')" />
+                    @if(isInvalid('email')){
+                    <p class=" text-red-500 text-xs mt-1">
+                        @if(demoForm.get('email')?.errors?.['required']){
+                        <span>Email is required.</span>
+                        }
+                        @if(demoForm.get('email')?.errors?.['email']){
+                        <span *ngIf="">Enter a valid email address.</span>
+                        }
+                    </p>
+                    }
+
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
+                    <input type="text" formControlName="phone" placeholder="Enter Phone Number"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        [class.border-red-500]='isInvalid("phone")' />
+                    @if(isInvalid('phone')){
+                    <p class="text-red-500 text-xs mt-1">Phone number is required.</p>
+                    }
+                </div>
+                <!-- Date Added -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date Added*</label>
+                    <p-datepicker id="dateAdded" formControlName="dateAdded" [showIcon]="true" appendTo="body"
+                        class="w-full rounded-md  px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        [class.border-red-500]='isInvalid("dateAdded")'></p-datepicker>
+                    @if(isInvalid('dateAdded')){
+                    <p class="text-red-500 text-xs mt-1">Date is required.</p>
+                    }
+                </div>
+                <!-- Demo -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Demo*</label>
+                    <input type="text" formControlName="demo" placeholder="Enter Demo Info"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 text-base focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        [class.border-red-500]='isInvalid("demo")' />
+                    @if(isInvalid('demo')){
+                    <p class="text-red-500 text-xs mt-1">Demo field is required.</p>
+                    }
+                </div>
+
+            </form>
+
+        </ng-template>
+        <ng-template pTemplate="footer">
+            @if(isView !='view'){
+            <div class="flex justify-end space-x-3 pt-4 border-t-2 border-gray-300 mt-4">
+                <button pButton type="submit" (click)="onSubmit()"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition"
+                    [disabled]="demoForm.invalid">{{isView == 'add'?'Submit':'Update'}}</button>
+                @if(isView=='add'){
+                <button pButton label="Reset" (click)="demoForm.reset()"
+                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition"></button>
+                }
+
+            </div>
+            }
+        </ng-template>
+
+    </p-drawer>
+
+
+</div>

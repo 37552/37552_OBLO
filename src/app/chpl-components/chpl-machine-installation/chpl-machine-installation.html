@@ -1,0 +1,299 @@
+<div class="bg-[#FFFFFF] min-h-screen p-4 sm:p-6 lg:p-0">
+    <div class="flex items-center justify-between p-3 border-b border-gray-200">
+        <h2 class="text-base font-semibold text-gray-800">
+            <p-breadcrumb [model]="breadcrumbItems" [styleClass]="'custom-breadcrumb mb-1 text-sm'"></p-breadcrumb>
+        </h2>
+        <div class="flex items-center space-x-2">
+            <p-button (click)="showDialog('add', [])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+                styleClass="orange-button">
+            </p-button>
+        </div>
+    </div>
+
+    <app-table-template [data]="data" [columns]="columns" [pageSize]="+pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+        
+        <!-- Column Selector and Refresh Buttons - Positioned next to search -->
+        <div customActions class="flex items-center gap-2">
+            <div class="relative">
+                <p-button type="button" icon="pi pi-filter" label="Columns" [badge]="getSelectedColumnsCount().toString()"
+                    badgeClass="p-badge-info" styleClass="orange-button p-button-sm"
+                    (click)="filtersPanel.toggle($event)"></p-button>
+
+                <p-popover #filtersPanel>
+                    <div class="p-0" style="width: 150px;">
+                        <!-- Selected Columns Section -->
+                        <div class="p-3 border-b border-gray-200">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <p-checkbox [(ngModel)]="selectAllChecked" [binary]="true" [ngModelOptions]="{ standalone: true }"
+                                        (onChange)="toggleSelectAll()"></p-checkbox>
+                                    <label class="text-xs text-gray-700 cursor-pointer" (click)="toggleSelectAll()">
+                                        Select All
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Selected Available Columns (Removable) -->
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <span *ngFor="let col of getSelectedAvailableColumns()"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded-md font-medium hover:bg-gray-200">
+                                    {{ col.header }}
+                                    <i class="pi pi-times text-gray-500 hover:text-gray-700 cursor-pointer text-xs"
+                                        (click)="toggleColumnVisibility(col); $event.stopPropagation()"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Available Columns List -->
+                        <div class="p-2 max-h-80 overflow-y-auto">
+                            <div class="flex flex-col">
+                                <div *ngFor="let col of getUnselectedAvailableColumns()"
+                                    class="px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer rounded"
+                                    (click)="toggleColumnVisibility(col)">
+                                    {{ col.header }}
+                                </div>
+                                <div *ngIf="getUnselectedAvailableColumns().length === 0"
+                                    class="text-center text-gray-400 text-xs py-4">
+                                    All columns selected
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </p-popover>
+            </div>
+
+            <!-- Refresh Button -->
+            <p-button type="button" icon="pi pi-refresh" label=" " styleClass="orange-button p-button-sm"
+                [loading]="isLoading" (click)="refreshData()" [title]="'Refresh Data'">
+            </p-button>
+        </div>
+    </app-table-template>
+    <ng-template #actionTemplateRef let-item let-i="rowIndex">
+        <button type="button" class="text-gray-600 hover:text-gray-900 cursor-pointer p-button-text"
+            (click)="op.toggle($event)">
+            <i class="pi pi-ellipsis-v text-xl"></i>
+        </button>
+
+        <p-popover #op>
+            <div class="flex flex-col">
+                <button (click)="showDialog('view', item); op.hide()" title="View"
+                    class="px-4 py-2 hover:bg-gray-100 text-left">
+                    <i class="pi pi-eye"></i>
+                </button>
+            </div>
+        </p-popover>
+    </ng-template>
+
+
+    <p-drawer [(visible)]="visible" position="right" [modal]="true" (onHide)="onDrawerHide()"
+        class="sm:w-[60%] w-full !max-w-full" [style]="{ width: '60%', 'max-width': '100%' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-2xl">{{ header }}</span>
+                <i class="text-blue-500" [ngClass]="headerIcon"></i>
+            </div>
+        </ng-template>
+
+<ng-template pTemplate="content">
+    <form [formGroup]="machineInstallationForm" class="flex flex-col gap-6 p-2" id="section-one">
+        <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+                <h4 class="text-base font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="pi pi-info-circle text-indigo-600"></i> Machine Installation
+                </h4>
+            </div>
+            <div class="grid grid-cols-2 gap-4 p-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name*</label>
+                    @if(postType !== 'view') {
+                        <p-select [options]="customerDrp" formControlName="customerName" optionLabel="drpOption"
+                            optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                            placeholder="Select Customer Name" appendTo="body" class="w-full"
+                            (onChange)="getSalesOrder()"></p-select>
+                    } @else {
+                        <input type="text" [value]="machineInstallationForm.get('customerName')?.value" readonly
+                            class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sales Order*</label>
+                    @if(postType !== 'view') {
+                        <p-select [options]="salesOrderDrp" formControlName="salesOrder" optionLabel="drpOption"
+                            optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                            placeholder="Select Sales Order" appendTo="body" class="w-full"
+                            (onChange)="getSoldByAndMachine()"></p-select>
+                    } @else {
+                        <input type="text" [value]="machineInstallationForm.get('salesOrder')?.value" readonly
+                            class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Address</label>
+                    <input type="text" readonly formControlName="address"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                    <input type="text" readonly formControlName="contactName"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <input type="text" readonly formControlName="contactNo"
+                        class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sold By*</label>
+                    @if(postType !== 'view') {
+                        <p-select [options]="soldByDrp" formControlName="soldBy" optionLabel="drpOption"
+                            optionValue="drpValue" [filter]="true" filterBy="drpOption" [showClear]="true"
+                            [virtualScroll]="true" [virtualScrollItemSize]="30" appendTo="body"
+                            placeholder="Select Sold By" appendTo="body" class="w-full"></p-select>
+                    } @else {
+                        <input type="text" [value]="machineInstallationForm.get('soldBy')?.value" readonly
+                            class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Invoice Date *</label>
+                    @if(postType !== 'view') {
+                        <p-datepicker formControlName="invoiceDate" placeholder="YYYY-MM-DD" appendTo="body" class="w-full"
+                        (onSelect)="transformDate($event, 'machineInstallationForm', 'invoiceDate')"></p-datepicker>
+                    } @else {
+                        <input type="text" [value]="machineInstallationForm.get('invoiceDate')?.value" readonly
+                            class="w-full rounded-md border-2 border-gray-300 px-3 py-1 bg-gray-100 cursor-not-allowed" />
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Is Commissioned</label>
+                    <p-checkbox formControlName="isCommisioned" [binary]="true" [disabled]="true"></p-checkbox>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attachment*</label>
+                    <input type="hidden" formControlName="attachment">
+
+                    <div class="flex items-center gap-2">
+                        <!-- Hidden native file input -->
+                        <input #attachmentInput type="file" class="hidden"
+                            (change)="onFileSelected($event, 'machineInstallationForm', 'attachment', 'chplMachineInstallation')" />
+
+                        <!-- Upload button -->
+                        <p-button type="button" icon="pi pi-upload" label="Upload" styleClass="p-button-sm"
+                            (click)="attachmentInput.click()" [disabled]="postType === 'view'">
+                        </p-button>
+
+                        <!-- View button -->
+                        <p-button type="button" icon="pi pi-eye" label="View"
+                            styleClass="p-button-text p-button-sm"
+                            [disabled]="!machineInstallationForm.get('attachment')?.value"
+                            (click)="viewAttachment(machineInstallationForm.get('attachment')?.value)">
+                        </p-button>
+
+                        <!-- Clear/Delete button -->
+                        <p-button type="button" icon="pi pi-times" label="Clear" severity="danger"
+                            styleClass="p-button-text p-button-sm"
+                            [disabled]="!machineInstallationForm.get('attachment')?.value"
+                            (click)="removeUploadedFile('machineInstallationForm','attachment')">
+                        </p-button>
+                    </div>
+
+                    @if(isInvalid('attachment',machineInstallationForm)){
+                    <p class="text-red-500 text-xs mt-1">Attachment is required.</p>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div *ngIf="productData?.length" class="bg-white rounded-lg border border-gray-200 mt-4 mx-2 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3 border-b border-gray-200">
+            <h4 class="text-base font-semibold text-gray-800">Machine Details</h4>
+        </div>
+        <div class="p-4 overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-2 border">S.No</th>
+                        <th *ngFor="let key of getKeys(productData[0])" class="p-2 border uppercase text-xs">{{ key }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of productData; let i = index" class="hover:bg-gray-50">
+                        <td class="p-2 border text-center">{{ i + 1 }}</td>
+                        <td *ngFor="let key of getKeys(productData[0])" class="p-2 border">{{ item[key] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</ng-template>
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-3 mt-4">
+                @if(postType === 'add'){
+                <p-button label="Reset" severity="secondary" icon="pi pi-refresh" type="button"
+                    (click)="machineInstallationForm.reset()"></p-button>
+                }
+
+                @if(postType !== 'view'){
+                <p-button [label]="postType === 'update' ? 'Update' : 'Submit'" icon="pi pi-check" type="submit"
+                    severity="success" [loading]="isFormLoading" (click)="OnSubmitModal()"></p-button>
+                }
+
+                <p-button label="Close" severity="secondary" icon="pi pi-times" type="button"
+                    (click)="onDrawerHide()"></p-button>
+            </div>
+        </ng-template>
+    </p-drawer>
+
+
+
+
+    <p-confirmdialog></p-confirmdialog>
+    <p-toast></p-toast>
+
+    <!-- Machine Details Modal -->
+    <p-dialog [(visible)]="showMachineModal" [modal]="true" [closable]="true"
+        [style]="{ width: '70vw', 'max-width': '100%' }" [draggable]="false" [resizable]="false">
+        <ng-template pTemplate="header">
+            <h3 class="text-xl font-semibold text-gray-800">Machine Details</h3>
+        </ng-template>
+        <ng-template pTemplate="content">
+            <div class="overflow-x-auto">
+                <p-table [value]="selectedMachineData" styleClass="p-datatable-striped">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>S.No</th>
+                            <th *ngFor="let key of getModalKeys(selectedMachineData[0])" class="capitalize">
+                                {{ key }}
+                            </th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item let-j="rowIndex">
+                        <tr>
+                            <td>{{ j + 1 }}</td>
+                            <td *ngFor="let key of getModalKeys(selectedMachineData[0])">
+                                {{ item[key] }}
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="footer">
+            <p-button label="Close" icon="pi pi-times" (click)="closeMachineModal()" styleClass="p-button-secondary">
+            </p-button>
+        </ng-template>
+    </p-dialog>

@@ -1,0 +1,294 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-4 lg:p-0">
+  
+  <div class="bg-white">
+    <!-- Mobile optimized header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border-b border-gray-200">
+      <div class="flex items-center justify-between w-full sm:w-auto mb-2 sm:mb-0">
+        <h2 class="text-sm sm:text-base font-semibold text-gray-800 truncate">
+          <p-breadcrumb 
+            [model]="breadcrumbItems"  
+            [styleClass]="'custom-breadcrumb text-xs sm:text-sm'">
+          </p-breadcrumb>
+        </h2>
+      </div>
+      <div class="flex items-center justify-end sm:space-x-2 w-full sm:w-auto">
+        <p-button (click)="showDialog('add',[])" label="Add" icon="pi pi-plus" variant="text" [raised]="true"
+          styleClass="orange-button text-sm px-3 py-2" />
+      </div>
+    </div>
+
+    <!-- Responsive table container -->
+    <div class="overflow-x-auto">
+      <app-table-template [data]="data" [columns]="columns" [pageSize]="pageSize" [totalCount]="totalCount"
+        [isLoading]="isLoading" [currentPage]="pageNo" [sortColumn]="sortColumn" [sortDirection]="sortDirection"
+        [searchText]="searchText" [actionTemplate]="actionTemplateRef" (pageChange)="onPageChange($event)"
+        (searchChange)="onSearchChange($event)" (sortChange)="onSortChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-table-template>
+      
+      <ng-template #actionTemplateRef let-item>
+        <button type="button" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1" (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer text-sm"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col min-w-[120px]">
+            <button (click)="showDialog('view', item); op.hide()" pTooltip="View"
+              class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+              <i class="pi pi-eye text-xs"></i>
+              <span>View</span>
+            </button>
+            <button (click)="showDialog('update', item); op.hide()" pTooltip="Update"
+              class="px-3 py-2 hover:bg-gray-100 text-left text-sm flex items-center gap-2">
+              <i class="pi pi-pencil text-xs"></i>
+              <span>Update</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Right side drawer -->
+  <p-drawer [(visible)]="visible" position="right" [modal]="true"
+    [style]="{ width: '60%', 'min-width': '300px'}" (onHide)="onDrawerHide()"
+    styleClass="right-drawer">
+    
+    <ng-template pTemplate="header">
+      <div class="w-full flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="text-blue-500" [ngClass]="headerIcon"></i>
+          <span class="font-semibold text-lg sm:text-xl truncate">{{header}}</span>
+        </div>
+        <!-- <button (click)="visible = false" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <i class="pi pi-times text-gray-600"></i>
+        </button> -->
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      <div class="h-full overflow-y-auto p-4 sm:p-6">
+        @if(isFormLoading){
+        <div class="flex flex-col items-center justify-center min-h-[300px]">
+          <p-progress-spinner strokeWidth="8" fill="transparent" animationDuration=".5s"
+            [style]="{ width: '50px', height: '50px' }" />
+          <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">Loading location data...</p>
+        </div>
+        }@else {
+        <form [formGroup]="locationForm" (ngSubmit)="onSubmit($event)" class="space-y-4 sm:space-y-6">
+
+          <!-- Basic Location Information -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-building text-indigo-600 text-sm"></i>
+                Basic Information
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+              <!-- Office Location -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  Office Location <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <input 
+                    type="text" 
+                    pInputText 
+                    formControlName="officeLocation" 
+                    [class.p-invalid]="isInvalid('officeLocation')" 
+                    class="w-full" 
+                    placeholder="Enter office location name" />
+                  @if(isInvalid('officeLocation')){
+                  <small class="text-red-500 text-xs mt-1 block">Office Location is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Branch -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  Branch <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <p-select 
+                    formControlName="branchId" 
+                    [options]="branches" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select branch"
+                    [class.p-invalid]="isInvalid('branchId')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('branchId')){
+                  <small class="text-red-500 text-xs mt-1 block">Branch is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- District -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  District <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <p-select 
+                    formControlName="districtId" 
+                    [options]="districts" 
+                    optionLabel="drpOption" 
+                    optionValue="drpValue"
+                    [filter]="true" 
+                    [showClear]="true" 
+                    placeholder="Select district"
+                    [class.p-invalid]="isInvalid('districtId')" 
+                    class="w-full">
+                  </p-select>
+                  @if(isInvalid('districtId')){
+                  <small class="text-red-500 text-xs mt-1 block">District is required.</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Geographic Coordinates -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-map-marker text-green-600 text-sm"></i>
+                Geographic Coordinates
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+              <!-- Latitude -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  Latitude <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <input 
+                    type="text" 
+                    pInputText 
+                    formControlName="latitude" 
+                    [class.p-invalid]="isInvalid('latitude')" 
+                    appOnlyDecimal 
+                    [maxLength]="10"
+                    class="w-full" 
+                    placeholder="Enter latitude (e.g., 12.345678)" />
+                  @if(isInvalid('latitude')){
+                  <small class="text-red-500 text-xs mt-1 block">Valid latitude is required (up to 8 decimal places).</small>
+                  }
+                </div>
+              </div>
+
+              <!-- Longitude -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  Longitude <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <input 
+                    type="text" 
+                    pInputText 
+                    formControlName="longitude" 
+                    [class.p-invalid]="isInvalid('longitude')" 
+                    appOnlyDecimal 
+                    [maxLength]="10"
+                    class="w-full" 
+                    placeholder="Enter longitude (e.g., 98.765432)" />
+                  @if(isInvalid('longitude')){
+                  <small class="text-red-500 text-xs mt-1 block">Valid longitude is required (up to 8 decimal places).</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Address Details -->
+          <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b border-gray-200">
+              <h4 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <i class="pi pi-home text-purple-600 text-sm"></i>
+                Address Details
+              </h4>
+            </div>
+            <div class="p-4 sm:p-5 space-y-4">
+              <!-- Address -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  Address <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <textarea 
+                    pInputText
+                    formControlName="Address" 
+                    [class.p-invalid]="isInvalid('Address')" 
+                    class="w-full" 
+                    rows="3"
+                    placeholder="Enter complete address with street, area, landmark, etc."></textarea>
+                  @if(isInvalid('Address')){
+                  <small class="text-red-500 text-xs mt-1 block">Address is required.</small>
+                  }
+                </div>
+              </div>
+
+              <!-- PIN Code -->
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+                <label class="sm:col-span-4 text-lg font-medium text-gray-700 pt-2">
+                  PIN Code <span class="text-red-500">*</span>
+                </label>
+                <div class="sm:col-span-8">
+                  <input 
+                    type="text" 
+                    pInputText 
+                    formControlName="pincode" 
+                    appOnlyNumber 
+                    [maxLength]="6"
+                    [class.p-invalid]="isInvalid('pincode')" 
+                    class="w-full" 
+                    placeholder="Enter 6-digit PIN code" />
+                  @if(isInvalid('pincode')){
+                  <small class="text-red-500 text-xs mt-1 block">PIN Code is required (6 digits).</small>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add some bottom padding for mobile keyboards -->
+          <div class="h-8 sm:h-0"></div>
+        </form>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div class="border-t border-gray-200 py-3 px-4">
+        <div class="flex flex-col sm:flex-row justify-end gap-3">
+          @if(postType === 'add'){
+          <button 
+            pButton 
+            type="button" 
+            (click)="onClear()"
+            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm sm:text-base font-medium w-full sm:w-auto">
+            Reset
+          </button>
+          }
+          <button 
+            pButton 
+            type="submit" 
+            (click)="onSubmit($event)"
+            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow text-sm sm:text-base font-medium w-full sm:w-auto">
+            {{ postType === 'add' ? 'Submit' : 'Update' }}
+          </button>
+        </div>
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast position="top-center"></p-toast>
+</div>

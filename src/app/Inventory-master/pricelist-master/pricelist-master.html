@@ -1,0 +1,324 @@
+<div class="bg-[#FFFFFF] min-h-screen p-2 sm:p-6 lg:p-0">
+  <div class="bg-white">
+    <div class="flex items-center justify-between p-3 sm:p-3 border-b border-gray-200">
+      <h2 class="text-base font-semibold text-gray-800">
+        <p-breadcrumb 
+          [model]="breadcrumbItems"  
+          [styleClass]="'custom-breadcrumb mb-1'">
+        </p-breadcrumb>
+      </h2>
+      <div class="flex items-center space-x-2">
+        <p-button
+          (click)="showDialog('add',[])"
+          label="Add"
+          icon="pi pi-plus"
+          variant="text"
+          [raised]="true"
+          styleClass="orange-button" />
+      </div>
+    </div>
+
+    <app-table-template 
+      [data]="data" 
+      [columns]="columns" 
+      [pageSize]="pageSize" 
+      [totalCount]="totalCount"
+      [isLoading]="isLoading" 
+      [currentPage]="pageNo" 
+      [sortColumn]="sortColumn" 
+      [sortDirection]="sortDirection"
+      [searchText]="searchText" 
+      [actionTemplate]="actionTemplateRef"
+      (pageChange)="onPageChange($event)"
+      (searchChange)="onSearchChange($event)" 
+      (sortChange)="onSortChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+
+      <ng-template #actionTemplateRef let-item>
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-600 cursor-pointer"
+          (click)="op.toggle($event)">
+          <i class="pi pi-ellipsis-v cursor-pointer"></i>
+        </button>
+        <p-popover #op>
+          <div class="flex flex-col">
+            <button
+              (click)="showDialog('view', item); op.hide()"
+              pTooltip="View"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-eye"></i>
+              <span class="text-sm">View</span>
+            </button>
+            <button
+              (click)="showDialog('update', item); op.hide()"
+              pTooltip="Update"
+              class="px-4 py-2 hover:bg-gray-100 text-left flex items-center gap-2">
+              <i class="pi pi-pencil"></i>
+              <span class="text-sm">Update</span>
+            </button>
+          </div>
+        </p-popover>
+      </ng-template>
+    </app-table-template>
+  </div>
+
+  <p-drawer
+    [(visible)]="visible"
+    position="right"
+    [modal]="true"
+    [style]="{ width: '70%', 'max-width': '100%'}"
+    (onHide)="onDrawerHide()">
+    <ng-template pTemplate="header">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-xl sm:text-2xl">{{header}}</span>
+        <i class="text-blue-500" [ngClass]="headerIcon"></i>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+      @if(isFormLoading){
+      <div class="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[500px] px-4">
+        <p-progress-spinner
+          strokeWidth="6"
+          fill="transparent"
+          animationDuration=".5s"
+          [style]="{ width: '60px', height: '60px' }" />
+        <p class="mt-4 text-gray-600 font-medium text-sm sm:text-base">
+          Loading price list data...
+        </p>
+      </div>
+      }@else {
+      <form
+        [formGroup]="priceListForm"
+        (ngSubmit)="onSubmit($event)"
+        class="space-y-6 sm:space-y-7 pb-24 sm:pb-0 px-2 sm:px-4">
+
+        <!-- Basic Information Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-indigo-50 to-blue-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-info-circle text-indigo-600"></i>
+              Basic Information
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Price List Name -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Price List Name <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <input 
+                  type="text" 
+                  pInputText 
+                  formControlName="priceListName" 
+                  [class.p-invalid]="isInvalid('priceListName')" 
+                  class="w-full" 
+                  placeholder="Enter price list name" />
+                @if(isInvalid('priceListName')){
+                <small class="text-red-500 text-xs mt-1 block">Price List Name is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Currency -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Currency <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select 
+                  formControlName="currencyId" 
+                  [options]="currencies" 
+                  optionLabel="drpOption" 
+                  optionValue="drpValue"
+                  [filter]="true" 
+                  [showClear]="true" 
+                  placeholder="Select currency"
+                  [class.p-invalid]="isInvalid('currencyId')" 
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('currencyId')){
+                <small class="text-red-500 text-xs mt-1 block">Currency is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Buy/Sell Type -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Buy/Sell Type <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select 
+                  formControlName="buySellTypeId" 
+                  [options]="buySellTypes" 
+                  optionLabel="drpOption" 
+                  optionValue="drpValue"
+                  [filter]="true" 
+                  [showClear]="true" 
+                  placeholder="Select buy/sell type"
+                  [class.p-invalid]="isInvalid('buySellTypeId')" 
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('buySellTypeId')){
+                <small class="text-red-500 text-xs mt-1 block">Buy/Sell Type is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Validity Period Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-lg sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-calendar text-green-600"></i>
+              Validity Period
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+
+            <!-- Valid From -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Valid From <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8 w-full">
+                <div class="p-inputgroup w-full">
+                  <p-datePicker 
+                    formControlName="validFrom" 
+                    [class.p-invalid]="isInvalid('validFrom')" 
+                    styleClass="w-full"
+                    placeholder="Select start date"
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    inputStyleClass="w-full"
+                    [style]="{'width': '100%'}">
+                  </p-datePicker>
+                </div>
+                @if(isInvalid('validFrom')){
+                <small class="text-red-500 text-xs mt-1 block">Valid From date is required.</small>
+                }
+              </div>
+            </div>
+            
+            <!-- Valid Till -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Valid Till <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8 w-full">
+                <div class="p-inputgroup w-full">
+                  <p-datePicker 
+                    formControlName="validTill" 
+                    [class.p-invalid]="isInvalid('validTill')" 
+                    styleClass="w-full"
+                    placeholder="Select end date"
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    inputStyleClass="w-full"
+                    [style]="{'width': '100%'}">
+                  </p-datePicker>
+                </div>
+                @if(isInvalid('validTill')){
+                <small class="text-red-500 text-xs mt-1 block">Valid Till date is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Section -->
+        <div class="bg-white rounded-lg border border-gray-200">
+          <div class="bg-gradient-to-r from-amber-50 to-orange-50 px-4 sm:px-5 py-3 border-b border-gray-200">
+            <h4 class="text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+              <i class="pi pi-map-marker text-amber-600"></i>
+              Location
+            </h4>
+          </div>
+          <div class="p-4 sm:p-5 space-y-4">
+            <!-- Country -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Country <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select 
+                  formControlName="countryId" 
+                  [options]="countries" 
+                  optionLabel="drpOption" 
+                  optionValue="drpValue"
+                  [filter]="true" 
+                  [appendTo]="'body'"
+                  [showClear]="true" 
+                  placeholder="Select country"
+                  [class.p-invalid]="isInvalid('countryId')" 
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('countryId')){
+                <small class="text-red-500 text-xs mt-1 block">Country is required.</small>
+                }
+              </div>
+            </div>
+          
+            <!-- Location -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4 items-start">
+              <label class="text-lg font-medium text-gray-700 sm:col-span-4 sm:pt-2.5">
+                Location <span class="text-red-500">*</span>
+              </label>
+              <div class="sm:col-span-8">
+                <p-select 
+                  formControlName="districtId" 
+                  [options]="location" 
+                  optionLabel="drpOption" 
+                  optionValue="drpValue"
+                  [filter]="true"
+                  [appendTo]="'body'"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="30"
+                  [showClear]="true" 
+                  placeholder="Select location"
+                  [class.p-invalid]="isInvalid('districtId')" 
+                  class="w-full">
+                </p-select>
+                @if(isInvalid('districtId')){
+                <small class="text-red-500 text-xs mt-1 block">Location is required.</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      @if(postType !== 'view'){
+      <div
+        class="fixed bottom-0 left-0 right-0 sm:static bg-white sm:bg-transparent px-3 sm:px-0 py-3 sm:py-0 border-t sm:border-t-2 border-gray-200 sm:border-gray-300 flex justify-end space-x-3">
+        <button
+          pButton
+          type="submit"
+          (click)="onSubmit($event)"
+          class="px-4 sm:px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition text-sm sm:text-base">
+          {{ postType === 'add' ? 'Submit' : 'Update' }}
+        </button>
+        @if(postType === 'add'){
+        <button
+          pButton
+          label="Reset"
+          (click)="onClear()"
+          class="px-4 sm:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg shadow transition text-sm sm:text-base">
+        </button>
+        }
+      </div>
+      }
+    </ng-template>
+  </p-drawer>
+
+  <p-confirmdialog></p-confirmdialog>
+  <p-toast></p-toast>
+</div>
