@@ -35,7 +35,7 @@ export class Login {
   password = signal('');
   resetEmail = signal('');
   formIcon = signal('pi-arrow-right');
-  formTitle = signal('Welcome back!!!');
+  formTitle = signal('Welcome back!!');
   formSubtitle = signal('Please fill the fields to sign-in oblo');
   loginForm!: FormGroup;
   captchaText = signal('');
@@ -312,7 +312,7 @@ export class Login {
     this.isLogin.update(current => {
       const isNowLogin = !current;
       if (isNowLogin) {
-        this.formTitle.set('Welcome back!!!');
+        this.formTitle.set('Welcome back!!');
         this.formSubtitle.set('Please fill the fields to sign-up oblo');
         this.formIcon.set('pi-arrow-right');
       }
