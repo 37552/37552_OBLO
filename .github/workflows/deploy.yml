@@ -1,0 +1,67 @@
+name: Universal Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # ✅ Install Node
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.12'
+
+    # ✅ Install dependencies
+    - name: Install Dependencies
+      run: npm install --legacy-peer-deps
+
+    # ✅ Build Angular App
+    - name: Build Angular
+      run: npm run build -- --configuration production
+
+    # ✅ Zip ONLY dist folder
+    - name: Create Artifact from dist
+      run: |
+        cd dist/oblo/browser
+        zip -r ../../../build.zip .
+
+    # ✅ Upload artifact
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: build.zip
+
+
+  deploy:
+
+    needs: build
+
+    runs-on: self-hosted
+
+    environment:
+      name: Production
+
+    steps:
+
+    - name: Download Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build
+
+    - name: Run Deployment Script
+      run: |
+        powershell D:\GitHubDeployment\Scripts\deploy.ps1 `
+        -artifactPath "build.zip" `
+        -repoName "${{ github.event.repository.name }}"
