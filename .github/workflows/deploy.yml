@@ -1,0 +1,50 @@
+name: Universal Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Create Artifact
+      run: |
+        zip -r build.zip .
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: build.zip
+
+
+  deploy:
+
+    needs: build
+
+    runs-on: self-hosted
+
+    environment:
+      name: Production
+
+    steps:
+
+    - name: Download Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build
+
+    - name: Run Deployment Script
+      run: |
+        powershell D:\Deployment\Scripts\deploy.ps1 `
+        -artifactPath "build.zip" `
+        -repoName "${{ github.event.repository.name }}"
