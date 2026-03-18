@@ -16,10 +16,27 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Create Artifact
-      run: |
-        zip -r build.zip .
+    # ✅ Install Node
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
 
+    # ✅ Install dependencies
+    - name: Install Dependencies
+      run: npm install
+
+    # ✅ Build Angular App
+    - name: Build Angular
+      run: npm run build -- --configuration production
+
+    # ✅ Zip ONLY dist folder
+    - name: Create Artifact from dist
+      run: |
+        cd dist
+        zip -r ../build.zip .
+
+    # ✅ Upload artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -45,6 +62,6 @@ jobs:
 
     - name: Run Deployment Script
       run: |
-        powershell D:\GitHubDeployment\Scripts\deploy.ps1 `
+        powershell D:\Deployment\Scripts\deploy.ps1 `
         -artifactPath "build.zip" `
         -repoName "${{ github.event.repository.name }}"
