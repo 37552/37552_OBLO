@@ -34,7 +34,7 @@ jobs:
     - name: Create Artifact from dist
       run: |
         cd dist/oblo/browser
-        zip -r ../build.zip .
+        zip -r ../../../build.zip .
 
     # ✅ Upload artifact
     - name: Upload Artifact
